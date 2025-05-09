@@ -1,0 +1,1 @@
+import{d as r}from"./card-D8ZZsheq.js";import{h as s}from"./index-CWxa_91Z.js";const a=r.create({baseURL:"https://zenomi.elitceler.com/api/v1",headers:{"Content-Type":"application/json"}});a.interceptors.request.use(e=>{const t=s(),o=t==null?void 0:t.token;return o&&(e.headers.Authorization=`Bearer ${o}`),e},e=>(console.error("Request error:",e),Promise.reject(e)));export{a};
