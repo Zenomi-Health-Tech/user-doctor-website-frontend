@@ -18,6 +18,7 @@ const userSchema = z.object({
     gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
     dob: z.string().min(1, 'Date of birth is required'),
     bloodGroup: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']),
+    referralCode: z.string().min(1, 'Referral code is required'),
 });
 type UserFormData = z.infer<typeof userSchema>;
 
@@ -34,7 +35,7 @@ const UserRegistrationForm = () => {
         setValue,
         formState: { errors },
     } = useForm<UserFormData>({
-        resolver: zodResolver(userSchema),
+        resolver: zodResolver(userSchema)
     });
 
     const handlePhoneChange = (value: string, country: { dialCode?: string }) => {
@@ -193,6 +194,20 @@ const UserRegistrationForm = () => {
                     </select>
                     {errors.bloodGroup && (
                         <p className="text-red-500 text-sm mt-1">{errors.bloodGroup.message}</p>
+                    )}
+                </div>
+
+                {/* Referral Code Input */}
+                <div>
+                    <input
+                        {...register('referralCode')}
+                        type="text"
+                        placeholder="Enter Doctor Referral Code"
+                        className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2"
+                        style={{ '--tw-ring-color': '#704180' } as React.CSSProperties}
+                    />
+                    {errors.referralCode && (
+                        <p className="text-red-500 text-sm mt-1">{errors.referralCode.message}</p>
                     )}
                 </div>
             </div>
