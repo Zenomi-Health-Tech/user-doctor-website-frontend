@@ -2,71 +2,63 @@ import * as React from "react";
 import {
   Sidebar,
   SidebarContent,
-  SidebarRail,// Import SidebarHeader
+  SidebarRail,
 } from "@/components/ui/sidebar";
 import { NavMain } from "./NavMain";
-import Logo from "@/assets/zenomiLogo.png";  // Logo import
-import dashBoardIcon from "@/assets/ic_Dashboard.svg";  // Dashboard icon import
-import AppointmentIcon from "@/assets/Apointment.svg";  // Appointment icon import
-import PatientIcon from "@/assets/Patient.svg";  // Patient icon import
-import ProfileIcon from "@/assets/Profile.svg"
+import Logo from "@/assets/zenomiLogo.png";
 import { SidebarHeader } from "./SidebarHeader";
-import { Bell, Settings } from 'lucide-react';
+import { Bell, Settings, HelpCircle , User , CalendarDays , ChartPie , House } from 'lucide-react';
+import UserAvatar from "./UserAvatar";
 
 // This is sample data.
 const data = {
   user: {
-    name: "Liv Med",
-    email: "livmed@gmail.com",
+    name: "Lily",
+    email: "lily@zenomi.health",
     avatar: "https://ui.shadcn.com/avatars/shadcn.jpg",
   },
   navMain: [
     {
       title: "Home",
-      url: "/dashboard",  // Updated URL
-      icon: dashBoardIcon,  // Image icon
+      url: "/dashboard",
+      icon: House,
     },
     {
-      title: "Patients",
-      url: "/patients",  // Updated URL
-      icon: PatientIcon,  // Image icon
+      title: "Results",
+      url: "/results",
+      icon: ChartPie,
     },
     {
       title: "Appointments",
-      url: "/appointments",  // Updated URL
-      icon: AppointmentIcon,  // Image icon
+      url: "/appointments",
+      icon: CalendarDays,
     },
     {
       title: "Profile",
-      url: "/profile",  // Updated URL
-      icon: ProfileIcon,  // Keeping default icon for profile (can replace with image as well)
+      url: "/profile",
+      icon: User,
     },
-  
     {
       title: "Notifications",
-      url: "/notifications",  // Updated URL
-      icon: Bell,  // Keeping default icon for profile (can replace with image as well)
+      url: "/notifications",
+      icon: Bell,
     },
-  
     {
       title: "Settings",
-      url: "/settings",  // Updated URL
-      icon: Settings,  // Keeping default icon for profile (can replace with image as well)
+      url: "/settings",
+      icon: Settings,
     },
-  
     {
       title: "Support",
-      url: "/support",  // Updated URL
-      icon: ProfileIcon,  // Keeping default icon for profile (can replace with image as well)
+      url: "/support",
+      icon: HelpCircle,
     },
-  
- 
   ],
   navMain2: [
     {
       title: "Logo",
-      url: "/",  // Updated URL
-      icon: Logo,  // Image icon
+      url: "/",
+      icon: Logo,
       isActive: true,
     },
   ],
@@ -74,12 +66,17 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible="icon" {...props} >
+    <Sidebar className="border-r font-['Poppins']" {...props}>
       {/* Sidebar Header */}
       <SidebarHeader items={data.navMain2} />
 
-      <SidebarContent >
+      <SidebarContent className="flex flex-col h-full">
         <NavMain items={data.navMain} />
+        <UserAvatar 
+          name={data.user.name} 
+          initial={data.user.name[0]} 
+          profileUrl="/profile" 
+        />
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

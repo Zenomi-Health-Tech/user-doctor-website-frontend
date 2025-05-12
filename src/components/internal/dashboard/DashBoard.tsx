@@ -1,150 +1,146 @@
-import React, { useEffect, useState } from "react";
-import api from "@/utils/api";
-import Overview from "./Overview";
-import MonthlyRevenue from "./MonthlyRevenue";
-import Departments from "./Departments";
-import SkeletonLoader from "@/pages/common/SkeletionLoader";
-import AppointmentsTable from "./UpcomingBooking";
 
-type OverviewData = {
-  totalPatients: number;
-  admissionRate: string;
-  ongoingCases: number;
-};
+import testImage1 from "@/assets/testImage1.png";
+import testImage2 from "@/assets/testImage2.png";
+import testImage3 from "@/assets/testImage3.png";
 
-type Revenue = {
-  monthly: { month: string; revenue: number }[];
-};
+const tests = [
+  {
+    key: "sleep",
+    title: "Sleep test",
+    description: "Track your sleep quality in 3 minutes.",
+    locked: false,
+    image: testImage1,
+  },
+  {
+    key: "nutrition",
+    title: "Nutrition Check",
+    description: "See how your food fuels your body.",
+    locked: true,
+    image: testImage2,
+    lockMsg: "Complete the Nutrition test to unlock",
+  },
+  {
+    key: "emotional",
+    title: "Emotional Wellness",
+    description: "Check how are you feeling, What's on your mind?",
+    locked: true,
+    image: testImage3,
+    lockMsg: "Complete the Emotional Wellness test to unlock",
+  },
+];
 
-type Department = {
-  name: string;
-  patientCount: number;
-  id: string;
-};
+const checklist = [
+  "Start Your Daily Mental Health Check-In",
+  "Review Your Recent Test Results",
+  "Talk to a Mental Health Expert",
+];
 
-type DashboardData = {
-  overview: OverviewData;
-  revenue: Revenue;
-  departments: Department[];
-};
-
-const Dashboard: React.FC = () => {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [todayData, setTodayData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [view, setView] = useState<'overall' | 'today'>('overall');
-
-  const getTodayDate = (): string => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
-    const day = String(today.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // Fetching overall stats
-        const overallResponse = await api.get("/hospital/dashboard");
-        if (overallResponse.data.success) {
-          setData(overallResponse.data.data);
-        } else {
-          throw new Error("Data retrieval unsuccessful");
-        }
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("An unknown error occurred");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    if (view === 'today') {
-      const fetchTodayData = async () => {
-        setLoading(true);
-        try {
-          const todayDate = getTodayDate();
-          // Fetching today's stats
-          const todayResponse = await api.get(`/hospital/dashboard/getStatsforDate?date=${todayDate}`);
-          if (todayResponse.data.success) {
-            setTodayData(todayResponse.data.data);
-          } else {
-            throw new Error("Today's data retrieval unsuccessful");
-          }
-        } catch (err: unknown) {
-          if (err instanceof Error) {
-            setError(err.message);
-          } else {
-            setError("An unknown error occurred");
-          }
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchTodayData();
-    }
-  }, [view]);
-
-  if (loading) {
-    return <SkeletonLoader fullPage className="rounded-3xl" />;
-  }
-
-  if (error) {
-    return <div className="text-center py-8 text-lg text-red-500">Error: {error}</div>;
-  }
-
-  const statsData = view === 'today' ? todayData : data;
-
+export default function Dashboard() {
   return (
-    <div className="p-6">
-      {/* Buttons for Stats View */}
-      <div className="flex justify-end">
-        <div className="flex items-center justify-center gap-4 mr-9 bg-[#E9F4FF] w-[345px] py-2 rounded-xl">
-          <button
-            onClick={() => setView('overall')}
-            className={`px-4 py-2 rounded-xl font-semibold text-sm w-40 ${view === 'overall' ? 'bg-[#013DC0] text-white' : 'text-[#013DC0]'
-              }`}
-          >
-            Overall Statistics
-          </button>
-          <button
-            onClick={() => setView('today')}
-            className={`px-4 py-2 rounded-xl w-40 font-semibold text-sm ${view === 'today' ? 'bg-[#013DC0] text-white' : 'text-[#013DC0]'
-              }`}
-          >
-            Todays Statistics
-          </button>
+    <div className="flex gap-8 p-8 bg-[#FAF8FB] min-h-screen font-['Poppins']">
+      {/* Left Column */}
+      <div className="flex-1 max-w-[650px] font-['Poppins']">
+        <h2 className="text-2xl font-semibold mb-2 font-['Urbanist']">
+          <span role="img" aria-label="wave">👋</span>
+          {" "}
+          Hey <span className="text-[#8B2D6C] font-bold font-['Urbanist']">Lily</span>, ready to check in with yourself today?
+        </h2>
+        {/* Progress Bar */}
+        <div className="mb-6 font-['Poppins']">
+          <div className="flex justify-between text-sm text-gray-500 mb-1 font-['Poppins']">
+            <span>0 of 5 completed</span>
+          </div>
+          <div className="w-full h-2 bg-gray-200 rounded-full">
+            <div className="h-2 rounded-full bg-gradient-to-r from-[#704180] to-[#8B2D6C] w-1/12" />
+          </div>
+        </div>
+        {/* Test Cards */}
+        <div className="flex flex-col gap-6 font-['Poppins']">
+          {tests.map((test) => (
+            <div
+              key={test.key}
+              className={`rounded-3xl p-6 relative font-['Poppins'] ${test.locked
+                ? "bg-gradient-to-r from-[#704180] to-[#2D133B] opacity-80"
+                : "bg-gradient-to-r from-[#704180] to-[#8B2D6C]"
+                }`}
+            >
+              <div className="flex items-center gap-6 font-['Poppins']">
+                <img src={test.image} alt={test.title} className="w-28 h-28 rounded-2xl" />
+                <div>
+                  <h3 className={`text-xl font-bold font-['Poppins'] ${test.locked ? "text-gray-300" : "text-white"}`}>{test.title}</h3>
+                  <p className={`text-base font-['Poppins'] ${test.locked ? "text-gray-300" : "text-white"}`}>{test.description}</p>
+                  <button
+                    className={`mt-4 px-6 py-2 rounded-full font-semibold text-base font-['Poppins']
+                      ${test.locked
+                        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                        : "bg-white text-[#704180] hover:bg-gray-100"
+                      }`}
+                    disabled={test.locked}
+                  >
+                    Take test
+                  </button>
+                </div>
+              </div>
+              {test.locked && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-40 rounded-3xl font-['Poppins']">
+                  <span className="text-white text-lg font-bold font-['Poppins']">
+                    <span role="img" aria-label="lock">🔒</span> {test.lockMsg}
+                  </span>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
-      {/* Overview Section */}
-      <Overview
-        totalPatients={statsData?.overview.totalPatients || 0}
-        admissionRate={statsData?.overview.admissionRate || "0.00"}
-        ongoingCases={statsData?.overview.ongoingCases || 0}
-      />
-
-      {/* Flex Row: Monthly Revenue and Departments */}
-      <div className="flex flex-row justify-between p-4">
-        <MonthlyRevenue monthly={statsData?.revenue.monthly || []} />
-        <Departments departments={statsData?.departments || []} />
-      </div>
-
-      <div className="p-4">
-        <AppointmentsTable />
+      {/* Right Column */}
+      <div className="w-[450px] bg-white rounded-3xl shadow p-8 flex flex-col items-center font-['Poppins']">
+        {/* Circular Progress */}
+        <div className="mb-4 font-['Poppins']">
+          <svg width="80" height="80">
+            <circle
+              cx="40"
+              cy="40"
+              r="36"
+              stroke="#E5E0EA"
+              strokeWidth="8"
+              fill="none"
+            />
+            <circle
+              cx="40"
+              cy="40"
+              r="36"
+              stroke="#704180"
+              strokeWidth="8"
+              fill="none"
+              strokeDasharray={2 * Math.PI * 36}
+              strokeDashoffset={2 * Math.PI * 36 * (1 - 0 / 3)}
+              strokeLinecap="round"
+            />
+            <text
+              x="50%"
+              y="50%"
+              textAnchor="middle"
+              dy=".3em"
+              fontSize="1.2em"
+              fill="#704180"
+              fontWeight="bold"
+              className="font-['Poppins']"
+            >
+              0/3
+            </text>
+          </svg>
+        </div>
+        <h3 className="text-lg font-semibold mb-2 text-center font-['Poppins']">Welcome to Zenomi ,<span className="text-[#8B2D6C] font-['Poppins']">Lily</span></h3>
+        <p className="text-gray-500 text-center mb-6 font-['Poppins']">Experience your AHA! moment by completing this simple steps</p>
+        <ul className="w-full space-y-3 font-['Poppins']">
+          {checklist.map((item) => (
+            <li key={item} className="flex items-center justify-between px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-['Poppins']">
+              <span>{item}</span>
+              <span className="w-6 h-6 flex items-center justify-center rounded-full bg-white border border-gray-300 text-gray-400 font-['Poppins']">✔️</span>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
-};
-
-export default Dashboard;
+}
