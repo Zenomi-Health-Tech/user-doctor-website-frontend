@@ -6,6 +6,12 @@ import { ProtectedRoute } from "./ProtectedRoute";
 
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const Results = lazy(() => import("@/pages/Results"));
+const Appointments = lazy(() => import("@/pages/Appointments"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const Notifications = lazy(() => import("@/pages/Notification"));
+const Settings = lazy(() => import("@/pages/Setting"));
+const Support = lazy(() => import("@/pages/Support"));
 const LoginScreen = lazy(() => import("@/components/internal/Auth/DoctorLogin/login/loginScreen"));
 const UserLoginScreen = lazy(() => import("@/components/internal/Auth/LoginUser/login/loginScreen"));
 const ChooseRole = lazy(() => import("@/components/internal/Auth/ChooseRole/page"));
@@ -34,6 +40,30 @@ export default function AppRouter() {
         {
           path: "/dashboard",
           element: <ProtectedRoute element={<Dashboard />} />,
+        },
+        {
+          path: "/results",
+          element: <ProtectedRoute element={<Results />} />,
+        },
+        {
+          path: "/appointments",
+          element: <ProtectedRoute element={<Appointments />} />,
+        },
+        {
+          path: "/profile",
+          element: <ProtectedRoute element={<Profile />} />,
+        },
+        {
+          path: "/notifications",
+          element: <ProtectedRoute element={<Notifications />} />,
+        },
+        {
+          path: "/settings",
+          element: <ProtectedRoute element={<Settings />} />,
+        },
+        {
+          path: "/support",
+          element: <ProtectedRoute element={<Support />} />,
         },
       ],
     },
