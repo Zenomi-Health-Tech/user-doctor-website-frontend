@@ -128,7 +128,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
             <Button
                 type="submit"
                 disabled={loading}
-                className="w-full cursor-pointer h-12 text-white rounded-xl transition-colors font-['Poppins']"
+                className="w-full cursor-pointer h-12 font-['Poppins'] text-white rounded-xl transition-colors font-['Poppins']"
                 style={{
                     background: 'linear-gradient(89.79deg, #704180 5.07%, #8B2D6C 95.83%)',
                 }}

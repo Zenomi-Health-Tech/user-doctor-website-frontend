@@ -1,6 +1,5 @@
 import { Card, CardFooter } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
-import Logo from "@/assets/zenomiLogo.png";
 import LoginForm from "./loginForm";
 import BackGroundLogo from "@/assets/bgLogo.png";
 
@@ -16,21 +15,21 @@ const Component = () => {
     <div 
       className="flex items-center justify-center min-h-screen relative"
       style={{
-        backgroundImage: `url(${BackGroundLogo})`,
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(${BackGroundLogo})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
       }}
     >
       <div className="absolute inset-0" />
-      <Card className="bg-white/95 backdrop-blur-sm rounded-3xl w-[539px] h-[500px] shadow-xl z-10">
+      <Card className="bg-white/95 backdrop-blur-sm rounded-3xl w-[439px] h-[400px] shadow-xl z-10">
         <div className="w-96 mt-10 mx-auto flex flex-col items-center">
-          <img
+          {/* <img
             src={Logo}
             alt="logo"
             
             loading="lazy"
-          />
+          /> */}
           <div>
             {/* <h1 className="block font-Inter text-xl font-medium text-[#013DC0] mb-4">Login</h1> */}
             <LoginForm onSuccess={handleSuccess} />
