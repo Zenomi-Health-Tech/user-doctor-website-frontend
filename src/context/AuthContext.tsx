@@ -13,6 +13,9 @@ interface DecodedUserToken {
   exp: number;
 }
 
+
+
+
 // 2. Define the shape of your context value
 interface AuthContextType {
   user: DecodedUserToken | null;
