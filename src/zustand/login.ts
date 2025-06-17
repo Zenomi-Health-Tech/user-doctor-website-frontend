@@ -4,14 +4,13 @@ import { handleApiError } from "../utils/errorHandler";
 import {
   setAuthCookies,
   clearAuthCookies,
-  getAuthCookies,
 } from "../utils/cookies";
+import Cookies from "js-cookie"; // Ensure Cookies is imported
 
 // Define the shape of the authentication state
 export interface LoginAuthState {
   countryCode: string;
   phoneNumber: string;
-  user: { token: string } | null;
   orderId: string | null;
   error: string | null;
   loading: boolean;
@@ -31,7 +30,6 @@ export const createLoginAuthSlice: StateCreator<LoginAuthState> = (
 ) => ({
   countryCode: "+91",
   phoneNumber: "",
-  user: getAuthCookies() || null,
   orderId: null,
   error: null,
   loading: false,
@@ -100,7 +98,7 @@ export const createLoginAuthSlice: StateCreator<LoginAuthState> = (
     }
   },
 
-  // Validate OTP with the orderId
+  // Validate OTP with the orderId (Doctor)
   validateOtp: async (otp: string) => {
     set({ loading: true, error: null });
     try {
@@ -110,6 +108,8 @@ export const createLoginAuthSlice: StateCreator<LoginAuthState> = (
         throw new Error("Order ID is missing. Please request OTP again.");
       }
 
+      console.log("Validating OTP with:", { orderId, countryCode, phoneNumber, otp });
+
       const response = await api.post("/doctors/login/verify-otp", {
         otp,
         countryCode,
@@ -117,23 +117,32 @@ export const createLoginAuthSlice: StateCreator<LoginAuthState> = (
         orderId,
       });
 
-      const { token } = response.data.data;
-      console.log(token);
+      if (!response.data || !response.data.data) {
+        throw new Error("Invalid response from server");
+      }
 
-      setAuthCookies({
-        token,
-      });
+      const { token } = response.data.data;
+      const { id } = response.data.data.doctor; 
+
+      // Set cookies
+      Cookies.set('userId', id, { expires: 7 });
+      setAuthCookies({ token }); // Save token to cookies
+
+      // Only set error to null here, AuthContext will manage user state
+      set({ error: null });
 
       return true;
     } catch (error: any) {
-      set({ error: handleApiError(error) });
+      const errorMessage = error.response?.data?.message || error.message || "Failed to verify OTP";
+      console.error("OTP validation error:", errorMessage);
+      set({ error: errorMessage });
       clearAuthCookies();
-      set({ user: null, orderId: null });
       return false;
     } finally {
       set({ loading: false });
     }
   },
+
   userValidateOtp: async (otp: string) => {
     set({ loading: true, error: null });
     try {
@@ -148,20 +157,29 @@ export const createLoginAuthSlice: StateCreator<LoginAuthState> = (
         countryCode,
         phoneNumber,
         orderId,
+
       });
+
+      if (!response.data || !response.data.data) {
+        throw new Error("Invalid response from server");
+      }
 
       const { token } = response.data.data;
-      console.log(token);
+      const { id } = response.data.data.user;
 
-      setAuthCookies({
-        token,
-      });
+      // Set cookies
+      Cookies.set('userId', id, { expires: 7 });
+      setAuthCookies({ token }); // Save token to cookies
+
+      // Only set error to null here, AuthContext will manage user state
+      set({ error: null });
 
       return true;
     } catch (error: any) {
-      set({ error: handleApiError(error) });
+      const errorMessage = error.response?.data?.message || error.message || "Failed to verify OTP";
+      console.error("OTP validation error:", errorMessage);
+      set({ error: errorMessage });
       clearAuthCookies();
-      set({ user: null, orderId: null });
       return false;
     } finally {
       set({ loading: false });
@@ -172,7 +190,6 @@ export const createLoginAuthSlice: StateCreator<LoginAuthState> = (
   logout: () => {
     clearAuthCookies();
     set({ 
-      user: null, 
       orderId: null,
       countryCode: "+91",
       phoneNumber: "",

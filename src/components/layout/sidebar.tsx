@@ -7,17 +7,54 @@ import {
 import { NavMain } from "./NavMain";
 import Logo from "@/assets/zenomiLogo.png";
 import { SidebarHeader } from "./SidebarHeader";
-import { Bell, Settings, HelpCircle , User , CalendarDays , ChartPie , House } from 'lucide-react';
+import { Bell, Settings, HelpCircle, User, CalendarDays, ChartPie, House, Users } from 'lucide-react';
 import UserAvatar from "./UserAvatar";
+import { useAuth } from "@/context/AuthContext";
 
 // This is sample data.
-const data = {
+const getNavItems = (isDoctor: boolean) => ({
   user: {
     name: "Lily",
     email: "lily@zenomi.health",
     avatar: "https://ui.shadcn.com/avatars/shadcn.jpg",
   },
-  navMain: [
+  navMain: isDoctor ? [
+    {
+      title: "Home",
+      url: "/dashboard",
+      icon: House,
+    },
+    {
+      title: "Patients",
+      url: "/patients",
+      icon: Users,
+    },
+    {
+      title: "Appointments",
+      url: "/appointments",
+      icon: CalendarDays,
+    },
+    {
+      title: "Profile",
+      url: "/profile",
+      icon: User,
+    },
+    {
+      title: "Notifications",
+      url: "/notifications",
+      icon: Bell,
+    },
+    {
+      title: "Settings",
+      url: "/settings",
+      icon: Settings,
+    },
+    {
+      title: "Support",
+      url: "/support",
+      icon: HelpCircle,
+    },
+  ] : [
     {
       title: "Home",
       url: "/dashboard",
@@ -62,9 +99,12 @@ const data = {
       isActive: true,
     },
   ],
-};
+});
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { isDoctor } = useAuth();
+  const data = getNavItems(isDoctor);
+
   return (
     <Sidebar className="border-r font-['Poppins']" {...props}>
       {/* Sidebar Header */}
