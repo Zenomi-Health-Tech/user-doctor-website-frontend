@@ -21,6 +21,9 @@ const UserOTPComponent = lazy(() => import("@/components/internal/Auth/LoginUser
 const RegisterScreen = lazy(() => import("@/components/internal/Auth/DoctorRegister/DoctorRegisterScreen"));
 const UseregisterScreen = lazy(() => import("@/components/internal/Auth/UserRegister/RegisterScreen"));
 const PatientDetails = lazy(() => import("@/components/internal/Patients/PatientDetails"));
+const ReferredPatients = lazy(() => import("@/components/internal/ReferredPatients/ReferredPatients"));
+const SetAvailability = lazy(() => import("@/components/internal/Appointments/SetAvailability"));
+const AvailableSlotsPage = lazy(() => import("@/components/internal/Appointments/AvailableSlots"));
 
 
 export default function AppRouter() {
@@ -63,6 +66,18 @@ export default function AppRouter() {
         {
           path: "/appointments",
           element: <ProtectedRoute element={<Appointments />} />,
+        },
+        {
+          path: "/appointments/set-availability",
+          element: <ProtectedRoute element={<SetAvailability />} />,
+        },
+        {
+          path: "/appointments/available-slots",
+          element: <ProtectedRoute element={<AvailableSlotsPage />} />,
+        },
+        {
+          path: "/referred-patients",
+          element: <ProtectedRoute element={<ReferredPatients />} />,
         },
         {
           path: "/profile",

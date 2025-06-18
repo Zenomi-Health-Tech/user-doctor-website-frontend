@@ -1,1 +1,0 @@
-import{j as e}from"./index-nbD1loPI.js";function r(){return e.jsx("div",{className:"flex gap-8 p-8 bg-[#FAF8FB] min-h-screen font-['Poppins']",children:e.jsx("h1",{children:"Profile"})})}const s=()=>e.jsx(r,{});export{s as default};

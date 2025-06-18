@@ -30,6 +30,11 @@ const getNavItems = (isDoctor: boolean) => ({
       icon: Users,
     },
     {
+      title: "Referred Patients",
+      url: "/referred-patients",
+      icon: Users,
+    },
+    {
       title: "Appointments",
       url: "/appointments",
       icon: CalendarDays,
