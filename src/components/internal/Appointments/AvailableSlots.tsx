@@ -23,9 +23,12 @@ export default function AvailableSlots() {
     const response = await api.get('/doctors/availability/all-slots', {
       headers: { Authorization: `Bearer ${token}` },
     });
-    console.log(response.data);
-    
-    setAllSlots(response.data.data || []);
+    // Map API response to expected structure
+    const mappedSlots = (response.data.data || []).map((item: any) => ({
+      date: item.availability,
+      timeSlots: item.doctorAvailabilityTimeSlot || [],
+    }));
+    setAllSlots(mappedSlots);
   };
 
   return (
@@ -47,9 +50,11 @@ export default function AvailableSlots() {
             <ul className="space-y-2">
               {allSlots.map((slotDay) => (
                 <li key={slotDay.date}>
-                  <div className="font-semibold">{slotDay.date}</div>
+                  <div className="font-semibold">
+                    {new Date(slotDay.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </div>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {slotDay.timeSlots.map((slot, idx) => (
+                    {(slotDay.timeSlots || []).map((slot, idx) => (
                       <span
                         key={idx}
                         className="inline-block px-3 py-1 rounded-full bg-[#8B2D6C1A] text-[#8B2D6C] text-sm"

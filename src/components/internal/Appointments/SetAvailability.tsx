@@ -1,6 +1,8 @@
 import  { useState } from 'react';
 import Cookies from 'js-cookie';
 import api from '@/utils/api';
+import { useNavigate } from "react-router-dom";
+import { useToast } from '@/hooks/use-toast';
 
 const TIME_SLOTS = [
   '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '12:00 PM',
@@ -32,7 +34,8 @@ export default function SetAvailability() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  
+  const router = useNavigate();
+  const { toast } = useToast();
 
   const handleSlotClick = (slot: string) => {
     setSelectedSlots((prev) =>
@@ -55,16 +58,35 @@ export default function SetAvailability() {
       startTime: getISODate(selectedDate, slot),
       endTime: getEndISODate(selectedDate, slot, 30), // 30 minutes slot
     }));
-    await api.post(
-      '/doctors/availability',
-      {
-        date: selectedDate.toISOString().split('T')[0],
-        timeSlots,
-      },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    setLoading(false);
-    // Optionally show a success message or redirect
+    try {
+      const response = await api.post(
+        '/doctors/availability',
+        {
+          date: selectedDate.toISOString().split('T')[0],
+          timeSlots,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data && response.data.success) {
+        toast({
+            title: "Success",
+            description: "Slot selected Successfully!",
+            variant: "default",
+            className: "bg-green-500 text-white",
+        });
+        setSelectedSlots([]);
+        router(-1);
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to set availability.',
+        variant: "default",
+        className: "bg-red-500 text-white",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
