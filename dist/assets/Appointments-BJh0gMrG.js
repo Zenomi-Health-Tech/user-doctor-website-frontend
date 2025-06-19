@@ -1,1 +1,0 @@
-import{j as n}from"./index-mcBuM8Fe.js";function t(){return n.jsx("div",{className:"flex gap-8 p-8 bg-[#FAF8FB] min-h-screen font-['Poppins']",children:n.jsx("h1",{children:"Appointments"})})}const s=()=>n.jsx(t,{});export{s as default};

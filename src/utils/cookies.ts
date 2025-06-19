@@ -13,11 +13,6 @@ const COOKIE_OPTIONS = {
 // Define the shape of the authentication cookie
 interface AuthUser {
   token: string;
-  hospitalRole?: string | null;
-  adminId?: string;
-  adminEmail?: string;
-  adminMobileNumber?: string;
-  adminName?: string;
   iat?: number;
   exp?: number;
 }

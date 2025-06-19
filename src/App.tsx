@@ -1,15 +1,15 @@
 import AppRouter from "@/routes";
 import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "./components/ui/toaster";
-import { UserProvider } from '@/context/UserContext';
+import { AuthProvider } from "./context/AuthContext";
 
 export default function App() {
   return (
-    <UserProvider>
+    <AuthProvider>
     <BrowserRouter>
       <AppRouter />
       <Toaster />
     </BrowserRouter>
-    </UserProvider>
+    </AuthProvider>
   );
 }

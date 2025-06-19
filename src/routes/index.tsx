@@ -7,6 +7,7 @@ import { ProtectedRoute } from "./ProtectedRoute";
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Results = lazy(() => import("@/pages/Results"));
+const Patients = lazy(() => import("@/pages/Patients"));
 const Appointments = lazy(() => import("@/pages/Appointments"));
 const Profile = lazy(() => import("@/pages/Profile"));
 const Notifications = lazy(() => import("@/pages/Notification"));
@@ -19,6 +20,10 @@ const OTPComponent = lazy(() => import("@/components/internal/Auth/DoctorLogin/o
 const UserOTPComponent = lazy(() => import("@/components/internal/Auth/LoginUser/otp/otpScreen"));
 const RegisterScreen = lazy(() => import("@/components/internal/Auth/DoctorRegister/DoctorRegisterScreen"));
 const UseregisterScreen = lazy(() => import("@/components/internal/Auth/UserRegister/RegisterScreen"));
+const PatientDetails = lazy(() => import("@/components/internal/Patients/PatientDetails"));
+const ReferredPatients = lazy(() => import("@/components/internal/ReferredPatients/ReferredPatients"));
+const SetAvailability = lazy(() => import("@/components/internal/Appointments/SetAvailability"));
+const AvailableSlotsPage = lazy(() => import("@/components/internal/Appointments/AvailableSlots"));
 
 
 export default function AppRouter() {
@@ -46,8 +51,33 @@ export default function AppRouter() {
           element: <ProtectedRoute element={<Results />} />,
         },
         {
+          path: "/patients",
+          children: [
+            {
+              index: true,
+              element: <ProtectedRoute element={<Patients />} />,
+            },
+            {
+              path: ":id",
+              element: <ProtectedRoute element={<PatientDetails />} />,
+            },
+          ],
+        },
+        {
           path: "/appointments",
           element: <ProtectedRoute element={<Appointments />} />,
+        },
+        {
+          path: "/appointments/set-availability",
+          element: <ProtectedRoute element={<SetAvailability />} />,
+        },
+        {
+          path: "/appointments/available-slots",
+          element: <ProtectedRoute element={<AvailableSlotsPage />} />,
+        },
+        {
+          path: "/referred-patients",
+          element: <ProtectedRoute element={<ReferredPatients />} />,
         },
         {
           path: "/profile",

@@ -51,27 +51,34 @@ const OTPForm: React.FC<OTPFormProps> = ({ onSuccess }) => {
 
   // Form submission handler
   const onSubmit: SubmitHandler<OTPFormValues> = async ({ otp }) => {
-    const success = await userValidateOtp(otp);
-
-    if (success) {
-      toast({
-        title: "Success",
-        description: "OTP verified successfully!",
-        variant: "default", // Use 'default' for success
-        className: "bg-green-500 text-white",
-      });
-      onSuccess(); // Call onSuccess callback if provided
-      console.log(success);
+    try {
+      const success = await userValidateOtp(otp);
+      console.log("OTP validation result:", success);
       
-    } else {
-      // Show error message without redirection
-      console.error("Verification error:", error);
+      if (success) {
+        toast({
+          title: "Success",
+          description: "OTP verified successfully!",
+          variant: "default",
+          className: "bg-green-500 text-white",
+        });
+        onSuccess();
+      } else {
+        const errorMessage = error || "Invalid OTP. Please try again.";
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        console.log("OTP verification failed:", { otp, error: errorMessage });
+      }
+    } catch (err) {
+      console.error("Unexpected error during OTP verification:", err);
       toast({
         title: "Error",
-        description: "Invalid OTP. Please try again.",
-        variant: "destructive", // Use 'destructive' for error
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
       });
-      console.log("Entered wrong OTP:", otp); // Log the entered wrong OTP
     }
   };
 
