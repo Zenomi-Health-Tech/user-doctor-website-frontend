@@ -89,7 +89,7 @@ console.log(isDoctor , "isDoctor");
             }
           }
         } else {
-          const res = await api.get("/testnames", {
+          const res = await axios.get("https://zenomiai.elitceler.com/api/testnames", {
             headers: { Authorization: `Bearer ${token}` }
           });
           console.log('API Response:', res.data);
@@ -132,7 +132,7 @@ console.log(isDoctor , "isDoctor");
           token = '';
         }
       }
-      const res = await api.get(`/questions/${selectedTest.id}`, {
+      const res = await axios.get(`https://zenomiai.elitceler.com/questions/${selectedTest.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       console.log(res.data, "res of questions");
@@ -233,15 +233,15 @@ console.log(isDoctor , "isDoctor");
 
       console.log('Submitting answers:', formattedAnswers); // Debug log
 
-      await api.post(
-        `/score-test/${currentTestId}`,
+      await axios.post(
+        `https://zenomiai.elitceler.com/score-test/${currentTestId}`,
         { answers: formattedAnswers },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setShowQuiz(false);
       setShowCompletionDialog(true);
       // Re-fetch tests after submission to update completed count
-      const res = await api.get("/testnames", {
+      const res = await axios.get("https://zenomiai.elitceler.com/api/testnames", {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTests(res.data);
