@@ -11,6 +11,7 @@ interface DecodedUserToken {
   type: 'DOCTOR' | 'USER'; // Your specific user types
   iat: number;
   exp: number;
+  isPaid: boolean;
 }
 
 

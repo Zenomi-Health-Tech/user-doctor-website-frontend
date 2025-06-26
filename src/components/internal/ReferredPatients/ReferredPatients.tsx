@@ -38,6 +38,7 @@ const ReferredPatientsList: React.FC = () => {
   const [patients, setPatients] = useState<ReferredPatient[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [referralCode, setReferralCode] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -68,8 +69,52 @@ const ReferredPatientsList: React.FC = () => {
         setLoading(false);
       }
     };
+    const fetchReferralCode = async () => {
+      try {
+        const authCookie = Cookies.get('auth');
+        let token = '';
+        if (authCookie) {
+          try {
+            token = JSON.parse(authCookie).token;
+          } catch (e) {
+            token = '';
+          }
+        }
+        const response = await api.get('/doctors/referral-code', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.data && response.data.data) {
+          setReferralCode(response.data.data.referralCode || response.data.data.code || null);
+        }
+      } catch (error) {
+        setReferralCode(null);
+      }
+    };
     fetchPatients();
+    fetchReferralCode();
   }, []);
+
+  const handleGenerateNow = async () => {
+    try {
+      const authCookie = Cookies.get('auth');
+      let token = '';
+      if (authCookie) {
+        try {
+          token = JSON.parse(authCookie).token;
+        } catch (e) {
+          token = '';
+        }
+      }
+      const response = await api.post('/stripe/create-doctor-checkout', {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.data && response.data.url) {
+        window.location.href = response.data.url;
+      }
+    } catch (error) {
+      alert('Failed to generate checkout.');
+    }
+  };
 
   const handlePatientClick = (id: string) => {
     navigate(`/patients/${id}`);
@@ -96,7 +141,7 @@ const ReferredPatientsList: React.FC = () => {
         <div className="flex-1">
           <div className="text-white text-2xl font-bold mb-2">Get 5 FREE referrals free</div>
           <div className="text-white text-base mb-4">You can onboard up to 5 patients via referral without any charges.</div>
-          <button className="px-6 py-2 cursor-pointer rounded-full bg-[#FCB35B] text-[#8B2D6C] font-semibold shadow hover:opacity-90 transition">Generate now</button>
+          <button onClick={handleGenerateNow} className="px-6 py-2 cursor-pointer rounded-full bg-[#FCB35B] text-[#8B2D6C] font-semibold shadow hover:opacity-90 transition">Generate now</button>
         </div>
         {/* Illustration (placeholder SVG) */}
         <div className="hidden md:block flex-shrink-0 ml-8 relative" style={{ width: 120, height: 120 }}>
@@ -104,6 +149,13 @@ const ReferredPatientsList: React.FC = () => {
           <img src={TouchImage} alt="Referral Illustration" className="absolute top-1/2 left-1/2 w-32 h-32 -translate-x-1/2 -translate-y-1/2 object-contain" />
         </div>
       </div>
+      {/* Referral Code Banner */}
+      {referralCode && (
+        <div className="bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] rounded-xl px-6 py-4 mb-8 flex items-center justify-between shadow">
+          <div className="text-white text-lg font-semibold">Your Referral Code:</div>
+          <div className="text-[#FFD700] text-2xl font-bold tracking-widest">{referralCode}</div>
+        </div>
+      )}
       {/* Search Bar */}
       <div className="flex items-center justify-between mb-8">
         <div className="relative flex-1 max-w-md">

@@ -104,7 +104,7 @@ const DoctorRegistrationForm = () => {
                 className: "bg-green-500 text-white",
             });
             if(response.status === 201){
-                navigate('/login');
+                navigate('/doctor/login');
             }
         } catch (error: any) {
             const errorMessage = error.response?.data?.message || 'Registration failed';

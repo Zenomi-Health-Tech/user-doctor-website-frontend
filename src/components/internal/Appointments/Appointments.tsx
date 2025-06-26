@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
-import api from '@/utils/api';
-import Cookies from 'js-cookie';
-import { Search, SlidersHorizontal, Calendar } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-
+import { useEffect, useState } from "react";
+import api from "@/utils/api";
+import Cookies from "js-cookie";
+import { Search, SlidersHorizontal, Calendar } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface Appointment {
   id: string;
@@ -20,33 +19,49 @@ interface Appointment {
   // add other fields as needed
 }
 
-const TABS = ['All', 'Completed', 'Rescheduled', 'Rejected', 'Upcoming'] as const;
-type TabType = typeof TABS[number];
+const TABS = [
+  "All",
+  "Completed",
+  "Rescheduled",
+  "Rejected",
+  "Upcoming",
+] as const;
+type TabType = (typeof TABS)[number];
 
 export default function Appointments() {
-  const [appointments, setAppointments] = useState<{ previous: Appointment[]; upcoming: Appointment[] }>({ previous: [], upcoming: [] });
+  const [appointments, setAppointments] = useState<{
+    previous: Appointment[];
+    upcoming: Appointment[];
+  }>({ previous: [], upcoming: [] });
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<TabType>('All');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState<TabType>("All");
   const navigate = useNavigate();
+
+
+
+
+  const handlePatientClick = (id: string) => {
+    navigate(`/patients/${id}`);
+  };
 
   useEffect(() => {
     const fetchAppointments = async () => {
       setLoading(true);
       try {
-        const authCookie = Cookies.get('auth');
-        let token = '';
+        const authCookie = Cookies.get("auth");
+        let token = "";
         if (authCookie) {
           try {
             token = JSON.parse(authCookie).token;
           } catch (e) {
-            token = '';
+            token = "";
           }
         }
-        const response = await api.get('/doctors/appointments', {
+        const response = await api.get("/doctors/appointments", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log('Appointments API response:', response.data);
+        console.log("Appointments API response:", response.data);
         if (
           response.data.success &&
           response.data.data &&
@@ -70,30 +85,30 @@ export default function Appointments() {
   }, []);
 
   const filteredAppointments =
-    activeTab === 'All'
+    activeTab === "All"
       ? appointments.previous.filter(
           (appt) =>
             appt.user?.name &&
             appt.user.name.toLowerCase().includes(searchTerm.toLowerCase())
         )
-      : activeTab === 'Completed'
+      : activeTab === "Completed"
       ? appointments.previous.filter(
           (appt) =>
-            appt.status === 'COMPLETED' &&
+            appt.status === "COMPLETED" &&
             appt.user?.name &&
             appt.user.name.toLowerCase().includes(searchTerm.toLowerCase())
         )
-      : activeTab === 'Rescheduled'
+      : activeTab === "Rescheduled"
       ? appointments.previous.filter(
           (appt) =>
-            appt.status === 'RESCHEDULED' &&
+            appt.status === "RESCHEDULED" &&
             appt.user?.name &&
             appt.user.name.toLowerCase().includes(searchTerm.toLowerCase())
         )
-      : activeTab === 'Rejected'
+      : activeTab === "Rejected"
       ? appointments.previous.filter(
           (appt) =>
-            appt.status === 'REJECTED' &&
+            appt.status === "REJECTED" &&
             appt.user?.name &&
             appt.user.name.toLowerCase().includes(searchTerm.toLowerCase())
         )
@@ -104,18 +119,28 @@ export default function Appointments() {
         );
 
   const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
   };
 
   return (
     <div className="p-8  min-h-screen font-['Poppins']">
-      <h1 className="text-3xl font-semibold mb-6 text-gray-800">Appointment Details</h1>
+      <h1 className="text-3xl font-semibold mb-6 text-gray-800">
+        Appointment Details
+      </h1>
       <div className="flex items-center justify-between mb-8">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -128,12 +153,15 @@ export default function Appointments() {
           />
         </div>
         <div className="flex gap-2 ml-4">
-          <button onClick={() => navigate('/appointments/available-slots')} className="p-3 rounded-full bg-white border border-gray-200 shadow-sm">
+          <button
+            onClick={() => navigate("/appointments/available-slots")}
+            className="p-3 rounded-full bg-white border border-gray-200 shadow-sm"
+          >
             <SlidersHorizontal className="w-5 h-5 text-gray-500" />
           </button>
           <button
             className="p-3 rounded-full bg-white border border-gray-200 shadow-sm"
-            onClick={() => navigate('/appointments/set-availability')}
+            onClick={() => navigate("/appointments/set-availability")}
           >
             <Calendar className="w-5 h-5 text-gray-500" />
           </button>
@@ -147,8 +175,8 @@ export default function Appointments() {
             key={tab}
             className={`px-4 pb-2 text-lg font-medium focus:outline-none ${
               activeTab === tab
-                ? 'border-b-2 border-[#8B2D6C] text-[#8B2D6C]'
-                : 'text-gray-500'
+                ? "border-b-2 border-[#8B2D6C] text-[#8B2D6C]"
+                : "text-gray-500"
             }`}
             onClick={() => setActiveTab(tab)}
           >
@@ -158,50 +186,54 @@ export default function Appointments() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center h-40 text-xl">Loading appointments...</div>
+        <div className="flex justify-center items-center h-40 text-xl">
+          Loading appointments...
+        </div>
       ) : (
         <div className="space-y-4">
           {filteredAppointments.length > 0 ? (
             filteredAppointments.map((appt) => (
               <div
                 key={appt.id}
-                className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm"
+                onClick={() => handlePatientClick(appt.userId)}
+                className="bg-white cursor-pointer rounded-2xl p-4 flex items-center justify-between shadow-sm"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-[#8B2D6C1A] flex items-center justify-center text-[#8B2D6C] font-semibold text-lg">
                     {appt.user && appt.user.name
                       ? appt.user.name
-                          .split(' ')
+                          .split(" ")
                           .map((n) => n[0])
-                          .join('')
+                          .join("")
                           .toUpperCase()
-                      : ''}
+                      : ""}
                   </div>
                   <div>
                     <p className="font-medium text-gray-800 text-lg">
                       {appt.user?.name}
                     </p>
                     <p className="text-sm text-gray-500">
-                      Date: {formatDate(appt.preferredDate)} Time: {formatTime(appt.preferredTime)}
+                      Date: {formatDate(appt.preferredDate)} Time:{" "}
+                      {formatTime(appt.preferredTime)}
                     </p>
                   </div>
                 </div>
-                {appt.status === 'COMPLETED' && (
+                {appt.status === "COMPLETED" && (
                   <span className="bg-green-600 text-white px-4 py-1 rounded-full text-sm font-medium">
                     Completed
                   </span>
                 )}
-                {appt.status === 'UPCOMING' && (
+                {appt.status === "UPCOMING" && (
                   <span className="bg-yellow-400 text-white px-4 py-1 rounded-full text-sm font-medium">
                     Upcoming
                   </span>
                 )}
-                {appt.status === 'RESCHEDULED' && (
+                {appt.status === "RESCHEDULED" && (
                   <span className="bg-yellow-400 text-white px-4 py-1 rounded-full text-sm font-medium">
                     Rescheduled
                   </span>
                 )}
-                {appt.status === 'REJECTED' && (
+                {appt.status === "REJECTED" && (
                   <span className="bg-red-400 text-white px-4 py-1 rounded-full text-sm font-medium">
                     Rejected
                   </span>
@@ -209,7 +241,9 @@ export default function Appointments() {
               </div>
             ))
           ) : (
-            <div className="text-center text-gray-500 text-lg mt-10">No appointments found.</div>
+            <div className="text-center text-gray-500 text-lg mt-10">
+              No appointments found.
+            </div>
           )}
         </div>
       )}
