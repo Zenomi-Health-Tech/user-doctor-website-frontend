@@ -10,6 +10,9 @@ import { SidebarHeader } from "./SidebarHeader";
 import { Bell, Settings, HelpCircle, User, CalendarDays, ChartPie, House, Users } from 'lucide-react';
 import UserAvatar from "./UserAvatar";
 import { useAuth } from "@/context/AuthContext";
+import { useEffect, useState } from 'react';
+import api from '@/utils/api';
+import Cookies from 'js-cookie';
 
 // This is sample data.
 const getNavItems = (isDoctor: boolean) => ({
@@ -49,16 +52,16 @@ const getNavItems = (isDoctor: boolean) => ({
       url: "/notifications",
       icon: Bell,
     },
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: Settings,
-    },
-    {
-      title: "Support",
-      url: "/support",
-      icon: HelpCircle,
-    },
+    // {
+    //   title: "Settings",
+    //   url: "/settings",
+    //   icon: Settings,
+    // },
+    // {
+    //   title: "Support",
+    //   url: "/support",
+    //   icon: HelpCircle,
+    // },
   ] : [
     {
       title: "Home",
@@ -110,6 +113,38 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isDoctor } = useAuth();
   const data = getNavItems(isDoctor);
 
+  // Doctor name state
+  const [doctorName, setDoctorName] = useState<string>('');
+  const [doctorInitial, setDoctorInitial] = useState<string>('');
+
+  useEffect(() => {
+    const fetchDoctor = async () => {
+      try {
+        const authCookie = Cookies.get('auth');
+        let token = '';
+        if (authCookie) {
+          try {
+            token = JSON.parse(authCookie).token;
+          } catch (e) {
+            token = '';
+          }
+        }
+        const response = await api.get('/doctors/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.data && response.data.data && response.data.data.name) {
+          const name = response.data.data.name.trim();
+          setDoctorName(name);
+          setDoctorInitial(name.charAt(0).toUpperCase());
+        }
+      } catch (error) {
+        setDoctorName('Doctor');
+        setDoctorInitial('D');
+      }
+    };
+    if (isDoctor) fetchDoctor();
+  }, [isDoctor]);
+
   return (
     <Sidebar className="border-r font-['Poppins']" {...props}>
       {/* Sidebar Header */}
@@ -118,8 +153,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent className="flex flex-col h-full">
         <NavMain items={data.navMain} />
         <UserAvatar 
-          name={data.user.name} 
-          initial={data.user.name[0]} 
+          name={isDoctor ? doctorName : data.user.name} 
+          initial={isDoctor ? doctorInitial : data.user.name[0]} 
           profileUrl="/profile" 
         />
       </SidebarContent>

@@ -42,6 +42,7 @@ const PatientDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [patient, setPatient] = useState<PatientDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [openTestId, setOpenTestId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPatientDetails = async () => {
@@ -124,59 +125,78 @@ const PatientDetails: React.FC = () => {
         </div>
       </div>
 
-      {/* Tests Done Section */}
+      {/* Tests Done Section as Dropdown/Accordion */}
       <div className="bg-white rounded-2xl p-6 mb-8 shadow border border-gray-100">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl md:text-2xl font-semibold text-gray-800">Tests done <span className="text-[#8B2D6C]">({patient.tests.length})</span></h2>
+          <h2 className="text-xl md:text-2xl font-semibold text-gray-800">Total Assessments Cycles done <span className="text-[#8B2D6C]">({patient.tests.length})</span></h2>
         </div>
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-1">
           {patient.tests.length === 0 && (
             <div className="text-gray-500">No tests available.</div>
           )}
-          {patient.tests.map((test) => (
-            <div key={test.id} className="bg-[#FBF9FF] rounded-xl p-5 flex flex-col gap-3 shadow-sm border border-[#E9D8F4]">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                <div className="mb-2 md:mb-0">
-                  <p className="font-semibold text-[#8B2D6C] text-lg">Cycle: {test.cycle}</p>
-                  <p className="text-sm text-gray-500">Tests Completed: {test.testsCompleted}</p>
-                  <p className="text-sm text-gray-500">Created: {formatDate(test.createdAt)}</p>
-                  <p className="text-sm text-gray-500">Updated: {formatDate(test.updatedAt)}</p>
-                </div>
-                <div className="flex flex-wrap gap-2 md:gap-3">
-                  {test.reportView && (
-                    <a href={test.reportView} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white text-sm font-semibold shadow hover:opacity-90 transition">View Report</a>
-                  )}
-                  {test.detailedReportView && (
-                    <a href={test.detailedReportView} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white text-sm font-semibold shadow hover:opacity-90 transition">View Detailed</a>
-                  )}
-                  {/* {test.reportDownload && (
-                    <a href={test.reportDownload} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-full bg-[#E9D8F4] text-[#8B2D6C] text-sm font-semibold border border-[#8B2D6C] hover:bg-[#8B2D6C] hover:text-white transition">Download</a>
-                  )}
-                  {test.detailedReportDownload && (
-                    <a href={test.detailedReportDownload} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-full bg-[#E9D8F4] text-[#8B2D6C] text-sm font-semibold border border-[#8B2D6C] hover:bg-[#8B2D6C] hover:text-white transition">Download Detailed</a>
-                  )} */}
-                </div>
+          {patient.tests.map((test) => {
+            const isOpen = openTestId === test.id;
+            return (
+              <div key={test.id} className="bg-[#FBF9FF] rounded-xl shadow-sm border border-[#E9D8F4]">
+                <button
+                  className="w-full flex items-center justify-between px-5 py-4 focus:outline-none"
+                  onClick={() => setOpenTestId(isOpen ? null : test.id)}
+                  aria-expanded={isOpen}
+                  aria-controls={`test-details-${test.id}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="font-semibold text-[#8B2D6C] text-lg">Cycle: {test.cycle}</span>
+                    <span className="text-sm text-gray-500">Tests Completed: {test.testsCompleted}</span>
+                  </div>
+                  <svg
+                    className={`w-5 h-5 text-[#8B2D6C] transform transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {isOpen && (
+                  <div id={`test-details-${test.id}`} className="px-5 pb-5 pt-2 animate-fade-in">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
+                      <div className="mb-2 md:mb-0">
+                        <p className="text-sm text-gray-500">Created: {formatDate(test.createdAt)}</p>
+                        <p className="text-sm text-gray-500">Updated: {formatDate(test.updatedAt)}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2 md:gap-3">
+                        {test.reportView && (
+                          <a href={test.reportView} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white text-sm font-semibold shadow hover:opacity-90 transition">View Report</a>
+                        )}
+                        {test.detailedReportView && (
+                          <a href={test.detailedReportView} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white text-sm font-semibold shadow hover:opacity-90 transition">View Detailed</a>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-col md:flex-row gap-6 mt-2">
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-700 mb-1">Raw Scores:</p>
+                        <ul className="list-disc ml-6 text-sm text-gray-800">
+                          {Object.entries(test.rawScores).map(([key, value]) => (
+                            <li key={key}>{key}: {value}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-700 mb-1">Normalized Scores:</p>
+                        <ul className="list-disc ml-6 text-sm text-gray-800">
+                          {Object.entries(test.normalizedScores).map(([key, value]) => (
+                            <li key={key}>{key}: {value}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="flex flex-col md:flex-row gap-6 mt-2">
-                <div className="flex-1">
-                  <p className="font-semibold text-gray-700 mb-1">Raw Scores:</p>
-                  <ul className="list-disc ml-6 text-sm text-gray-800">
-                    {Object.entries(test.rawScores).map(([key, value]) => (
-                      <li key={key}>{key}: {value}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-gray-700 mb-1">Normalized Scores:</p>
-                  <ul className="list-disc ml-6 text-sm text-gray-800">
-                    {Object.entries(test.normalizedScores).map(([key, value]) => (
-                      <li key={key}>{key}: {value}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

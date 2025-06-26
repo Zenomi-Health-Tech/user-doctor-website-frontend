@@ -3,6 +3,8 @@ import api from '@/utils/api';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import { Search, SlidersHorizontal, ArrowRight } from 'lucide-react';
+import TouchImage from '@/assets/mobileTouchRefer.svg'
+import circles from '@/assets/Cricles.svg'
 
 interface TestReport {
   id: string;
@@ -87,14 +89,28 @@ const ReferredPatientsList: React.FC = () => {
   }
 
   return (
-    <div className="p-8 bg-[#FAF8FB] min-h-screen font-['Poppins']">
-      <h1 className="text-3xl font-semibold mb-6 text-gray-800">Referred Patients</h1>
+    <div className="p-8 min-h-screen font-['Poppins'] ">
+      <h1 className="text-3xl font-semibold mb-6 text-gray-800">Referral patients</h1>
+      {/* Referral Offer Card */}
+      <div className="bg-[#8B2D6C] rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between mb-8 relative overflow-hidden">
+        <div className="flex-1">
+          <div className="text-white text-2xl font-bold mb-2">Get 5 FREE referrals free</div>
+          <div className="text-white text-base mb-4">You can onboard up to 5 patients via referral without any charges.</div>
+          <button className="px-6 py-2 cursor-pointer rounded-full bg-[#FCB35B] text-[#8B2D6C] font-semibold shadow hover:opacity-90 transition">Generate now</button>
+        </div>
+        {/* Illustration (placeholder SVG) */}
+        <div className="hidden md:block flex-shrink-0 ml-8 relative" style={{ width: 120, height: 120 }}>
+          <img src={circles} alt="" className='w-32 h-54' />
+          <img src={TouchImage} alt="Referral Illustration" className="absolute top-1/2 left-1/2 w-32 h-32 -translate-x-1/2 -translate-y-1/2 object-contain" />
+        </div>
+      </div>
+      {/* Search Bar */}
       <div className="flex items-center justify-between mb-8">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
             type="text"
-            placeholder="Search your referred patients here"
+            placeholder="Search your patients here"
             className="w-full py-3 pl-10 pr-4 rounded-full bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#8B2D6C]"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -104,14 +120,15 @@ const ReferredPatientsList: React.FC = () => {
           <SlidersHorizontal className="w-5 h-5 text-gray-500" />
         </button>
       </div>
-
+      {/* Patients List */}
       <div className="space-y-4">
         {filteredPatients.length > 0 ? (
           filteredPatients.map((patient) => (
             <div
               key={patient.id}
-              className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-200"
+              className="bg-white rounded-2xl px-6 py-4 flex items-center justify-between shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200"
               onClick={() => handlePatientClick(patient.id)}
+              style={{ cursor: 'pointer' }}
             >
               <div className="flex items-center gap-4">
                 {patient.profilePicture ? (
@@ -127,10 +144,15 @@ const ReferredPatientsList: React.FC = () => {
                 )}
                 <div>
                   <p className="font-medium text-gray-800 text-lg">{patient.name}</p>
-                  <p className="text-sm text-gray-500">Treated on {formatDate(patient.claimedAt)}</p>
+                  <p className="text-sm text-gray-500">Joined on {formatDate(patient.claimedAt)}</p>
                 </div>
               </div>
-              <ArrowRight className="w-5 h-5 text-gray-500" />
+              <div className="flex items-center gap-6">
+                <span className="text-[#8B2D6C] font-medium text-base">Referral code - {patient.referralCode}</span>
+                <button className="w-10 h-10 flex items-center justify-center rounded-full bg-[#8B2D6C1A] hover:bg-[#8B2D6C]/10 transition">
+                  <ArrowRight className="w-6 h-6 text-[#8B2D6C]" />
+                </button>
+              </div>
             </div>
           ))
         ) : (

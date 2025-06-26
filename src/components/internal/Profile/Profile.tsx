@@ -86,7 +86,7 @@ export default function Profile() {
 
   const handleLogout = () => {
     Cookies.remove('auth');
-    navigate('/login');
+    navigate('/chooserole');
   };
 
   const handleEdit = () => setEditMode(true);
@@ -118,7 +118,7 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-[#FAF8FB]">
+      <div className="flex justify-center items-center min-h-screen ">
         <div className="text-xl">Loading profile...</div>
       </div>
     );
@@ -126,7 +126,7 @@ export default function Profile() {
 
   if (!profile) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-[#FAF8FB]">
+      <div className="flex justify-center items-center min-h-screen ">
         <div className="text-xl text-red-500">Profile not found.</div>
       </div>
     );
@@ -135,101 +135,142 @@ export default function Profile() {
   if (isDoctor) {
     const doctor = profile as DoctorProfile;
     return (
-      <div className="flex flex-col md:flex-row gap-8 p-8 bg-[#FAF8FB] min-h-screen font-['Poppins']">
-        {/* Logout Button */}
-       
-        {/* Profile Picture */}
-        <div className="flex flex-col items-center bg-white rounded-2xl shadow-md p-6 min-w-[300px]">
-          <img
-            src={doctor.profilePicture}
-            alt={doctor.name}
-            className="w-40 h-40 rounded-full object-cover border-4 border-[#8B2D6C] mb-4"
-          />
-          <h2 className="text-2xl font-bold text-[#1A2343] mb-1">{doctor.name}</h2>
-          <span className="text-[#8B2D6C] font-semibold">{doctor.specialization}</span>
-          <span className="text-gray-500">{doctor.workLocation}</span>
-          <span className="mt-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
-            {doctor.profileStatus}
-          </span>
-           <button
-          onClick={handleLogout}
-          className="px-4 py-2 mt-10 bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white rounded-full font-semibold shadow"
-        >
-          Logout
-        </button>
-        </div>
-        {/* Profile Details */}
-        <div className="flex-1 bg-white rounded-2xl shadow-md p-8">
-          <h1 className="text-3xl font-semibold mb-6 text-gray-800">Profile Details</h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <div className="mb-2">
-                <span className="font-semibold">Email:</span> {doctor.email}
-              </div>
-              <div className="mb-2">
-                <span className="font-semibold">Phone:</span> {doctor.countryCode} {doctor.phoneNumber}
-              </div>
-              <div className="mb-2">
-                <span className="font-semibold">Gender:</span> {doctor.gender}
-              </div>
-              <div className="mb-2">
-                <span className="font-semibold">Experience:</span> {doctor.experience} years
-              </div>
-              <div className="mb-2">
-                <span className="font-semibold">Consultation Fee:</span> ₹{doctor.consultationFee}
-              </div>
-              <div className="mb-2">
-                <span className="font-semibold">Medical License #:</span> {doctor.medicalLicenseNumber}
-              </div>
-              <div className="mb-2">
-                <span className="font-semibold">Referrals Generated:</span> {doctor.freeReferralsGenerated}
-              </div>
-              <div className="mb-2">
-                <span className="font-semibold">Joined:</span> {new Date(doctor.createdAt).toLocaleDateString()}
-              </div>
+      <div className="min-h-screen flex items-center justify-center font-['Poppins']">
+        <div className="w-full max-w-5xl min-h-[80vh] bg-white rounded-2xl shadow-lg flex overflow-hidden border border-[#F2EAF6]">
+          {/* Sidebar */}
+          <aside className="w-72 border-r border-[#F2EAF6] flex flex-col py-8 px-6">
+            <div className="text-xl font-semibold mb-8">My profile</div>
+            <nav className="flex-1 flex flex-col gap-2">
+              <button className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#F8F2F9] text-[#8B2D6C] font-medium border-l-4 border-[#8B2D6C]">
+                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
+                Personal Information
+              </button>
+              <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
+              About Us
+              </button>
+              <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
+              Terms & Conditions
+              </button>
+              <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
+              My plans
+              </button>
+              <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
+              Privacy Policy
+              </button>
+              <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
+              Report an issue
+              </button>
+            </nav>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 mt-8 text-[#E11D48] font-medium hover:underline"
+            >
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className=""><path d="M15 12l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" /></svg>
+              Logout
+            </button>
+          </aside>
+          {/* Main Card */}
+          <main className="flex-1 flex flex-col items-center justify-center py-12 px-8">
+            <div className="flex flex-col items-center mb-8 relative">
+              {doctor.profilePicture ? (
+                <img
+                  src={doctor.profilePicture}
+                  alt={doctor.name}
+                  className="w-20 h-20 rounded-full object-cover bg-[#F8F2F9] mb-2"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] flex items-center justify-center text-white text-3xl font-bold mb-2">
+                  {doctor.name.charAt(0)}
+                </div>
+              )}
+              {/* Editable avatar icon */}
+              {/* <span className="absolute top-2 right-2 bg-white rounded-full p-1 shadow border border-gray-200 cursor-pointer">
+                <svg width="20" height="20" fill="none" stroke="#8B2D6C" strokeWidth="2"><path d="M15.232 5.232l-10 10A2 2 0 005 17h3a2 2 0 002-2v-3a2 2 0 00-.586-1.414l10-10a2 2 0 00-2.828 0z" /></svg>
+              </span> */}
+              <div className="text-2xl font-bold text-[#1A2343] mt-2">Dr.{doctor.name}</div>
+              <div className="text-gray-500 text-base">{doctor.countryCode} {doctor.phoneNumber}</div>
             </div>
-            <div>
-              <div className="mb-2">
-                <span className="font-semibold">Qualification:</span> {doctor.qualification}
+            <form className="w-full max-w-lg flex flex-col gap-5">
+              <input
+                className="w-full rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
+                name="name"
+                value={doctor.name || ''}
+                placeholder="Name*"
+                readOnly
+              />
+              <input
+                className="w-full rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
+                name="email"
+                value={doctor.email || ''}
+                placeholder="Email Address*"
+                readOnly
+              />
+              <select
+                className="w-full rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none appearance-none"
+                name="gender"
+                value={doctor.gender || ''}
+                disabled
+              >
+                <option value="">Gender</option>
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+                <option value="OTHER">Other</option>
+              </select>
+              <input
+                className="w-full rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
+                name="phoneNumber"
+                value={doctor.phoneNumber || ''}
+                placeholder="Phone Number*"
+                readOnly
+              />
+              <div className="relative">
+                <input
+                  className="w-full rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none pr-12"
+                  name="dob"
+                  type="date"
+                  value={doctor.createdAt ? new Date(doctor.createdAt).toISOString().split('T')[0] : ''}
+                  placeholder="Date of Birth*"
+                  readOnly
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="7" width="14" height="10" rx="2" /><path d="M16 3v4M4 3v4" /></svg>
+                </span>
               </div>
-              <div className="mb-2">
-                <span className="font-semibold">Additional Qualifications:</span>
-                <ul className="list-disc ml-6">
-                  {doctor.additionalQualifications.filter(Boolean).map((q, i) => (
-                    <li key={i}>{q}</li>
-                  ))}
-                </ul>
+              <div className="relative">
+                <input
+                  className="w-full rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none pr-12"
+                  name="govtId"
+                  value={doctor.govtIdUrl ? 'Uploaded' : ''}
+                  placeholder="Government ID"
+                  readOnly
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><rect x="8" y="2" width="8" height="4" rx="1" /></svg>
+                </span>
               </div>
-              <div className="mb-2">
-                <span className="font-semibold">Photo:</span>{' '}
-                <a href={doctor.photoUrl} target="_blank" rel="noopener noreferrer" className="text-[#8B2D6C] underline">
-                  View
-                </a>
-              </div>
-              <div className="mb-2">
-                <span className="font-semibold">License:</span>{' '}
-                <a href={doctor.licenseUrl} target="_blank" rel="noopener noreferrer" className="text-[#8B2D6C] underline">
-                  View
-                </a>
-              </div>
-              <div className="mb-2">
-                <span className="font-semibold">Govt ID:</span>{' '}
-                <a href={doctor.govtIdUrl} target="_blank" rel="noopener noreferrer" className="text-[#8B2D6C] underline">
-                  View
-                </a>
-              </div>
-            </div>
-          </div>
+              <button
+                type="button"
+                className="w-full mt-4 py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-lg shadow hover:opacity-90 transition"
+              >
+                Next
+              </button>
+            </form>
+          </main>
         </div>
       </div>
     );
   } else if (!isDoctor) {
     const user = profile as UserProfile;
     return (
-      <div className="min-h-screen bg-[#FAF8FB] flex items-center justify-center font-['Poppins']">
+      <div className="min-h-screen  flex items-center justify-center font-['Poppins']">
         <div className="w-full max-w-5xl min-h-[80vh] bg-white rounded-2xl shadow-lg flex overflow-hidden border border-[#F2EAF6]">
           {/* Sidebar */}
-          <aside className="w-72 bg-[#FAF8FB] border-r border-[#F2EAF6] flex flex-col py-8 px-6">
+          <aside className="w-72  border-r border-[#F2EAF6] flex flex-col py-8 px-6">
             <div className="text-xl font-semibold mb-8">My profile</div>
             <nav className="flex-1 flex flex-col gap-2">
               <button className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#F8F2F9] text-[#8B2D6C] font-medium border-l-4 border-[#8B2D6C]">
@@ -284,7 +325,7 @@ export default function Profile() {
             </div>
             <form className="w-full max-w-lg flex flex-col gap-5">
               <input
-                className="w-full bg-[#FAF8FB] rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
+                className="w-full  rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
                 name="name"
                 value={form?.name || ''}
                 onChange={handleChange}
@@ -292,7 +333,7 @@ export default function Profile() {
                 readOnly={!editMode}
               />
               <input
-                className="w-full bg-[#FAF8FB] rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
+                className="w-full  rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
                 name="email"
                 value={form?.email || ''}
                 onChange={handleChange}
@@ -300,7 +341,7 @@ export default function Profile() {
                 readOnly={!editMode}
               />
               <select
-                className="w-full bg-[#FAF8FB] rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none appearance-none"
+                className="w-full  rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none appearance-none"
                 name="gender"
                 value={form?.gender || ''}
                 onChange={handleChange}
@@ -312,7 +353,7 @@ export default function Profile() {
                 <option value="OTHER">Other</option>
               </select>
               <input
-                className="w-full bg-[#FAF8FB] rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
+                className="w-full  rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
                 name="phoneNumber"
                 value={form?.phoneNumber || ''}
                 onChange={handleChange}
@@ -321,7 +362,7 @@ export default function Profile() {
               />
               {/* Doctor referral code field (if needed) */}
               {/* <input
-                className="w-full bg-[#FAF8FB] rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
+                className="w-full  rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
                 name="doctorReferralCode"
                 value={form?.doctorReferralCode || ''}
                 onChange={handleChange}
@@ -330,7 +371,7 @@ export default function Profile() {
               /> */}
               <div className="relative">
                 <input
-                  className="w-full bg-[#FAF8FB] rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none pr-12"
+                  className="w-full  rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none pr-12"
                   name="dob"
                   type="date"
                   value={form?.dob ? (typeof form.dob === 'string' ? form.dob : new Date(form.dob).toISOString().split('T')[0]) : ''}

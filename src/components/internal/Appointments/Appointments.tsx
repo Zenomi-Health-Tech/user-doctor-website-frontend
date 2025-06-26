@@ -114,7 +114,7 @@ export default function Appointments() {
   };
 
   return (
-    <div className="p-8 bg-[#FAF8FB] min-h-screen font-['Poppins']">
+    <div className="p-8  min-h-screen font-['Poppins']">
       <h1 className="text-3xl font-semibold mb-6 text-gray-800">Appointment Details</h1>
       <div className="flex items-center justify-between mb-8">
         <div className="relative flex-1 max-w-md">
