@@ -28,6 +28,33 @@ interface DoctorAnalyticsData {
   pendingAppointmentsCount: number;
 }
 
+// Add Appointment type
+interface Appointment {
+  id: string;
+  doctorId: string;
+  userId: string;
+  preferredDate: string;
+  preferredTime: string;
+  reason: string;
+  status: string;
+  cancellationReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    phoneNumber: string;
+  };
+  doctor: {
+    id: string;
+    name: string;
+    email: string;
+    phoneNumber: string;
+    specialization: string;
+  };
+}
+
 const checklist = [
   "Start Your Daily Mental Health Check-In",
   "Review Your Recent Test Results",
@@ -48,6 +75,8 @@ export default function Dashboard() {
   // Add state to store the received report data
   const [doctorAnalytics, setDoctorAnalytics] = useState<DoctorAnalyticsData | null>(null); // New state for doctor analytics
   const { isDoctor , userName } = useAuth();
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loadingAppointments, setLoadingAppointments] = useState(true);
 console.log(isDoctor , "isDoctor");
 
   
@@ -112,6 +141,25 @@ console.log(isDoctor , "isDoctor");
 
     // WebSocket connection only for non-doctors
   }, [isDoctor]); // Dependency on isDoctor to re-run when type changes
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      setLoadingAppointments(true);
+      try {
+        const response = await api.get('/admin/get-todays-appointments');
+        if (response.data.success) {
+          setAppointments(response.data.data);
+        } else {
+          setAppointments([]);
+        }
+      } catch (err) {
+        setAppointments([]);
+      } finally {
+        setLoadingAppointments(false);
+      }
+    };
+    fetchAppointments();
+  }, []);
 
   // Add a useEffect to trigger PDF download when reportData is received (only for users)
  
@@ -268,7 +316,7 @@ console.log(isDoctor , "isDoctor");
   
 
   return (
-    <div className="flex justify-center gap-8 p-8 bg-[#FAF8FB] min-h-screen font-['Poppins']">
+    <div className="flex justify-center gap-8 p-8  min-h-screen font-['Poppins']">
       {/* Conditionally render content based on user type */}
       {isDoctor ? (
         <div className="w-full font-['Poppins']">
@@ -304,28 +352,33 @@ console.log(isDoctor , "isDoctor");
           {/* Today's Appointments */}
           <h3 className="text-xl font-semibold mb-4">Today's Appointments</h3>
           <div className="space-y-4">
-            {/* Placeholder for appointments - you'll map over actual data here */}
-            {[1, 2, 3, 4, 5].map((item) => (
-              <div key={item} className="bg-[#F8F3FA] rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-4">
-                  <div className="bg-[#E5E0EA] p-3 rounded-full">
-                    <svg className="w-6 h-6 text-[#704180]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            {loadingAppointments ? (
+              <div className="text-gray-500">Loading...</div>
+            ) : appointments.length === 0 ? (
+              <div className="text-gray-500">No appointments for today.</div>
+            ) : (
+              appointments.map((appt) => (
+                <div key={appt.id} className="bg-[#F8F3FA] rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-[#E5E0EA] p-3 rounded-full">
+                      <svg className="w-6 h-6 text-[#704180]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800">{appt.user?.name || 'Unknown'}</p>
+                      <p className="text-sm text-gray-500">{new Date(appt.preferredTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</p>
+                    </div>
+                  </div>
+                  <span className="text-gray-500 text-sm">{appt.status}</span>
+                  <button className="p-2 rounded-full bg-[#E5E0EA] text-[#8B2D6C] hover:bg-[#D5CCD6]">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
                     </svg>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800">Lily Thomas</p>
-                    <p className="text-sm text-gray-500">03:30 PM</p>
-                  </div>
+                  </button>
                 </div>
-                <span className="text-gray-500 text-sm">Today</span>
-                <button className="p-2 rounded-full bg-[#E5E0EA] text-[#8B2D6C] hover:bg-[#D5CCD6]">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                  </svg>
-                </button>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       ) : (

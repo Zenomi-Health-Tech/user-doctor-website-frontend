@@ -1,8 +1,36 @@
-import React from 'react';
-import { Search, Bell, Settings } from 'lucide-react'; // Use lucide-react icons or your own
-
+import React, { useEffect, useState } from 'react';
+import { Search } from 'lucide-react'; // Use lucide-react icons or your own
+import api from '@/utils/api';
+import Cookies from 'js-cookie';
 
 const Header: React.FC = () => {
+  const [doctorInitial, setDoctorInitial] = useState<string>('');
+
+  useEffect(() => {
+    const fetchDoctor = async () => {
+      try {
+        const authCookie = Cookies.get('auth');
+        let token = '';
+        if (authCookie) {
+          try {
+            token = JSON.parse(authCookie).token;
+          } catch (e) {
+            token = '';
+          }
+        }
+        const response = await api.get('/doctors/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.data && response.data.data && response.data.data.name) {
+          setDoctorInitial(response.data.data.name.trim().charAt(0).toUpperCase());
+        }
+      } catch (error) {
+        setDoctorInitial('L'); // fallback
+      }
+    };
+    fetchDoctor();
+  }, []);
+
   return (
     <header className="flex items-center justify-between h-20 px-8 border-b w-full bg-white">
       {/* Search Bar */}
@@ -18,17 +46,10 @@ const Header: React.FC = () => {
       </div>
       {/* Right Side Icons */}
       <div className="flex items-center gap-6">
-        {/* Settings Icon */}
-        <div className="w-10 h-10 flex items-center justify-center rounded-full bg-[#F8F5F9]">
-          <Settings className="w-5 h-5 text-[#636363]" />
-        </div>
-        {/* Notification Icon */}
-        <div className="w-10 h-10 flex items-center justify-center rounded-full bg-[#F8F5F9]">
-          <Bell className="w-5 h-5 text-[#636363]" />
-        </div>
+     
         {/* User Avatar */}
         <div className="w-10 h-10 flex items-center justify-center rounded-full bg-[#7B2B6A] text-white text-lg font-semibold">
-          L
+          {doctorInitial || 'L'}
         </div>
       </div>
     </header>

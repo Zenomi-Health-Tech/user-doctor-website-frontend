@@ -24,8 +24,8 @@ const ChooseRole = () => {
           onClick={() => navigate("/doctor/login")}
           className="flex items-center justify-between px-6 py-4 border-2 border-[#704180] rounded-full text-lg font-medium transition-all hover:bg-gradient-to-r hover:from-[#704180] hover:to-[#8B2D6C] hover:text-white"
         >
-          Continue as Doctor
           <img src={docLog} alt="Doctor" className="w-12 h-12 ml-4" />
+          Continue as Doctor
         </button>
       </div>
       <div className="absolute bottom-8 w-full text-center text-gray-500">
