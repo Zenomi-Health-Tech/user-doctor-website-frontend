@@ -176,7 +176,7 @@ const PatientDetails: React.FC = () => {
                     </div>
                     <div className="flex flex-col md:flex-row gap-6 mt-2">
                       <div className="flex-1">
-                        <p className="font-semibold text-gray-700 mb-1">Raw Scores:</p>
+                        <p className="font-semibold text-gray-700 mb-1">Test Scores:</p>
                         <ul className="list-disc ml-6 text-sm text-gray-800">
                           {Object.entries(test.rawScores).map(([key, value]) => (
                             <li key={key}>{key}: {value}</li>

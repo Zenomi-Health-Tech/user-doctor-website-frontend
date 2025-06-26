@@ -5,6 +5,8 @@ import  userTick  from '@/assets/user-tick.png'
 import  yellowcal  from '@/assets/yellowcal.png'
 import  purplecal  from '@/assets/purplecal.png'
 import  greencal  from '@/assets/greencal.png'
+import { useNavigate } from 'react-router-dom';
+
 // Import the WellnessReport component
 import { useAuth } from '@/context/AuthContext'; // Import useAuth from the new context
 import api from '@/utils/api';
@@ -77,6 +79,7 @@ export default function Dashboard() {
   const { isDoctor , userName } = useAuth();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
+  const navigate = useNavigate();
 console.log(isDoctor , "isDoctor");
 
   
@@ -304,6 +307,10 @@ console.log(isDoctor , "isDoctor");
   };
   console.log(selectedTest?.id);
 
+  const handlePatientClick = (id: string) => {
+    navigate(`/patients/${id}`);
+  };
+
 
   if (loading) return <div>Loading...</div>;
 
@@ -358,7 +365,7 @@ console.log(isDoctor , "isDoctor");
               <div className="text-gray-500">No appointments for today.</div>
             ) : (
               appointments.map((appt) => (
-                <div key={appt.id} className="bg-[#F8F3FA] rounded-2xl p-4 flex items-center justify-between shadow-sm">
+                <div key={appt.id}  onClick={() => handlePatientClick(appt.userId)} className="bg-[#F8F3FA] cursor-pointer rounded-2xl p-4 flex items-center justify-between shadow-sm">
                   <div className="flex items-center gap-4">
                     <div className="bg-[#E5E0EA] p-3 rounded-full">
                       <svg className="w-6 h-6 text-[#704180]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
