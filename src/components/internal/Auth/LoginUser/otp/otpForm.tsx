@@ -63,6 +63,7 @@ const OTPForm: React.FC<OTPFormProps> = ({ onSuccess }) => {
           className: "bg-green-500 text-white",
         });
         onSuccess();
+        window.location.reload();
       } else {
         const errorMessage = error || "Invalid OTP. Please try again.";
         toast({

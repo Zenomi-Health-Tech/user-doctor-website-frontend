@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import api from '@/utils/api';
 import Cookies from 'js-cookie';
-import { ChevronDown, Clock, Search, SlidersHorizontal, ArrowRight } from 'lucide-react'; // Import necessary icons
 
 interface ScoreData {
   [key: string]: number;
@@ -35,14 +34,9 @@ interface PatientDetail {
   updatedAt: string;
   profilePicture: string | null;
   tests: TestReport[];
+  isCourseAssigned: boolean;
 }
 
-interface CourseRecommendation {
-  name: string;
-  duration?: string;
-  assignedDate?: string;
-  icon: string; // Placeholder for icon path
-}
 
 const PatientDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -96,21 +90,7 @@ const PatientDetails: React.FC = () => {
   };
 
   // Dummy data for AI and Doctor recommendations (replace with real data if available in API response)
-  const aiRecommendations: CourseRecommendation[] = [
-    {
-      name: "Calm sleep routine",
-      duration: "5 days . 10 min/day",
-      icon: "/path/to/sleep-icon.png" // Placeholder
-    }
-  ];
 
-  const doctorRecommendations: CourseRecommendation[] = [
-    {
-      name: "Meditation Marathon",
-      assignedDate: "27 April 2025",
-      icon: "/path/to/meditation-icon.png" // Placeholder
-    }
-  ];
 
   if (loading) {
     return <div className="flex justify-center items-center h-screen text-xl">Loading patient details...</div>;
@@ -121,95 +101,92 @@ const PatientDetails: React.FC = () => {
   }
 
   return (
-    <div className="p-8 bg-[#FAF8FB] min-h-screen font-['Poppins']">
-      <div className="bg-white rounded-2xl p-6 mb-6 shadow-sm">
-        <h1 className="text-3xl font-semibold mb-6 text-gray-800">Patient Details</h1>
-        <div className="flex items-center justify-between mb-8">
-          <div className="relative flex-1 max-w-md">
-            {/* Search bar from previous page, re-added here for consistency with design */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search your patients here"
-                className="w-full py-3 pl-10 pr-4 rounded-full bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#8B2D6C]"
-              />
-            </div>
-          </div>
-          <button className="p-3 rounded-full bg-white border border-gray-200 shadow-sm ml-4">
-            <SlidersHorizontal className="w-5 h-5 text-gray-500" />
-          </button>
+    <div className="p-4 md:p-8 bg-[#FAF8FB] min-h-screen font-['Poppins']">
+      {/* Patient Info Card */}
+      <div className="bg-white rounded-2xl p-6 mb-8 shadow flex flex-col md:flex-row items-center md:items-start gap-6 border border-gray-100">
+        <div className="w-28 h-28 rounded-full bg-[#8B2D6C1A] flex items-center justify-center text-[#8B2D6C] font-semibold text-4xl overflow-hidden border-4 border-[#8B2D6C]">
+          {patient.profilePicture ? (
+            <img src={patient.profilePicture} alt={patient.name} className="w-full h-full object-cover" />
+          ) : (
+            patient.name.charAt(0).toUpperCase()
+          )}
         </div>
-
-        {/* Patient Header Card */}
-        <div className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-200">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-[#8B2D6C1A] flex items-center justify-center text-[#8B2D6C] font-semibold text-lg">
-              {patient.name.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <p className="font-medium text-gray-800 text-lg">{patient.name}</p>
-              <p className="text-sm text-gray-500">Treated on {formatDate(patient.updatedAt)}</p>
-            </div>
+        <div className="flex-1 flex flex-col gap-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-[#1A2343] mb-1">{patient.name}</h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1 text-gray-700 text-base">
+            <span><span className="font-semibold">Email:</span> {patient.email}</span>
+            <span><span className="font-semibold">Phone:</span> {patient.countryCode} {patient.phoneNumber}</span>
+            <span><span className="font-semibold">Gender:</span> {patient.gender}</span>
+            <span><span className="font-semibold">DOB:</span> {formatDate(patient.dob)}</span>
+            <span><span className="font-semibold">Created:</span> {formatDate(patient.createdAt)}</span>
+            <span><span className="font-semibold">Updated:</span> {formatDate(patient.updatedAt)}</span>
           </div>
-          <span className="bg-[#A9F2001A] text-[#A9F200] px-4 py-1 rounded-full text-sm font-medium">Completed</span>
         </div>
       </div>
 
       {/* Tests Done Section */}
-      <div className="bg-white rounded-2xl p-6 mb-6 shadow-sm">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">Tests done ({patient.tests.length})</h2>
-          <Link to="#" className="text-[#8B2D6C] font-medium flex items-center">View Reports <ArrowRight className="w-4 h-4 ml-1" /></Link>
+      <div className="bg-white rounded-2xl p-6 mb-8 shadow border border-gray-100">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl md:text-2xl font-semibold text-gray-800">Tests done <span className="text-[#8B2D6C]">({patient.tests.length})</span></h2>
         </div>
-        <div className="space-y-4">
+        <div className="grid gap-6 md:grid-cols-2">
+          {patient.tests.length === 0 && (
+            <div className="text-gray-500">No tests available.</div>
+          )}
           {patient.tests.map((test) => (
-            <div key={test.id} className="bg-[#FBF9FF] rounded-2xl p-4 flex items-center justify-between shadow-sm">
-              <div className="flex items-center gap-4">
-                {/* Placeholder for test icons, replace with actual image if available */}
-                <img src={`/assets/${test.rawScores && Object.keys(test.rawScores).length > 0 ? Object.keys(test.rawScores)[0].toLowerCase().replace(' ','-') : 'default'}-icon.png`} alt="Test Icon" className="w-10 h-10" />
-                <div>
-                  <p className="font-medium text-gray-800">{Object.keys(test.rawScores)[0] || 'Test Name'}</p>
-                  <p className="text-sm text-gray-500">Score {test.rawScores ? Object.values(test.rawScores)[0] : 'N/A'} /10</p>
+            <div key={test.id} className="bg-[#FBF9FF] rounded-xl p-5 flex flex-col gap-3 shadow-sm border border-[#E9D8F4]">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                <div className="mb-2 md:mb-0">
+                  <p className="font-semibold text-[#8B2D6C] text-lg">Cycle: {test.cycle}</p>
+                  <p className="text-sm text-gray-500">Tests Completed: {test.testsCompleted}</p>
+                  <p className="text-sm text-gray-500">Created: {formatDate(test.createdAt)}</p>
+                  <p className="text-sm text-gray-500">Updated: {formatDate(test.updatedAt)}</p>
+                </div>
+                <div className="flex flex-wrap gap-2 md:gap-3">
+                  {test.reportView && (
+                    <a href={test.reportView} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white text-sm font-semibold shadow hover:opacity-90 transition">View Report</a>
+                  )}
+                  {test.detailedReportView && (
+                    <a href={test.detailedReportView} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white text-sm font-semibold shadow hover:opacity-90 transition">View Detailed</a>
+                  )}
+                  {/* {test.reportDownload && (
+                    <a href={test.reportDownload} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-full bg-[#E9D8F4] text-[#8B2D6C] text-sm font-semibold border border-[#8B2D6C] hover:bg-[#8B2D6C] hover:text-white transition">Download</a>
+                  )}
+                  {test.detailedReportDownload && (
+                    <a href={test.detailedReportDownload} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-full bg-[#E9D8F4] text-[#8B2D6C] text-sm font-semibold border border-[#8B2D6C] hover:bg-[#8B2D6C] hover:text-white transition">Download Detailed</a>
+                  )} */}
                 </div>
               </div>
-              <ChevronDown className="w-5 h-5 text-gray-500" /> {/* Assuming this is a dropdown/expand icon */}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Zenomi AI course recommendation */}
-      <div className="bg-white rounded-2xl p-6 mb-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Zenomi AI course recommendation ({aiRecommendations.length})</h2>
-        <div className="space-y-4">
-          {aiRecommendations.map((rec, index) => (
-            <div key={index} className="bg-[#FBF9FF] rounded-2xl p-4 flex items-center gap-4 shadow-sm">
-              <img src={rec.icon} alt={rec.name} className="w-10 h-10" />
-              <div>
-                <p className="font-medium text-gray-800">{rec.name}</p>
-                {rec.duration && <p className="text-sm text-gray-500 flex items-center"><Clock className="w-4 h-4 mr-1" /> {rec.duration}</p>}
+              <div className="flex flex-col md:flex-row gap-6 mt-2">
+                <div className="flex-1">
+                  <p className="font-semibold text-gray-700 mb-1">Raw Scores:</p>
+                  <ul className="list-disc ml-6 text-sm text-gray-800">
+                    {Object.entries(test.rawScores).map(([key, value]) => (
+                      <li key={key}>{key}: {value}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-gray-700 mb-1">Normalized Scores:</p>
+                  <ul className="list-disc ml-6 text-sm text-gray-800">
+                    {Object.entries(test.normalizedScores).map(([key, value]) => (
+                      <li key={key}>{key}: {value}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Courses recommended by doctor */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Courses recommended by doctor</h2>
-        <div className="space-y-4">
-          {doctorRecommendations.map((rec, index) => (
-            <div key={index} className="bg-[#FBF9FF] rounded-2xl p-4 flex items-center gap-4 shadow-sm">
-              <img src={rec.icon} alt={rec.name} className="w-10 h-10" />
-              <div>
-                <p className="font-medium text-gray-800">{rec.name}</p>
-                {rec.assignedDate && <p className="text-sm text-gray-500">Assigned on {rec.assignedDate}</p>}
-              </div>
-            </div>
-          ))}
+      {/* Course Assignment Section */}
+      {patient.isCourseAssigned && (
+        <div className="bg-white rounded-2xl p-6 shadow border border-gray-100">
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Course Assigned</h2>
+          <p className="text-gray-700">A course has been assigned to this patient.</p>
         </div>
-      </div>
+      )}
     </div>
   );
 };
