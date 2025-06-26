@@ -21,6 +21,7 @@ const UserOTPComponent = lazy(() => import("@/components/internal/Auth/LoginUser
 const RegisterScreen = lazy(() => import("@/components/internal/Auth/DoctorRegister/DoctorRegisterScreen"));
 const UseregisterScreen = lazy(() => import("@/components/internal/Auth/UserRegister/RegisterScreen"));
 const PatientDetails = lazy(() => import("@/components/internal/Patients/PatientDetails"));
+const PaymentOnboard = lazy(() => import("@/components/internal/Auth/PaymentOnboard/PaymentOnboard"));
 const ReferredPatients = lazy(() => import("@/components/internal/ReferredPatients/ReferredPatients"));
 const SetAvailability = lazy(() => import("@/components/internal/Appointments/SetAvailability"));
 const AvailableSlotsPage = lazy(() => import("@/components/internal/Appointments/AvailableSlots"));
@@ -141,6 +142,20 @@ export default function AppRouter() {
           element={
             <Suspense fallback={<div>Loading...</div>}>
               <LoginScreen />
+            </Suspense>
+          }
+          isPublic
+          // alreadyLoggedInRedirect="/dashboard"
+        />
+      ),
+    },
+    {
+      path: "/doctor/payment-onboard",
+      element: (
+        <ProtectedRoute
+          element={
+            <Suspense fallback={<div>Loading...</div>}>
+              <PaymentOnboard />
             </Suspense>
           }
           isPublic

@@ -183,14 +183,7 @@ const PatientDetails: React.FC = () => {
                           ))}
                         </ul>
                       </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-gray-700 mb-1">Normalized Scores:</p>
-                        <ul className="list-disc ml-6 text-sm text-gray-800">
-                          {Object.entries(test.normalizedScores).map(([key, value]) => (
-                            <li key={key}>{key}: {value}</li>
-                          ))}
-                        </ul>
-                      </div>
+                      
                     </div>
                   </div>
                 )}

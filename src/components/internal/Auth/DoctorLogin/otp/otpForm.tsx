@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import useStore from "@/zustand/store";
 import { useToast } from "@/hooks/use-toast";
 import { Loader } from "lucide-react";
+import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 // Define schema for OTP validation
 const otpSchema = z.object({
@@ -49,6 +51,9 @@ const OTPForm: React.FC<OTPFormProps> = ({ onSuccess }) => {
   // Create refs for the input elements
   const inputRefs = Array(6).fill(0).map(() => useRef<HTMLInputElement>(null));
 
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
   // Form submission handler
   const onSubmit: SubmitHandler<OTPFormValues> = async ({ otp }) => {
     try {
@@ -62,8 +67,12 @@ const OTPForm: React.FC<OTPFormProps> = ({ onSuccess }) => {
           variant: "default",
           className: "bg-green-500 text-white",
         });
-        onSuccess();
-        window.location.reload();
+        if (user && user.type === 'DOCTOR' && user.isPaid === false) {
+          navigate('/doctor/payment-onboard');
+        } else {
+          onSuccess();
+          window.location.reload();
+        }
       } else {
         const errorMessage = error || "Invalid OTP. Please try again.";
         toast({
