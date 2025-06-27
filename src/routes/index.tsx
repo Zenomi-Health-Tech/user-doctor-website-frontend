@@ -24,6 +24,7 @@ const PatientDetails = lazy(() => import("@/components/internal/Patients/Patient
 const PaymentOnboard = lazy(() => import("@/components/internal/Auth/PaymentOnboard/PaymentOnboard"));
 const ReferredPatients = lazy(() => import("@/components/internal/ReferredPatients/ReferredPatients"));
 const SetAvailability = lazy(() => import("@/components/internal/Appointments/SetAvailability"));
+const SetAvailabilityUser = lazy(() => import("@/components/internal/Appointments/SetAvailabilityUser"));
 const AvailableSlotsPage = lazy(() => import("@/components/internal/Appointments/AvailableSlots"));
 
 
@@ -71,6 +72,10 @@ export default function AppRouter() {
         {
           path: "/appointments/set-availability",
           element: <ProtectedRoute element={<SetAvailability />} />,
+        },
+        {
+          path: "/appointments/set-availability-user",
+          element: <ProtectedRoute element={<SetAvailabilityUser />} />,
         },
         {
           path: "/appointments/available-slots",

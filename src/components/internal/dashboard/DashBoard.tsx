@@ -57,6 +57,14 @@ interface Appointment {
   };
 }
 
+interface Course {
+  id: string;
+  title: string;
+  category: string;
+  courseLink: string;
+  // add other fields if needed
+}
+
 const checklist = [
   "Start Your Daily Mental Health Check-In",
   "Review Your Recent Test Results",
@@ -80,6 +88,8 @@ export default function Dashboard() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const navigate = useNavigate();
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [submittingQuiz, setSubmittingQuiz] = useState(false);
 console.log(isDoctor , "isDoctor");
 
   
@@ -164,6 +174,29 @@ console.log(isDoctor , "isDoctor");
     fetchAppointments();
   }, []);
 
+  useEffect(() => {
+    if (!isDoctor) {
+      const fetchCourses = async () => {
+        const authCookie = Cookies.get('auth');
+        let token = '';
+        if (authCookie) {
+          try {
+            token = JSON.parse(authCookie).token;
+          } catch (e) {
+            token = '';
+          }
+        }
+        const res = await api.get('/users/get-all-courses', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data && res.data.success) {
+          setCourses(res.data.data);
+        }
+      };
+      fetchCourses();
+    }
+  }, [isDoctor]);
+
   // Add a useEffect to trigger PDF download when reportData is received (only for users)
  
 
@@ -183,7 +216,7 @@ console.log(isDoctor , "isDoctor");
           token = '';
         }
       }
-      const res = await axios.get(`https://zenomiai.elitceler.com/questions/${selectedTest.id}`, {
+      const res = await axios.get(`https://zenomiai.elitceler.com/api/questions/${selectedTest.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       console.log(res.data, "res of questions");
@@ -275,6 +308,7 @@ console.log(isDoctor , "isDoctor");
         token = '';
       }
     }
+    setSubmittingQuiz(true);
     try {
       // Format answers to match API expectations
       const formattedAnswers = answers.map(a => ({
@@ -285,7 +319,7 @@ console.log(isDoctor , "isDoctor");
       console.log('Submitting answers:', formattedAnswers); // Debug log
 
       await axios.post(
-        `https://zenomiai.elitceler.com/score-test/${currentTestId}`,
+        `https://zenomiai.elitceler.com/api/score-test/${currentTestId}`,
         { answers: formattedAnswers },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -303,6 +337,7 @@ console.log(isDoctor , "isDoctor");
       alert('Failed to submit quiz. Please try again.');
     } finally {
       setLoading(false);
+      setSubmittingQuiz(false);
     }
   };
   console.log(selectedTest?.id);
@@ -613,6 +648,7 @@ console.log(isDoctor , "isDoctor");
                       return (q.scaleOptions || []).map((option: string) => (
                         <button
                           key={option}
+                          
                           className={`w-full py-4 rounded-full border-2 text-lg font-medium ${answers[currentQuestion]?.answer === option.split(':')[0]
                               ? 'bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white'
                               : 'border-[#8B2D6C] text-[#704180] bg-white'
@@ -635,9 +671,9 @@ console.log(isDoctor , "isDoctor");
                     <button
                       className="px-8 py-2 rounded-full bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white font-medium"
                       onClick={handleNext}
-                      disabled={!answers[currentQuestion] || !answers[currentQuestion].answer}
+                      disabled={submittingQuiz || !answers[currentQuestion] || !answers[currentQuestion].answer}
                     >
-                      {currentQuestion === questions.length - 1 ? 'Submit' : 'Next'}
+                      {submittingQuiz ? 'Submitting...' : (currentQuestion === questions.length - 1 ? 'Submit' : 'Next')}
                     </button>
                   </div>
                 </div>
@@ -672,6 +708,41 @@ console.log(isDoctor , "isDoctor");
          
           </div>
       </div>
+      )}
+      {!isDoctor && courses.length > 0 && (
+        <div className="mt-10">
+          <h2 className="text-2xl font-semibold mb-4">Continue learning</h2>
+          <div className="flex flex-col gap-6">
+            {courses.map(course => (
+              <div
+                key={course.id}
+                className="rounded-3xl p-8 bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white flex flex-col md:flex-row items-center justify-between shadow-lg relative"
+                style={{ minHeight: 180 }}
+              >
+                <div>
+                  <div className="uppercase text-sm tracking-widest text-[#D1B3E0] mb-2">Category - {course.category}</div>
+                  <div className="text-2xl font-bold mb-2">{course.title}</div>
+                  <a
+                    href={course.courseLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block mt-4 px-6 py-3 rounded-full bg-white text-[#8B2D6C] font-semibold text-lg shadow hover:bg-[#F3EAF7] transition"
+                  >
+                    Continue →
+                  </a>
+                </div>
+                {/* Decorative shapes (optional, for background) */}
+                <div className="absolute right-8 top-8 opacity-20 pointer-events-none select-none">
+                  <svg width="120" height="120">
+                    <circle cx="30" cy="30" r="30" fill="#fff" />
+                    <rect x="60" y="20" width="40" height="40" fill="#fff" />
+                    <circle cx="90" cy="90" r="25" fill="#fff" />
+                  </svg>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
