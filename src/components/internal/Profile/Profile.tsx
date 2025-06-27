@@ -3,7 +3,7 @@ import api from '@/utils/api';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext'; // Import useAuth from the new context
-
+import { useToast } from '@/hooks/use-toast';
 
 interface DoctorProfile {
   id: string;
@@ -35,20 +35,21 @@ interface UserProfile {
   countryCode: string;
   phoneNumber: string;
   gender: string;
-  dob: string;
-  profilePicture: string | null;
-  createdAt: string;
+  bloodGroup?: string;
+  profilePicture: string | File | null;
 }
 
 export default function Profile() {
-  const [profile, setProfile] = useState<DoctorProfile | UserProfile | null>(null);
+  const [doctorForm, setDoctorForm] = useState<DoctorProfile>(/* ... */);
+  const [userForm, setUserForm] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const { isDoctor } = useAuth();
+  const { toast } = useToast();
 
   const navigate = useNavigate();
 
   const [editMode, setEditMode] = useState(false);
-  const [form, setForm] = useState<UserProfile | null>(null);
+  const [step, setStep] = useState(1);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -68,21 +69,22 @@ export default function Profile() {
         const response = await api.get('/doctors/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setProfile(response.data.data);
+        setDoctorForm(response.data.data);
       } else {
         const response = await api.get('/users/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setProfile(response.data.data);
+        
+        if (response.data.data.dob && typeof response.data.data.dob === 'string') {
+          response.data.data.dob = response.data.data.dob.split('T')[0];
+        }
+        setUserForm(response.data.data);
+        
       }
       setLoading(false);
     };
     fetchProfile();
   }, []);
-
-  useEffect(() => {
-    if (profile && !isDoctor) setForm(profile as UserProfile);
-  }, [profile, isDoctor]);
 
   const handleLogout = () => {
     Cookies.remove('auth');
@@ -92,24 +94,115 @@ export default function Profile() {
   const handleEdit = () => setEditMode(true);
   const handleCancel = () => setEditMode(false);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setForm((prev) => prev ? { ...prev, [e.target.name]: e.target.value } : prev);
+  const handleDoctorChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setDoctorForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }) as DoctorProfile);
   };
 
-  const handleSave = async () => {
+  const handleDoctorFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, files } = e.target;
+    if (files && files[0]) {
+      setDoctorForm((prev) => ({
+        ...prev,
+        [name]: files[0],
+      }) as DoctorProfile);
+    }
+  };
+
+  const handleDoctorSave = async () => {
     try {
-      let payload = form;
-      // Ensure dob is a string (ISO format)
-      if (form && form.dob) {
-        // If dob is already a string, keep as is; if it's a Date, convert to string
-        if (typeof form.dob !== 'string') {
-          payload = { ...form, dob: new Date(form.dob).toISOString().split('T')[0] };
+      const formData = new FormData();
+      Object.entries(doctorForm as DoctorProfile).forEach(([key, value]) => {
+        // Handle arrays and files
+        if (Array.isArray(value)) {
+          formData.append(key, JSON.stringify(value));
+        } else if (value instanceof File) {
+          formData.append(key, value);
+        } else {
+          if (key === 'dob') {
+            if (typeof value === 'string') {
+              formData.append('dob', value.split('T')[0]);
+            } else if (value instanceof Date) {
+              formData.append('dob', value.toISOString().split('T')[0]);
+            } else {
+              formData.append('dob', '');
+            }
+          } else {
+            formData.append(key, value as string);
+          }
+        }
+      });
+      const res = await api.put('/doctors/profile', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if(res.data && res.data.success){
+        toast({
+          title: "Success",
+          description: "Doctor Profile Editted!",
+          variant: "default",
+          className: "bg-green-500 text-white",
+      });
+      window.location.reload();
+      }
+      setEditMode(false);
+    } catch (err) {
+      // handle error
+    }
+  };
+
+  const handleUserChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setUserForm((prev) => prev ? { ...prev, [name]: value } : prev);
+  };
+
+  // const handleUserFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const { name, files } = e.target;
+  //   if (files && files[0]) {
+  //     setUserForm((prev) => prev ? { ...prev, [name]: files[0] } : prev);
+  //   }
+  // };
+
+  const handleUserSave = async () => {
+    if (!userForm) return;
+    try {
+      const formData = new FormData();
+      Object.entries(userForm as UserProfile).forEach(([key, value]) => {
+        if (key === 'dob') return;
+        if (Array.isArray(value)) {
+          formData.append(key, JSON.stringify(value));
+        } else if (value instanceof File) {
+          formData.append(key, value);
+        } else if (value !== undefined && value !== null) {
+          formData.append(key, value as string);
+        }
+      });
+      const authCookie = Cookies.get('auth');
+      let token = '';
+      if (authCookie) {
+        try {
+          token = JSON.parse(authCookie).token;
+        } catch (e) {
+          token = '';
         }
       }
-      await api.put('/users/profile', payload);
-      setProfile(payload);
+      const res = await api.put('/users/profile', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.data && res.data.success) {
+        toast({
+          title: "Success",
+          description: "User Profile Edited!",
+          variant: "default",
+          className: "bg-green-500 text-white",
+        });
+        window.location.reload();
+      }
       setEditMode(false);
     } catch (err) {
       // handle error
@@ -124,7 +217,7 @@ export default function Profile() {
     );
   }
 
-  if (!profile) {
+  if (!doctorForm && !userForm) {
     return (
       <div className="flex justify-center items-center min-h-screen ">
         <div className="text-xl text-red-500">Profile not found.</div>
@@ -133,7 +226,7 @@ export default function Profile() {
   }
 
   if (isDoctor) {
-    const doctor = profile as DoctorProfile;
+    const doctor = doctorForm as DoctorProfile;
     return (
       <div className="min-h-screen flex items-center justify-center font-['Poppins']">
         <div className="w-full max-w-5xl min-h-[80vh] bg-white rounded-2xl shadow-lg flex overflow-hidden border border-[#F2EAF6]">
@@ -166,111 +259,160 @@ export default function Profile() {
               Report an issue
               </button>
             </nav>
-            <button
-              onClick={handleLogout}
+        <button
+          onClick={handleLogout}
               className="flex items-center gap-2 mt-8 text-[#E11D48] font-medium hover:underline"
-            >
+        >
               <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className=""><path d="M15 12l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" /></svg>
-              Logout
-            </button>
+          Logout
+        </button>
           </aside>
           {/* Main Card */}
           <main className="flex-1 flex flex-col items-center justify-center py-12 px-8">
-            <div className="flex flex-col items-center mb-8 relative">
+            <div className="flex flex-col items-center mb-8">
               {doctor.profilePicture ? (
-                <img
-                  src={doctor.profilePicture}
-                  alt={doctor.name}
+          <img
+                  src={typeof doctor.profilePicture === 'string'
+                    ? doctor.profilePicture
+                    : URL.createObjectURL(doctor.profilePicture)}
+            alt={doctor.name}
                   className="w-20 h-20 rounded-full object-cover bg-[#F8F2F9] mb-2"
-                />
+          />
               ) : (
                 <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] flex items-center justify-center text-white text-3xl font-bold mb-2">
                   {doctor.name.charAt(0)}
-                </div>
+        </div>
               )}
-              {/* Editable avatar icon */}
-              {/* <span className="absolute top-2 right-2 bg-white rounded-full p-1 shadow border border-gray-200 cursor-pointer">
-                <svg width="20" height="20" fill="none" stroke="#8B2D6C" strokeWidth="2"><path d="M15.232 5.232l-10 10A2 2 0 005 17h3a2 2 0 002-2v-3a2 2 0 00-.586-1.414l10-10a2 2 0 00-2.828 0z" /></svg>
-              </span> */}
               <div className="text-2xl font-bold text-[#1A2343] mt-2">Dr.{doctor.name}</div>
               <div className="text-gray-500 text-base">{doctor.countryCode} {doctor.phoneNumber}</div>
             </div>
             <form className="w-full max-w-lg flex flex-col gap-5">
-              <input
-                className="w-full rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
-                name="name"
-                value={doctor.name || ''}
-                placeholder="Name*"
-                readOnly
-              />
-              <input
-                className="w-full rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
-                name="email"
-                value={doctor.email || ''}
-                placeholder="Email Address*"
-                readOnly
-              />
-              <select
-                className="w-full rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none appearance-none"
-                name="gender"
-                value={doctor.gender || ''}
-                disabled
-              >
-                <option value="">Gender</option>
-                <option value="MALE">Male</option>
-                <option value="FEMALE">Female</option>
-                <option value="OTHER">Other</option>
-              </select>
-              <input
-                className="w-full rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
-                name="phoneNumber"
-                value={doctor.phoneNumber || ''}
-                placeholder="Phone Number*"
-                readOnly
-              />
-              <div className="relative">
-                <input
-                  className="w-full rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none pr-12"
-                  name="dob"
-                  type="date"
-                  value={doctor.createdAt ? new Date(doctor.createdAt).toISOString().split('T')[0] : ''}
-                  placeholder="Date of Birth*"
-                  readOnly
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="7" width="14" height="10" rx="2" /><path d="M16 3v4M4 3v4" /></svg>
-                </span>
+              {step === 1 && (
+                <>
+                  <input
+                    className="rounded-lg px-4 py-3 bg-[#F8F2F9] text-gray-700 placeholder-gray-400 border-0"
+                    name="name"
+                    value={doctor.name}
+                    onChange={handleDoctorChange}
+                    placeholder="Name*"
+                  />
+                  <input
+                    className="rounded-lg px-4 py-3 bg-[#F8F2F9] text-gray-700 placeholder-gray-400 border-0"
+                    name="email"
+                    value={doctor.email}
+                    onChange={handleDoctorChange}
+                    placeholder="Email Address*"
+                  />
+                  <select
+                    className="rounded-lg px-4 py-3 bg-[#F8F2F9] text-gray-700 border-0"
+                    name="gender"
+                    value={doctor.gender}
+                    onChange={handleDoctorChange}
+                  >
+                    <option value="">Gender</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                  <input
+                    className="rounded-lg px-4 py-3 bg-[#F8F2F9] text-gray-700 placeholder-gray-400 border-0"
+                    name="phoneNumber"
+                    value={doctor.phoneNumber}
+                    onChange={handleDoctorChange}
+                    placeholder="Phone Number*"
+                  />
+                  <input
+                    className="rounded-lg px-4 py-3 bg-[#F8F2F9] text-gray-700 placeholder-gray-400 border-0"
+                    name="dob"
+                    type="date"
+                    value={doctor.createdAt ? doctor.createdAt.split('T')[0] : ''}
+                    onChange={handleDoctorChange}
+                    placeholder="Date of Birth*"
+                  />
+                  <input
+                    className="rounded-lg px-4 py-3 bg-[#F8F2F9] text-gray-700 placeholder-gray-400 border-0"
+                    name="govtIdUrl"
+                    type="file"
+                    onChange={handleDoctorFileChange}
+                    placeholder="Government ID"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setStep(2)}
+                    className="w-full mt-4 py-3 rounded-full text-white font-semibold text-lg shadow"
+                    style={{ background: 'linear-gradient(89.79deg, #704180 5.07%, #8B2D6C 95.83%)' }}
+                  >
+                    Next
+                  </button>
+                </>
+              )}
+              {step === 2 && (
+                <>
+                  <input
+                    className="rounded-lg px-4 py-3 bg-[#F8F2F9] text-gray-700 placeholder-gray-400 border-0"
+                    name="qualification"
+                    value={doctor.qualification}
+                    onChange={handleDoctorChange}
+                    placeholder="Qualification*"
+                  />
+                  <input
+                    className="rounded-lg px-4 py-3 bg-[#F8F2F9] text-gray-700 placeholder-gray-400 border-0"
+                    name="specialization"
+                    value={doctor.specialization}
+                    onChange={handleDoctorChange}
+                    placeholder="Specialization*"
+                  />
+                  <input
+                    className="rounded-lg px-4 py-3 bg-[#F8F2F9] text-gray-700 placeholder-gray-400 border-0"
+                    name="medicalLicenseNumber"
+                    value={doctor.medicalLicenseNumber}
+                    onChange={handleDoctorChange}
+                    placeholder="Medical License Number*"
+                  />
+                  <input
+                    className="rounded-lg px-4 py-3 bg-[#F8F2F9] text-gray-700 placeholder-gray-400 border-0"
+                    name="experience"
+                    value={doctor.experience.toString()}
+                    onChange={handleDoctorChange}
+                    placeholder="Experience*"
+                  />
+                  <input
+                    className="rounded-lg px-4 py-3 bg-[#F8F2F9] text-gray-700 placeholder-gray-400 border-0"
+                    name="consultationFee"
+                    value={doctor.consultationFee.toString()}
+                    onChange={handleDoctorChange}
+                    placeholder="Consultation Fee*"
+                  />
+                  <div className="flex gap-2 mt-4">
+                    <button
+                      type="button"
+                      onClick={() => setStep(1)}
+                      className="btn-secondary"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDoctorSave}
+                      className="flex-1 py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-lg shadow hover:opacity-90 transition"
+                    >
+                      Edit Profile
+                    </button>
               </div>
-              <div className="relative">
-                <input
-                  className="w-full rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none pr-12"
-                  name="govtId"
-                  value={doctor.govtIdUrl ? 'Uploaded' : ''}
-                  placeholder="Government ID"
-                  readOnly
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><rect x="8" y="2" width="8" height="4" rx="1" /></svg>
-                </span>
-              </div>
-              <button
-                type="button"
-                className="w-full mt-4 py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-lg shadow hover:opacity-90 transition"
-              >
-                Next
-              </button>
+                </>
+              )}
             </form>
           </main>
         </div>
       </div>
     );
   } else if (!isDoctor) {
-    const user = profile as UserProfile;
+    const user = userForm as UserProfile;
     return (
       <div className="min-h-screen  flex items-center justify-center font-['Poppins']">
         <div className="w-full max-w-5xl min-h-[80vh] bg-white rounded-2xl shadow-lg flex overflow-hidden border border-[#F2EAF6]">
           {/* Sidebar */}
-          <aside className="w-72  border-r border-[#F2EAF6] flex flex-col py-8 px-6">
+          <aside className="w-72 border-r border-[#F2EAF6] flex flex-col py-8 px-6">
             <div className="text-xl font-semibold mb-8">My profile</div>
             <nav className="flex-1 flex flex-col gap-2">
               <button className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#F8F2F9] text-[#8B2D6C] font-medium border-l-4 border-[#8B2D6C]">
@@ -278,48 +420,54 @@ export default function Profile() {
                 Personal Information
               </button>
               <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
-                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><rect x="4" y="4" width="12" height="12" rx="2" /></svg>
-                About Us
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
+              About Us
               </button>
               <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
-                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><rect x="4" y="4" width="12" height="12" rx="2" /></svg>
-                Terms & Conditions
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
+              Terms & Conditions
               </button>
               <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
-                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><rect x="4" y="4" width="12" height="12" rx="2" /></svg>
-                Previous appointments
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
+              My plans
               </button>
               <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
-                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><rect x="4" y="4" width="12" height="12" rx="2" /></svg>
-                Privacy Policy
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
+              Privacy Policy
               </button>
               <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
-                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
-                Report an issue
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
+              Report an issue
               </button>
             </nav>
-            <button
-              onClick={handleLogout}
+          <button
+            onClick={handleLogout}
               className="flex items-center gap-2 mt-8 text-[#E11D48] font-medium hover:underline"
-            >
+          >
               <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className=""><path d="M15 12l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" /></svg>
-              Logout
-            </button>
+            Logout
+          </button>
           </aside>
           {/* Main Card */}
           <main className="flex-1 flex flex-col items-center justify-center py-12 px-8">
             <div className="flex flex-col items-center mb-8">
-              {user.profilePicture ? (
-                <img
-                  src={user.profilePicture}
-                  alt={user.name}
+            {user.profilePicture ? (
+              <img
+                  src={
+                    typeof user.profilePicture === 'string'
+                      ? user.profilePicture
+                      : user.profilePicture
+                      ? URL.createObjectURL(user.profilePicture)
+                      : undefined
+                  }
+                alt={user.name}
                   className="w-20 h-20 rounded-full object-cover bg-[#F8F2F9] mb-2"
-                />
-              ) : (
+              />
+            ) : (
                 <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] flex items-center justify-center text-white text-3xl font-bold mb-2">
-                  {user.name.charAt(0)}
-                </div>
-              )}
+                {user.name.charAt(0)}
+              </div>
+            )}
               <div className="text-2xl font-bold text-[#1A2343]">{user.name}</div>
               <div className="text-gray-500 text-base">{user.countryCode} {user.phoneNumber}</div>
             </div>
@@ -327,24 +475,24 @@ export default function Profile() {
               <input
                 className="w-full  rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
                 name="name"
-                value={form?.name || ''}
-                onChange={handleChange}
+                value={user.name}
+                onChange={handleUserChange}
                 placeholder="Name*"
                 readOnly={!editMode}
               />
               <input
                 className="w-full  rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
                 name="email"
-                value={form?.email || ''}
-                onChange={handleChange}
+                value={user.email}
+                onChange={handleUserChange}
                 placeholder="Email Address*"
                 readOnly={!editMode}
               />
               <select
                 className="w-full  rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none appearance-none"
                 name="gender"
-                value={form?.gender || ''}
-                onChange={handleChange}
+                value={user.gender}
+                onChange={handleUserChange}
                 disabled={!editMode}
               >
                 <option value="">Gender</option>
@@ -355,47 +503,25 @@ export default function Profile() {
               <input
                 className="w-full  rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
                 name="phoneNumber"
-                value={form?.phoneNumber || ''}
-                onChange={handleChange}
+                value={user.phoneNumber}
+                onChange={handleUserChange}
                 placeholder="Phone Number*"
                 readOnly={!editMode}
               />
-              {/* Doctor referral code field (if needed) */}
-              {/* <input
-                className="w-full  rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
-                name="doctorReferralCode"
-                value={form?.doctorReferralCode || ''}
-                onChange={handleChange}
-                placeholder="Doctor referral code*"
-                readOnly={!editMode}
-              /> */}
-              <div className="relative">
-                <input
-                  className="w-full  rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none pr-12"
-                  name="dob"
-                  type="date"
-                  value={form?.dob ? (typeof form.dob === 'string' ? form.dob : new Date(form.dob).toISOString().split('T')[0]) : ''}
-                  onChange={handleChange}
-                  placeholder="Date of Birth*"
-                  readOnly={!editMode}
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="7" width="14" height="10" rx="2" /><path d="M16 3v4M4 3v4" /></svg>
-                </span>
-              </div>
+           
               {!editMode ? (
-                <button
+          <button
                   type="button"
                   onClick={handleEdit}
                   className="w-full mt-4 py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-lg shadow hover:opacity-90 transition"
-                >
-                  Edit Profile
-                </button>
+          >
+            Edit Profile
+          </button>
               ) : (
                 <div className="flex gap-4 mt-4">
                   <button
                     type="button"
-                    onClick={handleSave}
+                    onClick={handleUserSave}
                     className="flex-1 py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-lg shadow hover:opacity-90 transition"
                   >
                     Save

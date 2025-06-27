@@ -7,7 +7,7 @@ import {
 import { NavMain } from "./NavMain";
 import Logo from "@/assets/zenomiLogo.png";
 import { SidebarHeader } from "./SidebarHeader";
-import { Bell, Settings, HelpCircle, User, CalendarDays, ChartPie, House, Users } from 'lucide-react';
+import {  User, CalendarDays, ChartPie, House, Users } from 'lucide-react';
 import UserAvatar from "./UserAvatar";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from 'react';
@@ -47,11 +47,11 @@ const getNavItems = (isDoctor: boolean) => ({
       url: "/profile",
       icon: User,
     },
-    {
-      title: "Notifications",
-      url: "/notifications",
-      icon: Bell,
-    },
+    // {
+    //   title: "Notifications",
+    //   url: "/notifications",
+    //   icon: Bell,
+    // },
     // {
     //   title: "Settings",
     //   url: "/settings",
@@ -83,21 +83,21 @@ const getNavItems = (isDoctor: boolean) => ({
       url: "/profile",
       icon: User,
     },
-    {
-      title: "Notifications",
-      url: "/notifications",
-      icon: Bell,
-    },
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: Settings,
-    },
-    {
-      title: "Support",
-      url: "/support",
-      icon: HelpCircle,
-    },
+    // {
+    //   title: "Notifications",
+    //   url: "/notifications",
+    //   icon: Bell,
+    // },
+    // {
+    //   title: "Settings",
+    //   url: "/settings",
+    //   icon: Settings,
+    // },
+    // {
+    //   title: "Support",
+    //   url: "/support",
+    //   icon: HelpCircle,
+    // },
   ],
   navMain2: [
     {

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '@/utils/api';
 import Cookies from 'js-cookie';
+import { useToast } from '@/hooks/use-toast';
 
 interface ScoreData {
   [key: string]: number;
@@ -43,6 +44,8 @@ const PatientDetails: React.FC = () => {
   const [patient, setPatient] = useState<PatientDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [openTestId, setOpenTestId] = useState<string | null>(null);
+  const { toast } = useToast();
+  const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
     const fetchPatientDetails = async () => {
@@ -90,8 +93,47 @@ const PatientDetails: React.FC = () => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  // Dummy data for AI and Doctor recommendations (replace with real data if available in API response)
-
+  const handleAssignCourse = async () => {
+    if (!patient) return;
+    setAssigning(true);
+    try {
+      const authCookie = Cookies.get('auth');
+      let token = '';
+      if (authCookie) {
+        try {
+          token = JSON.parse(authCookie).token;
+        } catch (e) {
+          token = '';
+        }
+      }
+      const res = await api.post(`/doctors/assign-course?userId=${patient.id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.data && res.data.success) {
+        toast({
+          title: 'Success',
+          description: 'Course assigned successfully!',
+          variant: 'default',
+          className: 'bg-green-500 text-white',
+        });
+        setPatient({ ...patient, isCourseAssigned: true });
+      } else {
+        toast({
+          title: 'Error',
+          description: res.data?.message || 'Failed to assign course.',
+          variant: 'destructive',
+        });
+      }
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'Failed to assign course.',
+        variant: 'destructive',
+      });
+    } finally {
+      setAssigning(false);
+    }
+  };
 
   if (loading) {
     return <div className="flex justify-center items-center h-screen text-xl">Loading patient details...</div>;
@@ -185,6 +227,55 @@ const PatientDetails: React.FC = () => {
                       </div>
                       
                     </div>
+                    {/* Retake the Test Button */}
+                    <div className="mt-4">
+                      <button
+                        onClick={async () => {
+                          setAssigning(true);
+                          try {
+                            const authCookie = Cookies.get('auth');
+                            let token = '';
+                            if (authCookie) {
+                              try {
+                                token = JSON.parse(authCookie).token;
+                              } catch (e) {
+                                token = '';
+                              }
+                            }
+                            const res = await api.post(`/doctors/reassign-tests?userId=${patient.id}`, {}, {
+                              headers: { Authorization: `Bearer ${token}` },
+                            });
+                            if (res.data && res.data.success) {
+                              toast({
+                                title: 'Success',
+                                description: 'Test cycle reassigned successfully!',
+                                variant: 'default',
+                                className: 'bg-green-500 text-white',
+                              });
+                              // Optionally, refetch patient details here
+                            } else {
+                              toast({
+                                title: 'Error',
+                                description: res.data?.message || 'Failed to reassign test cycle.',
+                                variant: 'destructive',
+                              });
+                            }
+                          } catch (err) {
+                            toast({
+                              title: 'Error',
+                              description: 'Failed to reassign test cycle.',
+                              variant: 'destructive',
+                            });
+                          } finally {
+                            setAssigning(false);
+                          }
+                        }}
+                        disabled={assigning}
+                        className="px-5 py-2 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold shadow hover:opacity-90 transition disabled:opacity-60"
+                      >
+                        {assigning ? 'Reassigning...' : 'Retake the Test'}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -198,6 +289,17 @@ const PatientDetails: React.FC = () => {
         <div className="bg-white rounded-2xl p-6 shadow border border-gray-100">
           <h2 className="text-xl font-semibold text-gray-800 mb-2">Course Assigned</h2>
           <p className="text-gray-700">A course has been assigned to this patient.</p>
+        </div>
+      )}
+      {!patient.isCourseAssigned && (
+        <div className="bg-white rounded-2xl p-6 shadow border border-gray-100 mt-4">
+          <button
+            onClick={handleAssignCourse}
+            disabled={assigning}
+            className="px-6 py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-lg shadow hover:opacity-90 transition disabled:opacity-60"
+          >
+            {assigning ? 'Assigning...' : 'Assign Course'}
+          </button>
         </div>
       )}
     </div>
