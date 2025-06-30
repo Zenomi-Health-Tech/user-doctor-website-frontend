@@ -65,11 +65,7 @@ interface Course {
   // add other fields if needed
 }
 
-const checklist = [
-  "Start Your Daily Mental Health Check-In",
-  "Review Your Recent Test Results",
-  "Talk to a Mental Health Expert",
-];
+
 
 export default function Dashboard() {
   const [tests, setTests] = useState<Test[]>([]);
@@ -485,56 +481,7 @@ console.log(isDoctor , "isDoctor");
         </div>
       )}
       {/* Right Column (for regular users) */}
-      {!isDoctor && (
-        <div className="w-[450px] bg-white rounded-3xl shadow p-8 flex flex-col items-center font-['Poppins']">
-          {/* Circular Progress */}
-          <div className="mb-4 font-['Poppins']">
-            <svg width="80" height="80">
-              <circle
-                cx="40"
-                cy="40"
-                r="36"
-                stroke="#E5E0EA"
-                strokeWidth="8"
-                fill="none"
-              />
-              <circle
-                cx="40"
-                cy="40"
-                r="36"
-                stroke="#704180"
-                strokeWidth="8"
-                fill="none"
-                strokeDasharray={2 * Math.PI * 36}
-                strokeDashoffset={2 * Math.PI * 36 * (1 - 0 / 3)}
-                strokeLinecap="round"
-              />
-              <text
-                x="50%"
-                y="50%"
-                textAnchor="middle"
-                dy=".3em"
-                fontSize="1.2em"
-                fill="#704180"
-                fontWeight="bold"
-                className="font-['Poppins']"
-              >
-                0/3
-              </text>
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold mb-2 text-center font-['Poppins']">Welcome to Zenomi ,<span className="text-[#8B2D6C] font-bold font-['Poppins']">{userName || 'Lily'}</span></h3>
-          <p className="text-gray-500 text-center mb-6 font-['Poppins']">Experience your AHA! moment by completing this simple steps</p>
-          <ul className="w-full space-y-3 font-['Poppins']">
-            {checklist.map((item) => (
-              <li key={item} className="flex items-center justify-between px-4 py-2 rounded-lg bg-gray-100 text-gray-700 font-['Poppins']">
-                <span>{item}</span>
-                <span className="w-6 h-6 flex items-center justify-center rounded-full bg-white border border-gray-300 text-gray-400 font-['Poppins']">✔️</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+     
       {selectedTest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white rounded-3xl p-10 w-full max-w-lg shadow-lg flex flex-col items-center relative font-['Urbanist']">
@@ -710,29 +657,28 @@ console.log(isDoctor , "isDoctor");
       </div>
       )}
       {!isDoctor && courses.length > 0 && (
-        <div className="mt-10">
+        <div className="mt-10 w-full max-w-xl mx-auto">
           <h2 className="text-2xl font-semibold mb-4">Continue learning</h2>
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-[#8B2D6C]/40 scrollbar-track-transparent pr-2">
             {courses.map(course => (
               <div
                 key={course.id}
-                className="rounded-3xl p-8 bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white flex flex-col md:flex-row items-center justify-between shadow-lg relative"
-                style={{ minHeight: 180 }}
+                className="rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white flex flex-col md:flex-row items-center md:items-start justify-between shadow-lg relative min-h-[160px] md:min-h-[180px] w-full"
               >
-                <div>
-                  <div className="uppercase text-sm tracking-widest text-[#D1B3E0] mb-2">Category - {course.category}</div>
-                  <div className="text-2xl font-bold mb-2">{course.title}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="uppercase text-xs sm:text-sm tracking-widest text-[#D1B3E0] mb-2">Category - {course.category}</div>
+                  <div className="text-lg sm:text-2xl font-bold mb-2 break-words">{course.title}</div>
                   <a
                     href={course.courseLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block mt-4 px-6 py-3 rounded-full bg-white text-[#8B2D6C] font-semibold text-lg shadow hover:bg-[#F3EAF7] transition"
+                    className="inline-block mt-4 px-5 py-2 sm:px-6 sm:py-3 rounded-full bg-white text-[#8B2D6C] font-semibold text-base sm:text-lg shadow hover:bg-[#F3EAF7] transition"
                   >
                     Continue →
                   </a>
                 </div>
                 {/* Decorative shapes (optional, for background) */}
-                <div className="absolute right-8 top-8 opacity-20 pointer-events-none select-none">
+                <div className="hidden md:block absolute right-8 top-8 opacity-20 pointer-events-none select-none">
                   <svg width="120" height="120">
                     <circle cx="30" cy="30" r="30" fill="#fff" />
                     <rect x="60" y="20" width="40" height="40" fill="#fff" />
