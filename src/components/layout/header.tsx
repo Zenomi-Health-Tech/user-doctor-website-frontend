@@ -32,9 +32,9 @@ const Header: React.FC = () => {
   }, []);
 
   return (
-    <header className="flex items-center justify-between h-20 px-8 border-b w-full bg-white">
+    <header className="flex flex-col sm:flex-row items-center sm:justify-between h-16 sm:h-20 px-4 mt-4 sm:px-8 border-b w-full bg-white gap-4 sm:gap-0">
       {/* Search Bar */}
-      <div className="flex items-center w-1/3 min-w-[300px]">
+      <div className="flex items-center w-full sm:w-1/2 md:w-1/3 min-w-0 mb-2 sm:mb-0">
         <div className="flex items-center w-full bg-white border border-[#C7BFCB] rounded-full px-4 py-2">
           <Search className="text-[#C7BFCB] w-5 h-5 mr-2" />
           <input
@@ -45,10 +45,9 @@ const Header: React.FC = () => {
         </div>
       </div>
       {/* Right Side Icons */}
-      <div className="flex items-center gap-6">
-     
+      <div className="flex items-center gap-4 sm:gap-6">
         {/* User Avatar */}
-        <div className="w-10 h-10 flex items-center justify-center rounded-full bg-[#7B2B6A] text-white text-lg font-semibold">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-[#7B2B6A] text-white text-base sm:text-lg font-semibold">
           {doctorInitial || 'L'}
         </div>
       </div>
