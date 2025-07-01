@@ -409,12 +409,12 @@ export default function Profile() {
   } else if (!isDoctor) {
     const user = userForm as UserProfile;
     return (
-      <div className="min-h-screen  flex items-center justify-center font-['Poppins']">
-        <div className="w-full max-w-5xl min-h-[80vh] bg-white rounded-2xl shadow-lg flex overflow-hidden border border-[#F2EAF6]">
+      <div className="min-h-screen flex flex-col md:flex-row items-center md:items-start justify-center font-['Poppins'] p-2 sm:p-4">
+        <div className="w-full max-w-5xl min-h-[80vh] bg-white rounded-2xl shadow-lg flex flex-col md:flex-row overflow-hidden border border-[#F2EAF6]">
           {/* Sidebar */}
-          <aside className="w-72 border-r border-[#F2EAF6] flex flex-col py-8 px-6">
-            <div className="text-xl font-semibold mb-8">My profile</div>
-            <nav className="flex-1 flex flex-col gap-2">
+          <aside className="w-full md:w-72 border-b md:border-b-0 md:border-r border-[#F2EAF6] flex flex-row md:flex-col py-4 md:py-8 px-4 md:px-6 gap-2 md:gap-0 overflow-x-auto md:overflow-x-visible whitespace-nowrap md:whitespace-normal max-w-full min-w-0">
+            <div className="text-lg md:text-xl font-semibold mb-4 md:mb-8 w-full">My profile</div>
+            <nav className="flex-1 flex flex-row md:flex-col gap-2 w-full overflow-x-auto md:overflow-x-visible whitespace-nowrap md:whitespace-normal">
               <button className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#F8F2F9] text-[#8B2D6C] font-medium border-l-4 border-[#8B2D6C]">
                 <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
                 Personal Information
@@ -442,15 +442,15 @@ export default function Profile() {
             </nav>
           <button
             onClick={handleLogout}
-              className="flex items-center gap-2 mt-8 text-[#E11D48] font-medium hover:underline"
+              className="flex items-center gap-2 mt-4 md:mt-8 text-[#E11D48] font-medium hover:underline"
           >
               <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className=""><path d="M15 12l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" /></svg>
             Logout
           </button>
           </aside>
           {/* Main Card */}
-          <main className="flex-1 flex flex-col items-center justify-center py-12 px-8">
-            <div className="flex flex-col items-center mb-8">
+          <main className="flex-1 flex flex-col items-center justify-center py-6 sm:py-10 md:py-12 px-2 sm:px-4 md:px-8">
+            <div className="flex flex-col items-center mb-6 sm:mb-8">
             {user.profilePicture ? (
               <img
                   src={
@@ -461,19 +461,19 @@ export default function Profile() {
                       : undefined
                   }
                 alt={user.name}
-                  className="w-20 h-20 rounded-full object-cover bg-[#F8F2F9] mb-2"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover bg-[#F8F2F9] mb-2"
               />
             ) : (
-                <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] flex items-center justify-center text-white text-3xl font-bold mb-2">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] flex items-center justify-center text-white text-2xl sm:text-3xl font-bold mb-2">
                 {user.name.charAt(0)}
               </div>
             )}
-              <div className="text-2xl font-bold text-[#1A2343]">{user.name}</div>
-              <div className="text-gray-500 text-base">{user.countryCode} {user.phoneNumber}</div>
+              <div className="text-lg sm:text-2xl font-bold text-[#1A2343]">{user.name}</div>
+              <div className="text-gray-500 text-sm sm:text-base">{user.countryCode} {user.phoneNumber}</div>
             </div>
-            <form className="w-full max-w-lg flex flex-col gap-5">
+            <form className="w-full max-w-full sm:max-w-lg flex flex-col gap-4 sm:gap-5">
               <input
-                className="w-full  rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
+                className="w-full rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none text-sm sm:text-base"
                 name="name"
                 value={user.name}
                 onChange={handleUserChange}
@@ -481,7 +481,7 @@ export default function Profile() {
                 readOnly={!editMode}
               />
               <input
-                className="w-full  rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
+                className="w-full rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none text-sm sm:text-base"
                 name="email"
                 value={user.email}
                 onChange={handleUserChange}
@@ -489,7 +489,7 @@ export default function Profile() {
                 readOnly={!editMode}
               />
               <select
-                className="w-full  rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none appearance-none"
+                className="w-full rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none appearance-none text-sm sm:text-base"
                 name="gender"
                 value={user.gender}
                 onChange={handleUserChange}
@@ -501,7 +501,7 @@ export default function Profile() {
                 <option value="OTHER">Other</option>
               </select>
               <input
-                className="w-full  rounded-lg px-4 py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none"
+                className="w-full rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 text-gray-700 placeholder-gray-400 border-0 focus:ring-2 focus:ring-[#8B2D6C] focus:outline-none text-sm sm:text-base"
                 name="phoneNumber"
                 value={user.phoneNumber}
                 onChange={handleUserChange}
@@ -513,23 +513,23 @@ export default function Profile() {
           <button
                   type="button"
                   onClick={handleEdit}
-                  className="w-full mt-4 py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-lg shadow hover:opacity-90 transition"
+                  className="w-full mt-4 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-base sm:text-lg shadow hover:opacity-90 transition"
           >
             Edit Profile
           </button>
               ) : (
-                <div className="flex gap-4 mt-4">
+                <div className="flex gap-3 sm:gap-4 mt-4">
                   <button
                     type="button"
                     onClick={handleUserSave}
-                    className="flex-1 py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-lg shadow hover:opacity-90 transition"
+                    className="flex-1 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-base sm:text-lg shadow hover:opacity-90 transition"
                   >
                     Save
                   </button>
                   <button
                     type="button"
                     onClick={handleCancel}
-                    className="flex-1 py-3 rounded-full bg-gray-200 text-gray-700 font-semibold text-lg shadow hover:bg-gray-300 transition"
+                    className="flex-1 py-2.5 sm:py-3 rounded-full bg-gray-200 text-gray-700 font-semibold text-base sm:text-lg shadow hover:bg-gray-300 transition"
                   >
                     Cancel
                   </button>

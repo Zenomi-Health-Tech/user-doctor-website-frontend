@@ -39,9 +39,9 @@ export default function Results() {
   ];
 
   return (
-    <div className="flex gap-8 p-8 bg-gray-50 min-h-screen ">
+    <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 p-2 sm:p-4 md:p-8 bg-gray-50 min-h-screen ">
       {/* Left Column */}
-      <div className="flex-1 max-w-[700px] font-['Urbanist'] flex flex-col">
+      <div className="flex-1 w-full max-w-full lg:max-w-[700px] font-['Urbanist'] flex flex-col">
         {analytics.length === 0 ? (
           <div>No results found.</div>
         ) : (
@@ -57,107 +57,174 @@ export default function Results() {
             const testsCompleted = result.testsCompleted;
             const isOpen = openCycle === result.id;
             return (
-              <div key={result.id} className="mb-6 border rounded-2xl bg-white shadow-sm">
+              <div key={result.id} className="mb-4 sm:mb-6 border rounded-2xl bg-white shadow-sm">
                 {/* Accordion Header */}
                 <button
-                  className="w-full flex justify-between items-center px-6 py-4 text-left focus:outline-none"
+                  className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 sm:px-6 py-3 sm:py-4 text-left focus:outline-none"
                   onClick={() => setOpenCycle(isOpen ? null : result.id)}
                 >
-                  <span className="font-semibold text-lg">Cycle {result.cycle}</span>
-                  <span className="text-gray-500 text-sm">Last Updated: {lastUpdated}</span>
-                  <span className="ml-4 text-2xl">{isOpen ? '▲' : '▼'}</span>
+                  <span className="font-semibold text-base sm:text-lg">Cycle {result.cycle}</span>
+                  <span className="text-gray-500 text-xs sm:text-sm mt-1 sm:mt-0">Last Updated: {lastUpdated}</span>
+                  <span className="ml-0 sm:ml-4 text-lg sm:text-2xl">{isOpen ? '▲' : '▼'}</span>
                 </button>
                 {/* Accordion Content */}
                 {isOpen && (
-                  <div className="px-6 pb-6 pt-2">
-                    <div className="flex items-center gap-2 mb-4">
-                      <span className="text-base font-medium">{testsCompleted} of 3 tests completed</span>
-                      <span className="w-6 h-6 flex items-center justify-center rounded-full bg-[#4E8041] text-white text-lg">✔</span>
-                      <span className="w-6 h-6 flex items-center justify-center rounded-full bg-[#4E8041] text-white text-lg">✔</span>
-                      <span className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-200 text-gray-400 text-lg">✔</span>
+                  <div className="px-2 sm:px-6 pb-4 sm:pb-6 pt-2">
+                    <div className="flex items-center gap-2 mb-4 flex-wrap">
+                      <span className="text-sm sm:text-base font-medium">{testsCompleted} of 3 tests completed</span>
+                      <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-[#4E8041] text-white text-base sm:text-lg">✔</span>
+                      <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-[#4E8041] text-white text-base sm:text-lg">✔</span>
+                      <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-gray-200 text-gray-400 text-base sm:text-lg">✔</span>
                     </div>
                     {/* Bar Chart */}
-                    <div className="rounded-2xl p-6 mb-6 min-h-[400px] flex items-center justify-center" style={{ boxShadow: '0px 6.58px 6.58px 0px #00000040' }}>
-                      <svg width="700" height="400" viewBox="0 0 700 400">
-                        {/* Y axis grid lines */}
-                        {[0, 2, 4, 6, 8, 10].map((y) => (
-                          <line
-                            key={y}
-                            x1={60}
-                            x2={660}
-                            y1={360 - y * 32}
-                            y2={360 - y * 32}
-                            stroke="#E5E0EA"
-                            strokeWidth={1}
-                          />
-                        ))}
-                        {/* Bars */}
-                        {barData.map((bar, i) => (
-                          <g key={bar.label}>
-                            <rect
-                              x={90 + i * 110}
-                              y={360 - (bar.value ?? 0) * 32}
-                              width={60}
-                              height={(bar.value ?? 0) * 32}
-                              rx={18}
-                              fill="url(#barGradient)"
+                    <div className="rounded-2xl p-2 sm:p-6 mb-4 sm:mb-6 min-h-[220px] sm:min-h-[400px] flex items-center justify-center overflow-x-auto">
+                      <div className="w-[420px] sm:w-[700px]">
+                        <svg width="100%" height="220" viewBox="0 0 700 220" className="hidden sm:block">
+                          {/* Y axis grid lines */}
+                          {[0, 2, 4, 6, 8, 10].map((y) => (
+                            <line
+                              key={y}
+                              x1={60}
+                              x2={660}
+                              y1={200 - y * 18}
+                              y2={200 - y * 18}
+                              stroke="#E5E0EA"
+                              strokeWidth={1}
                             />
+                          ))}
+                          {/* Bars */}
+                          {barData.map((bar, i) => (
+                            <g key={bar.label}>
+                              <rect
+                                x={90 + i * 110}
+                                y={200 - (bar.value ?? 0) * 18}
+                                width={60}
+                                height={(bar.value ?? 0) * 18}
+                                rx={12}
+                                fill="url(#barGradient)"
+                              />
+                              <text
+                                x={120 + i * 110}
+                                y={200 - (bar.value ?? 0) * 18 - 10}
+                                textAnchor="middle"
+                                fontSize="16"
+                                fill="#704180"
+                                fontWeight="bold"
+                              >
+                                {(bar.value ?? 0) > 0 ? bar.value : ''}
+                              </text>
+                              <text
+                                x={120 + i * 110}
+                                y={220}
+                                textAnchor="middle"
+                                fontSize="14"
+                                fill="#231942"
+                                fontWeight="400"
+                              >
+                                {bar.label}
+                              </text>
+                            </g>
+                          ))}
+                          {/* Y axis labels */}
+                          {[0, 2, 4, 6, 8, 10].map((y) => (
                             <text
-                              x={120 + i * 110}
-                              y={360 - (bar.value ?? 0) * 32 - 16}
-                              textAnchor="middle"
-                              fontSize="22"
-                              fill="#704180"
-                              fontWeight="bold"
-                            >
-                              {(bar.value ?? 0) > 0 ? bar.value : ''}
-                            </text>
-                            <text
-                              x={120 + i * 110}
-                              y={390}
-                              textAnchor="middle"
-                              fontSize="20"
+                              key={y}
+                              x={50}
+                              y={200 - y * 18 + 8}
+                              fontSize="12"
                               fill="#231942"
-                              fontWeight="400"
+                              textAnchor="end"
+                              fontWeight="600"
                             >
-                              {bar.label}
+                              {y < 10 ? `0${y}` : y}
                             </text>
-                          </g>
-                        ))}
-                        {/* Y axis labels */}
-                        {[0, 2, 4, 6, 8, 10].map((y) => (
-                          <text
-                            key={y}
-                            x={50}
-                            y={360 - y * 32 + 10}
-                            fontSize="18"
-                            fill="#231942"
-                            textAnchor="end"
-                            fontWeight="600"
-                          >
-                            {y < 10 ? `0${y}` : y}
-                          </text>
-                        ))}
-                        {/* Gradient */}
-                        <defs>
-                          <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
-                            <stop offset="5%" stopColor="#704180" />
-                            <stop offset="95%" stopColor="#8B2D6C" />
-                          </linearGradient>
-                        </defs>
-                      </svg>
+                          ))}
+                          {/* Gradient */}
+                          <defs>
+                            <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
+                              <stop offset="5%" stopColor="#704180" />
+                              <stop offset="95%" stopColor="#8B2D6C" />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                        {/* Mobile SVG */}
+                        <svg width="100%" height="160" viewBox="0 0 420 160" className="block sm:hidden">
+                          {[0, 2, 4, 6, 8, 10].map((y) => (
+                            <line
+                              key={y}
+                              x1={40}
+                              x2={400}
+                              y1={140 - y * 12}
+                              y2={140 - y * 12}
+                              stroke="#E5E0EA"
+                              strokeWidth={1}
+                            />
+                          ))}
+                          {barData.map((bar, i) => (
+                            <g key={bar.label}>
+                              <rect
+                                x={60 + i * 70}
+                                y={140 - (bar.value ?? 0) * 12}
+                                width={36}
+                                height={(bar.value ?? 0) * 12}
+                                rx={8}
+                                fill="url(#barGradientMob)"
+                              />
+                              <text
+                                x={78 + i * 70}
+                                y={140 - (bar.value ?? 0) * 12 - 6}
+                                textAnchor="middle"
+                                fontSize="10"
+                                fill="#704180"
+                                fontWeight="bold"
+                              >
+                                {(bar.value ?? 0) > 0 ? bar.value : ''}
+                              </text>
+                              <text
+                                x={78 + i * 70}
+                                y={158}
+                                textAnchor="middle"
+                                fontSize="10"
+                                fill="#231942"
+                                fontWeight="400"
+                              >
+                                {bar.label}
+                              </text>
+                            </g>
+                          ))}
+                          {[0, 2, 4, 6, 8, 10].map((y) => (
+                            <text
+                              key={y}
+                              x={32}
+                              y={140 - y * 12 + 5}
+                              fontSize="9"
+                              fill="#231942"
+                              textAnchor="end"
+                              fontWeight="600"
+                            >
+                              {y < 10 ? `0${y}` : y}
+                            </text>
+                          ))}
+                          <defs>
+                            <linearGradient id="barGradientMob" x1="0" y1="0" x2="1" y2="0">
+                              <stop offset="5%" stopColor="#704180" />
+                              <stop offset="95%" stopColor="#8B2D6C" />
+                            </linearGradient>
+                          </defs>
+                        </svg>
+                      </div>
                     </div>
                     {/* Recommended Courses */}
                     <div className="mt-2">
-                      <h3 className="text-lg font-semibold mb-3">Recommended Courses</h3>
-                      <div className="flex flex-col gap-3">
+                      <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">Recommended Courses</h3>
+                      <div className="flex flex-col gap-2 sm:gap-3">
                         {result.courseRecommendations && result.courseRecommendations.length > 0 ? (
                           result.courseRecommendations.map((course, idx) => (
-                            <div key={idx} className="flex items-center bg-white rounded-xl shadow p-4 max-w-lg border border-gray-100">
+                            <div key={idx} className="flex items-center bg-white rounded-xl shadow p-3 sm:p-4 max-w-full sm:max-w-lg border border-gray-100">
                               <div className="flex-1">
-                                <div className="font-bold text-base mb-1">{course.courseName}</div>
-                                <div className="text-gray-500 text-sm mb-1 flex items-center gap-2">
-                                  <a href={course.courseLink.split(',')[0]} target="_blank" rel="noopener noreferrer" className="text-[#704180] font-semibold text-sm underline">Go to Course</a>
+                                <div className="font-bold text-sm sm:text-base mb-1">{course.courseName}</div>
+                                <div className="text-gray-500 text-xs sm:text-sm mb-1 flex items-center gap-2">
+                                  <a href={course.courseLink.split(',')[0]} target="_blank" rel="noopener noreferrer" className="text-[#704180] font-semibold underline">Go to Course</a>
                                 </div>
                               </div>
                             </div>
@@ -175,19 +242,51 @@ export default function Results() {
         )}
       </div>
       {/* Right Column */}
-      <div className="w-[350px] flex flex-col gap-6 font-['Poppins']">
+      <div className="w-full lg:w-[350px] flex flex-col gap-4 sm:gap-6 font-['Poppins'] mt-4 lg:mt-0">
         {/* Therapist Card */}
-        <div className="bg-white rounded-3xl shadow p-6 flex flex-col items-center border border-[#BCBCBC]">
-          <img src={topresultimage} alt="Therapist" className="w-52 h-32 object-cover rounded-xl mb-4" />
-          <div className="font-semibold text-lg mb-1 text-center">Talk to a therapist?</div>
-          <div className="text-gray-500 text-center mb-4">Book your session now</div>
-          <button onClick={() => navigate('/appointments/set-availability-user')} className="px-6 py-2 rounded-full font-medium text-base text-white" style={{background: 'linear-gradient(89.79deg, #704180 5.07%, #8B2D6C 95.83%)'}}>Book now</button>
+        <div className="bg-white rounded-3xl shadow p-4 sm:p-6 flex flex-col items-center border border-[#BCBCBC]">
+          <img src={topresultimage} alt="Therapist" className="w-36 h-20 sm:w-52 sm:h-32 object-cover rounded-xl mb-3 sm:mb-4" />
+          <div className="font-semibold text-base sm:text-lg mb-1 text-center">Talk to a therapist?</div>
+          <div className="text-gray-500 text-center mb-3 sm:mb-4">Book your session now</div>
+          <button onClick={() => navigate('/appointments/set-availability-user')} className="px-4 sm:px-6 py-2 rounded-full font-medium text-sm sm:text-base text-white" style={{background: 'linear-gradient(89.79deg, #704180 5.07%, #8B2D6C 95.83%)'}}>Book now</button>
         </div>
         {/* Checklist Card */}
-        <div className="bg-white rounded-3xl shadow p-8 flex flex-col items-center border border-[#BCBCBC]">
+        <div className="bg-white rounded-3xl shadow p-6 sm:p-8 flex flex-col items-center border border-[#BCBCBC]">
           {/* Circular Progress */}
-          <div className="mb-4">
-            <svg width="80" height="80">
+          <div className="mb-3 sm:mb-4">
+            <svg width="60" height="60" className="sm:hidden">
+              <circle
+                cx="30"
+                cy="30"
+                r="26"
+                stroke="#E5E0EA"
+                strokeWidth="6"
+                fill="none"
+              />
+              <circle
+                cx="30"
+                cy="30"
+                r="26"
+                stroke="#704180"
+                strokeWidth="6"
+                fill="none"
+                strokeDasharray={2 * Math.PI * 26}
+                strokeDashoffset={2 * Math.PI * 26 * (1 - 0 / 3)}
+                strokeLinecap="round"
+              />
+              <text
+                x="50%"
+                y="50%"
+                textAnchor="middle"
+                dy=".3em"
+                fontSize="0.9em"
+                fill="#704180"
+                fontWeight="bold"
+              >
+                0/3
+              </text>
+            </svg>
+            <svg width="80" height="80" className="hidden sm:block">
               <circle
                 cx="40"
                 cy="40"
@@ -220,13 +319,13 @@ export default function Results() {
               </text>
             </svg>
           </div>
-          <h3 className="text-lg font-semibold mb-2 text-center">Welcome to Zenomi ,<span className="text-[#8B2D6C]">Lily</span></h3>
-          <p className="text-gray-500 text-center mb-6">Experience your AHA! moment by completing this simple steps</p>
-          <ul className="w-full space-y-3">
+          <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2 text-center">Welcome to Zenomi ,<span className="text-[#8B2D6C]">Lily</span></h3>
+          <p className="text-gray-500 text-center mb-4 sm:mb-6 text-xs sm:text-base">Experience your AHA! moment by completing this simple steps</p>
+          <ul className="w-full space-y-2 sm:space-y-3">
             {checklist.map((item) => (
-              <li key={item} className="flex items-center justify-between px-4 py-2 rounded-lg bg-gray-100 text-gray-700">
+              <li key={item} className="flex items-center justify-between px-2 sm:px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-xs sm:text-base">
                 <span>{item}</span>
-                <span className="w-6 h-6 flex items-center justify-center rounded-full bg-white border border-gray-300 text-gray-400">✔️</span>
+                <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-white border border-gray-300 text-gray-400">✔️</span>
               </li>
             ))}
           </ul>

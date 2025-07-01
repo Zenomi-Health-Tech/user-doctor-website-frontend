@@ -331,13 +331,13 @@ export default function Appointments() {
 
   // --- User UI ---
   return (
-    <div className="p-8 min-h-screen font-['Poppins'] ">
-      <h1 className="text-3xl font-semibold mb-6 text-gray-800">Appointments</h1>
-      <div className="flex flex-col lg:flex-row gap-4 w-full">
+    <div className="p-2 sm:p-4 md:p-8 min-h-screen font-['Poppins'] ">
+      <h1 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 text-gray-800">Appointments</h1>
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 w-full">
         {/* Left: Appointments List */}
-        <div className="flex-grow max-w-[800px] min-w-0">
+        <div className="flex-grow w-full max-w-full lg:max-w-[800px] min-w-0">
           {/* Tabs */}
-          <div className="flex mb-8 w-full max-w-xl  rounded-full overflow-hidden bg-[#F6EEF3]" style={{height: 56}}>
+          <div className="flex mb-6 sm:mb-8 w-full max-w-xl rounded-full overflow-hidden bg-[#F6EEF3]" style={{height: 48}}>
             <button
               className={`w-1/2 py-3 text-lg font-normal transition-all focus:outline-none ${userActiveTab === 'Upcoming' ? 'text-white' : 'text-black'}`}
               style={userActiveTab === 'Upcoming'
@@ -389,7 +389,7 @@ export default function Appointments() {
                 return (
                   <div
                     key={appt.id}
-                    className="bg-white rounded-2xl border border-[#E5E5E5] shadow-sm p-6 flex flex-col gap-4 max-w-xl "
+                    className="bg-white rounded-2xl border border-[#E5E5E5] shadow-sm p-4 sm:p-6 flex flex-col gap-4 max-w-full sm:max-w-xl "
                     style={{ boxShadow: '0px 2px 12px 0px #0000000A' }}
                   >
                     <div className="flex items-center gap-4">
@@ -397,7 +397,7 @@ export default function Appointments() {
                         <img
                           src={appt.doctor.photoUrl}
                           alt={appt.doctor.name}
-                          className="w-16 h-16 rounded-2xl object-cover bg-[#F8F2F9]"
+                          className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl object-cover bg-[#F8F2F9]"
                         />
                       ) : (
                         <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-[#F8F2F9] text-[#B06AB3] text-2xl font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>
@@ -405,21 +405,21 @@ export default function Appointments() {
                         </div>
                       )}
                       <div className="flex flex-col justify-center ml-2">
-                        <div className="text-2xl font-bold text-[#1A2343]" style={{ fontFamily: 'Poppins, sans-serif' }}>{appt.doctor.name}</div>
-                        <div className="text-lg text-gray-500 font-medium" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                        <div className="text-lg sm:text-2xl font-bold text-[#1A2343]" style={{ fontFamily: 'Poppins, sans-serif' }}>{appt.doctor.name}</div>
+                        <div className="text-base sm:text-lg text-gray-500 font-medium" style={{ fontFamily: 'Poppins, sans-serif' }}>
                           Specialist in {appt.doctor.specialization}
                         </div>
                       </div>
                     </div>
                     <hr className="my-2 border-[#ECECEC]" />
-                    <div className="flex items-center gap-8 text-gray-700 mb-2">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-8 text-gray-700 mb-2">
                       <div className="flex items-center gap-2">
-                        <svg width="22" height="22" fill="none" stroke="#1A2343" strokeWidth="2"><rect x="3" y="5" width="16" height="14" rx="4" /><path d="M8 3v4M14 3v4" /></svg>
-                        <span className="text-base font-medium">{dateStr}</span>
+                        <svg width="20" height="20" fill="none" stroke="#1A2343" strokeWidth="2"><rect x="3" y="5" width="16" height="14" rx="4" /><path d="M8 3v4M14 3v4" /></svg>
+                        <span className="text-sm sm:text-base font-medium">{dateStr}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <svg width="22" height="22" fill="none" stroke="#1A2343" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="M11 7v4l2 2" /></svg>
-                        <span className="text-base font-medium">{startTimeStr} - {endTimeStr}</span>
+                        <svg width="20" height="20" fill="none" stroke="#1A2343" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="M11 7v4l2 2" /></svg>
+                        <span className="text-sm sm:text-base font-medium">{startTimeStr} - {endTimeStr}</span>
                       </div>
                     </div>
                     {/* <button
@@ -435,63 +435,95 @@ export default function Appointments() {
           )}
         </div>
         {/* Right: Cards */}
-        <div className="w-full max-w-[350px] flex flex-col gap-6 font-['Poppins'] mt-8 lg:mt-0">
-        {/* Therapist Card */}
-        <div className="bg-white rounded-3xl shadow p-6 flex flex-col items-center border border-[#BCBCBC]">
-          <img src={topresultimage} alt="Therapist" className="w-52 h-32 object-cover rounded-xl mb-4" />
-          <div className="font-semibold text-lg mb-1 text-center">Talk to a therapist?</div>
-          <div className="text-gray-500 text-center mb-4">Book your session now</div>
-          <button onClick={() => navigate('/appointments/set-availability-user')} className="px-6 py-2 rounded-full font-medium text-base text-white" style={{background: 'linear-gradient(89.79deg, #704180 5.07%, #8B2D6C 95.83%)'}}>Book now</button>
-        </div>
-        {/* Checklist Card */}
-        <div className="bg-white rounded-3xl shadow p-8 flex flex-col items-center border border-[#BCBCBC]">
-          {/* Circular Progress */}
-          <div className="mb-4">
-            <svg width="80" height="80">
-              <circle
-                cx="40"
-                cy="40"
-                r="36"
-                stroke="#E5E0EA"
-                strokeWidth="8"
-                fill="none"
-              />
-              <circle
-                cx="40"
-                cy="40"
-                r="36"
-                stroke="#704180"
-                strokeWidth="8"
-                fill="none"
-                strokeDasharray={2 * Math.PI * 36}
-                strokeDashoffset={2 * Math.PI * 36 * (1 - 0 / 3)}
-                strokeLinecap="round"
-              />
-              <text
-                x="50%"
-                y="50%"
-                textAnchor="middle"
-                dy=".3em"
-                fontSize="1.2em"
-                fill="#704180"
-                fontWeight="bold"
-              >
-                0/3
-              </text>
-            </svg>
+        <div className="w-full lg:w-[350px] flex flex-col gap-4 sm:gap-6 font-['Poppins'] mt-6 lg:mt-0">
+          {/* Therapist Card */}
+          <div className="bg-white rounded-3xl shadow p-4 sm:p-6 flex flex-col items-center border border-[#BCBCBC]">
+            <img src={topresultimage} alt="Therapist" className="w-36 h-20 sm:w-52 sm:h-32 object-cover rounded-xl mb-3 sm:mb-4" />
+            <div className="font-semibold text-base sm:text-lg mb-1 text-center">Talk to a therapist?</div>
+            <div className="text-gray-500 text-center mb-3 sm:mb-4">Book your session now</div>
+            <button onClick={() => navigate('/appointments/set-availability-user')} className="px-4 sm:px-6 py-2 rounded-full font-medium text-sm sm:text-base text-white" style={{background: 'linear-gradient(89.79deg, #704180 5.07%, #8B2D6C 95.83%)'}}>Book now</button>
           </div>
-          <h3 className="text-lg font-semibold mb-2 text-center">Welcome to Zenomi ,<span className="text-[#8B2D6C]">Lily</span></h3>
-          <p className="text-gray-500 text-center mb-6">Experience your AHA! moment by completing this simple steps</p>
-          <ul className="w-full space-y-3">
-            {checklist.map((item) => (
-              <li key={item} className="flex items-center justify-between px-4 py-2 rounded-lg bg-gray-100 text-gray-700">
-                <span>{item}</span>
-                <span className="w-6 h-6 flex items-center justify-center rounded-full bg-white border border-gray-300 text-gray-400">✔️</span>
-              </li>
-            ))}
-          </ul>
+          {/* Checklist Card */}
+          <div className="bg-white rounded-3xl shadow p-6 sm:p-8 flex flex-col items-center border border-[#BCBCBC]">
+            {/* Circular Progress */}
+            <div className="mb-3 sm:mb-4">
+              <svg width="60" height="60" className="sm:hidden">
+                <circle
+                  cx="30"
+                  cy="30"
+                  r="26"
+                  stroke="#E5E0EA"
+                  strokeWidth="6"
+                  fill="none"
+                />
+                <circle
+                  cx="30"
+                  cy="30"
+                  r="26"
+                  stroke="#704180"
+                  strokeWidth="6"
+                  fill="none"
+                  strokeDasharray={2 * Math.PI * 26}
+                  strokeDashoffset={2 * Math.PI * 26 * (1 - 0 / 3)}
+                  strokeLinecap="round"
+                />
+                <text
+                  x="50%"
+                  y="50%"
+                  textAnchor="middle"
+                  dy=".3em"
+                  fontSize="0.9em"
+                  fill="#704180"
+                  fontWeight="bold"
+                >
+                  0/3
+                </text>
+              </svg>
+              <svg width="80" height="80" className="hidden sm:block">
+                <circle
+                  cx="40"
+                  cy="40"
+                  r="36"
+                  stroke="#E5E0EA"
+                  strokeWidth="8"
+                  fill="none"
+                />
+                <circle
+                  cx="40"
+                  cy="40"
+                  r="36"
+                  stroke="#704180"
+                  strokeWidth="8"
+                  fill="none"
+                  strokeDasharray={2 * Math.PI * 36}
+                  strokeDashoffset={2 * Math.PI * 36 * (1 - 0 / 3)}
+                  strokeLinecap="round"
+                />
+                <text
+                  x="50%"
+                  y="50%"
+                  textAnchor="middle"
+                  dy=".3em"
+                  fontSize="1.2em"
+                  fill="#704180"
+                  fontWeight="bold"
+                >
+                  0/3
+                </text>
+              </svg>
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2 text-center">Welcome to Zenomi ,<span className="text-[#8B2D6C]">Lily</span></h3>
+            <p className="text-gray-500 text-center mb-4 sm:mb-6 text-xs sm:text-base">Experience your AHA! moment by completing this simple steps</p>
+            <ul className="w-full space-y-2 sm:space-y-3">
+              {checklist.map((item) => (
+                <li key={item} className="flex items-center justify-between px-2 sm:px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-xs sm:text-base">
+                  <span>{item}</span>
+                  <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-white border border-gray-300 text-gray-400">✔️</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-      </div>
       </div>
     </div>
   );
