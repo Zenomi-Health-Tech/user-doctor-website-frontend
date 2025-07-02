@@ -6,6 +6,7 @@ import  yellowcal  from '@/assets/yellowcal.png'
 import  purplecal  from '@/assets/purplecal.png'
 import  greencal  from '@/assets/greencal.png'
 import { useNavigate } from 'react-router-dom';
+import PeopleTest from '@/assets/PeopleTest.svg'
 
 // Import the WellnessReport component
 import { useAuth } from '@/context/AuthContext'; // Import useAuth from the new context
@@ -421,63 +422,129 @@ console.log(isDoctor , "isDoctor");
         </div>
       ) : (
         <div className="flex-1 w-full max-w-[650px] font-['Poppins'] mx-auto">
-          <h2 className="text-xl sm:text-2xl font-semibold mb-2 font-['Urbanist']">
-            <span role="img" aria-label="wave">👋</span>
-            {" "}
-            Hey <span className="text-[#8B2D6C] font-bold font-['Urbanist']">{userName || 'there'}</span>, ready to check in with yourself today?
-          </h2>
-          {/* Progress Bar */}
-          <div className="mb-4 sm:mb-6 font-['Poppins']">
-            <div className="flex justify-between text-xs sm:text-sm text-gray-500 mb-1 font-['Poppins']">
-              <span>{completedCount} of {tests.length} completed</span>
-            </div>
-            <div className="w-full h-2 bg-gray-200 rounded-full">
-              <div
-                className="h-2 rounded-full bg-gradient-to-r from-[#704180] to-[#8B2D6C]"
-                style={{ width: `${tests.length ? (completedCount / tests.length) * 100 : 0}%` }}
-              />
-            </div>
-          </div>
-          {/* Test Cards */}
-          <div className="flex flex-col gap-4 sm:gap-6 font-['Poppins']">
-            {tests?.map((test) => (
-              <div
-                key={test.id}
-                className={`rounded-3xl p-4 sm:p-6 relative font-['Poppins'] ${test.testStatus === 'COMPLETED'
-                    ? 'bg-gradient-to-r from-[#704180] to-[#8B2D6C]'
-                    : test.testStatus === 'UNLOCKED'
-                      ? 'bg-gradient-to-r from-[#704180] to-[#8B2D6C] opacity-80'
-                      : 'bg-gray-200 opacity-80'
-                  }`}
-              >
-                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 font-['Poppins']">
-                  <img src={test.image_url} alt={test.name} className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl object-cover" />
-                  <div className="flex-1 w-full">
-                    <h3 className={`text-lg sm:text-xl font-bold font-['Poppins'] ${test.testStatus === 'COMPLETED' ? 'text-white' : 'text-gray-300'}`}>{test.name}</h3>
-                    <p className={`text-sm sm:text-base font-['Poppins'] ${test.testStatus === 'COMPLETED' ? 'text-white' : 'text-gray-300'}`}>{test.description || 'No description available'}</p>
-                    <button
-                      className={`mt-4 px-4 py-2 sm:px-6 sm:py-2 rounded-full font-semibold text-sm sm:text-base font-['Poppins']
-                        ${(test.testStatus === 'COMPLETED' || test.testStatus === 'UNLOCKED')
-                          ? 'bg-white text-[#704180] hover:bg-gray-100'
-                          : 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                        }`}
-                      onClick={() => setSelectedTest(test)}
-                      disabled={!(test.testStatus === 'COMPLETED' || test.testStatus === 'UNLOCKED')}
-                    >
-                      Take test
-                    </button>
+          {tests.length > 0 && completedCount === tests.length ? (
+            <>
+              {/* All tests complete card */}
+              <div className="rounded-3xl p-6 sm:p-8 flex items-center justify-between bg-[#E9D7F7] relative min-h-[200px] mb-8">
+                <div className="flex-1">
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-2">All your tests are complete!</h2>
+                  <div className="w-full h-4 bg-gray-200 rounded-full mb-3">
+                    <div
+                      className="h-4 rounded-full bg-[#F6C851]"
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+                  <div className="text-lg mb-4">{completedCount} out of {tests.length} tests completed</div>
+                  <button
+                    className="px-8 py-3 rounded-full bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white font-semibold text-lg shadow hover:opacity-90 transition"
+                    onClick={() => navigate('/results')}
+                  >
+                    View reports
+                  </button>
+                </div>
+                <img
+                  src={PeopleTest}
+                  alt="All tests complete"
+                  className="w-40 h-40 object-contain ml-6 hidden sm:block"
+                />
+              </div>
+              {/* Courses section below the card, column layout */}
+              {courses.length > 0 && (
+                <div className="w-full max-w-xl mx-auto">
+                  <h2 className="text-xl sm:text-2xl font-semibold mb-4">Continue learning</h2>
+                  <div className="flex flex-col gap-4 sm:gap-6 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-[#8B2D6C]/40 scrollbar-track-transparent pr-2">
+                    {courses.map(course => (
+                      <div
+                        key={course.id}
+                        className="rounded-3xl p-4 sm:p-8 bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white flex flex-col md:flex-row items-center md:items-start justify-between shadow-lg relative min-h-[140px] md:min-h-[180px] w-full"
+                      >
+                        <div className="flex-1 min-w-0 w-full">
+                          <div className="uppercase text-xs sm:text-sm tracking-widest text-[#D1B3E0] mb-2">Category - {course.category}</div>
+                          <div className="text-base sm:text-2xl font-bold mb-2 break-words">{course.title}</div>
+                          <a
+                            href={course.courseLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-block mt-4 px-4 py-2 sm:px-6 sm:py-3 rounded-full bg-white text-[#8B2D6C] font-semibold text-sm sm:text-lg shadow hover:bg-[#F3EAF7] transition w-full sm:w-auto text-center"
+                          >
+                            Continue →
+                          </a>
+                        </div>
+                        {/* Decorative shapes (optional) */}
+                        <div className="hidden md:block absolute right-8 top-8 opacity-20 pointer-events-none select-none">
+                          <svg width="120" height="120">
+                            <circle cx="30" cy="30" r="30" fill="#fff" />
+                            <rect x="60" y="20" width="40" height="40" fill="#fff" />
+                            <circle cx="90" cy="90" r="25" fill="#fff" />
+                          </svg>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                {(test.testStatus !== 'COMPLETED' && test.testStatus !== 'UNLOCKED') && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-40 rounded-3xl font-['Poppins']">
-                    <span className="text-white text-base sm:text-lg font-bold font-['Poppins']">
-                      <span role="img" aria-label="lock">🔒</span> {test.testStatus === 'UNLOCKED' ? `Complete the ${test.name} to unlock` : 'Locked'}
-                    </span>
-                  </div>
-                )}
+              )}
+            </>
+          ) : (
+            <>
+              <h2 className="text-xl sm:text-2xl font-semibold mb-2 font-['Urbanist']">
+                <span role="img" aria-label="wave">👋</span>
+                {" "}
+                Hey <span className="text-[#8B2D6C] font-bold font-['Urbanist']">{userName || 'there'}</span>, ready to check in with yourself today?
+              </h2>
+              {/* Progress Bar */}
+              <div className="mb-4 sm:mb-6 font-['Poppins']">
+                <div className="flex justify-between text-xs sm:text-sm text-gray-500 mb-1 font-['Poppins']">
+                  <span>{completedCount} of {tests.length} completed</span>
+                </div>
+                <div className="w-full h-2 bg-gray-200 rounded-full">
+                  <div
+                    className="h-2 rounded-full bg-gradient-to-r from-[#704180] to-[#8B2D6C]"
+                    style={{ width: `${tests.length ? (completedCount / tests.length) * 100 : 0}%` }}
+                  />
+                </div>
               </div>
-            ))}
-          </div>
+              {/* Test Cards */}
+              <div className="flex flex-col gap-4 sm:gap-6 font-['Poppins']">
+                {tests?.map((test) => (
+                  <div
+                    key={test.id}
+                    className={`rounded-3xl p-4 sm:p-6 relative font-['Poppins'] ${test.testStatus === 'COMPLETED'
+                        ? 'bg-gradient-to-r from-[#704180] to-[#8B2D6C]'
+                        : test.testStatus === 'UNLOCKED'
+                          ? 'bg-gradient-to-r from-[#704180] to-[#8B2D6C] opacity-80'
+                          : 'bg-gray-200 opacity-80'
+                      }`}
+                  >
+                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 font-['Poppins']">
+                      <img src={test.image_url} alt={test.name} className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl object-cover" />
+                      <div className="flex-1 w-full">
+                        <h3 className={`text-lg sm:text-xl font-bold font-['Poppins'] ${test.testStatus === 'COMPLETED' ? 'text-white' : 'text-gray-300'}`}>{test.name}</h3>
+                        <p className={`text-sm sm:text-base font-['Poppins'] ${test.testStatus === 'COMPLETED' ? 'text-white' : 'text-gray-300'}`}>{test.description || 'No description available'}</p>
+                        <button
+                          className={`mt-4 px-4 py-2 sm:px-6 sm:py-2 rounded-full font-semibold text-sm sm:text-base font-['Poppins']
+                            ${(test.testStatus === 'COMPLETED' || test.testStatus === 'UNLOCKED')
+                              ? 'bg-white text-[#704180] hover:bg-gray-100'
+                              : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                            }`}
+                          onClick={() => setSelectedTest(test)}
+                          disabled={!(test.testStatus === 'COMPLETED' || test.testStatus === 'UNLOCKED')}
+                        >
+                          Take test
+                        </button>
+                      </div>
+                    </div>
+                    {(test.testStatus !== 'COMPLETED' && test.testStatus !== 'UNLOCKED') && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-40 rounded-3xl font-['Poppins']">
+                        <span className="text-white text-base sm:text-lg font-bold font-['Poppins']">
+                          <span role="img" aria-label="lock">🔒</span> {test.testStatus === 'UNLOCKED' ? `Complete the ${test.name} to unlock` : 'Locked'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
       {/* Right Column (for regular users) */}
@@ -656,9 +723,9 @@ console.log(isDoctor , "isDoctor");
           </div>
       </div>
       )}
-      {!isDoctor && courses.length > 0 && (
+      {!isDoctor &&  courses.length && completedCount !== tests.length  && (
         <div className="mt-10 w-full max-w-xl mx-auto">
-          <h2 className="text-xl sm:text-2xl font-semibold mb-4">Continue learning</h2>
+          <h2 className="text-xl sm:text-2xl font-normal mb-4">Continue learning</h2>
           <div className="flex flex-col gap-4 sm:gap-6 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-[#8B2D6C]/40 scrollbar-track-transparent pr-2">
             {courses.map(course => (
               <div
