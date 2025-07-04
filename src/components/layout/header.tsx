@@ -2,34 +2,44 @@ import React, { useEffect, useState } from 'react';
 import { Search } from 'lucide-react'; // Use lucide-react icons or your own
 import api from '@/utils/api';
 import Cookies from 'js-cookie';
+import { useAuth } from '@/context/AuthContext';
 
 const Header: React.FC = () => {
-  const [doctorInitial, setDoctorInitial] = useState<string>('');
+  const [userInitial, setUserInitial] = useState<string>('');
+  const { isDoctor } = useAuth();
 
   useEffect(() => {
-    const fetchDoctor = async () => {
+    const fetchProfile = async () => {
       try {
         const authCookie = Cookies.get('auth');
         let token = '';
         if (authCookie) {
           try {
-            token = JSON.parse(authCookie).token;
+            const parsed = JSON.parse(authCookie);
+            token = parsed.token;
           } catch (e) {
             token = '';
           }
         }
-        const response = await api.get('/doctors/profile', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        let response;
+        if (isDoctor) {
+          response = await api.get('/doctors/profile', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        } else {
+          response = await api.get('/users/profile', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
         if (response.data && response.data.data && response.data.data.name) {
-          setDoctorInitial(response.data.data.name.trim().charAt(0).toUpperCase());
+          setUserInitial(response.data.data.name.trim().charAt(0).toUpperCase());
         }
       } catch (error) {
-        setDoctorInitial('L'); // fallback
+        setUserInitial('L'); // fallback
       }
     };
-    fetchDoctor();
-  }, []);
+    fetchProfile();
+  }, [isDoctor]);
 
   return (
     <header className="flex flex-col sm:flex-row items-center sm:justify-between h-16 sm:h-20 px-4 mt-4 sm:px-8 border-b w-full bg-white gap-4 sm:gap-0">
@@ -48,7 +58,7 @@ const Header: React.FC = () => {
       <div className="flex items-center gap-4 sm:gap-6">
         {/* User Avatar */}
         <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-[#7B2B6A] text-white text-base sm:text-lg font-semibold">
-          {doctorInitial || 'L'}
+          {userInitial || 'L'}
         </div>
       </div>
     </header>

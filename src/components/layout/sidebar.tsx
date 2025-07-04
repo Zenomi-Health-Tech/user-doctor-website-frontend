@@ -11,7 +11,7 @@ import { SidebarHeader } from "./SidebarHeader";
 import {  User, CalendarDays, ChartPie, House, Users, Menu } from 'lucide-react';
 import UserAvatar from "./UserAvatar";
 import { useAuth } from "@/context/AuthContext";
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import api from '@/utils/api';
 import Cookies from 'js-cookie';
 
@@ -114,9 +114,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isDoctor } = useAuth();
   const data = getNavItems(isDoctor);
 
-  // Doctor name state
-  const [doctorName, setDoctorName] = useState<string>('');
-  const [doctorInitial, setDoctorInitial] = useState<string>('');
   // Get sidebar context for mobile state
   const { isMobile, openMobile, setOpenMobile } = useSidebar();
 
@@ -136,13 +133,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (response.data && response.data.data && response.data.data.name) {
-          const name = response.data.data.name.trim();
-          setDoctorName(name);
-          setDoctorInitial(name.charAt(0).toUpperCase());
+          // const name = response.data.data.name.trim();
         }
       } catch (error) {
-        setDoctorName('Doctor');
-        setDoctorInitial('D');
       }
     };
     if (isDoctor) fetchDoctor();
@@ -176,11 +169,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarHeader items={data.navMain2} />
             <SidebarContent className="flex flex-col h-full">
               <NavMain items={data.navMain} />
-              <UserAvatar 
-                name={isDoctor ? doctorName : data.user.name} 
-                initial={isDoctor ? doctorInitial : data.user.name[0]} 
-                profileUrl="/profile" 
-              />
+              <UserAvatar profileUrl="/profile" />
             </SidebarContent>
           </div>
         </div>
@@ -191,11 +180,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarHeader items={data.navMain2} />
           <SidebarContent className="flex flex-col h-full">
             <NavMain items={data.navMain} />
-            <UserAvatar 
-              name={isDoctor ? doctorName : data.user.name} 
-              initial={isDoctor ? doctorInitial : data.user.name[0]} 
-              profileUrl="/profile" 
-            />
+            <UserAvatar profileUrl="/profile" />
           </SidebarContent>
           <SidebarRail />
         </Sidebar>
