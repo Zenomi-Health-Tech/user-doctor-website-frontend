@@ -1,0 +1,1 @@
+import{j as r}from"./index-_jotthW6.js";function p(){return r.jsx("div",{className:"flex gap-8 p-8 bg-[#FAF8FB] min-h-screen font-['Poppins']",children:r.jsx("h1",{children:"Support"})})}const e=()=>r.jsx(p,{});export{e as default};

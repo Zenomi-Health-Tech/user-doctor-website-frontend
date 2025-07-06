@@ -456,7 +456,7 @@ console.log(isDoctor , "isDoctor");
                     {courses.map(course => (
                       <div
                         key={course.id}
-                        className="rounded-3xl p-4 sm:p-8 bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white flex flex-col md:flex-row items-center md:items-start justify-between shadow-lg relative min-h-[140px] md:min-h-[180px] w-full"
+                        className="rounded-3xl p-4 sm:p-8 bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white flex flex-col md:flex-row items-center md:items-start justify-between shadow-lg relative min-h-[140px] md:min-h-[180px] w-full max-w-md mx-auto"
                       >
                         <div className="flex-1 min-w-0 w-full">
                           <div className="uppercase text-xs sm:text-sm tracking-widest text-[#D1B3E0] mb-2">Category - {course.category}</div>
@@ -724,13 +724,13 @@ console.log(isDoctor , "isDoctor");
       </div>
       )}
       {!isDoctor &&  courses.length && completedCount !== tests.length  && (
-        <div className="mt-10 w-full max-w-xl mx-auto">
+        <div className="mt-10 w-full max-w-md mx-auto">
           <h2 className="text-xl sm:text-2xl font-normal mb-4">Continue learning</h2>
           <div className="flex flex-col gap-4 sm:gap-6 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-[#8B2D6C]/40 scrollbar-track-transparent pr-2">
             {courses.map(course => (
               <div
                 key={course.id}
-                className="rounded-3xl p-4 sm:p-8 bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white flex flex-col md:flex-row items-center md:items-start justify-between shadow-lg relative min-h-[140px] md:min-h-[180px] w-full"
+                className="rounded-3xl p-4 sm:p-8 bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white flex flex-col md:flex-row items-center md:items-start justify-between shadow-lg relative min-h-[140px] md:min-h-[180px] w-full max-w-md mx-auto"
               >
                 <div className="flex-1 min-w-0 w-full">
                   <div className="uppercase text-xs sm:text-sm tracking-widest text-[#D1B3E0] mb-2">Category - {course.category}</div>
