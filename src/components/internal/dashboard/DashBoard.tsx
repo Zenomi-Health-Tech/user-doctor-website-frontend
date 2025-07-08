@@ -511,7 +511,7 @@ console.log(isDoctor , "isDoctor");
                     className={`rounded-3xl p-4 sm:p-6 relative font-['Poppins'] ${test.testStatus === 'COMPLETED'
                         ? 'bg-gradient-to-r from-[#704180] to-[#8B2D6C]'
                         : test.testStatus === 'UNLOCKED'
-                          ? 'bg-gradient-to-r from-[#704180] to-[#8B2D6C] opacity-80'
+                          ? 'bg-gradient-to-r from-[#704180] to-[#8B2D6C] '
                           : 'bg-gray-200 opacity-80'
                       }`}
                   >
