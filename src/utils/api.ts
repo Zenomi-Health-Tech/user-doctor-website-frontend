@@ -3,7 +3,7 @@ import axios, { AxiosError, AxiosRequestHeaders, InternalAxiosRequestConfig } fr
 import { getAuthCookies } from "./cookies";
 
 const api = axios.create({
-  baseURL: "https://zenomi.elitceler.com/api/v1",
+  baseURL: "https://apizenomiotp.zenomihealth.com/api/v1",
   headers: {
     "Content-Type": "application/json",
   },
