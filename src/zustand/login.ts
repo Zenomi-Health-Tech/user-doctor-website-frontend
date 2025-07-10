@@ -1,12 +1,11 @@
 import { StateCreator } from "zustand";
-import api from "../utils/api";
 import { handleApiError } from "../utils/errorHandler";
 import {
   setAuthCookies,
   clearAuthCookies,
 } from "../utils/cookies";
 import Cookies from "js-cookie"; // Ensure Cookies is imported
-
+import axios from "axios";
 // Define the shape of the authentication state
 export interface LoginAuthState {
   countryCode: string;
@@ -45,10 +44,10 @@ export const createLoginAuthSlice: StateCreator<LoginAuthState> = (
     set({ loading: true, error: null });
     try {
       const { countryCode, phoneNumber } = get();
-      const response = await api.post<{
+      const response = await axios.post<{
         message: string;
         data: { orderId: string };
-      }>("/doctors/login/send-otp", {
+      }>("https://apizenomiotp.zenomihealth.com/api/v1/doctors/login/send-otp", {
         countryCode,
         phoneNumber,
       });
@@ -65,10 +64,10 @@ export const createLoginAuthSlice: StateCreator<LoginAuthState> = (
     set({ loading: true, error: null });
     try {
       const { countryCode, phoneNumber } = get();
-      const response = await api.post<{
+      const response = await axios.post<{
         message: string;
         data: { orderId: string };
-      }>("/users/send-otp", {
+      }>("https://apizenomiotp.zenomihealth.com/api/v1/users/send-otp", {
         countryCode,
         phoneNumber,
       });
@@ -87,7 +86,7 @@ export const createLoginAuthSlice: StateCreator<LoginAuthState> = (
     set({ loading: true, error: null });
     try {
       const { countryCode, phoneNumber } = get();
-      await api.post("/auth/resendOTP", { 
+      await axios.post("https://apizenomiotp.zenomihealth.com/api/v1/auth/resendOTP", { 
         countryCode,
         phoneNumber
       });
@@ -110,7 +109,7 @@ export const createLoginAuthSlice: StateCreator<LoginAuthState> = (
 
       console.log("Validating OTP with:", { orderId, countryCode, phoneNumber, otp });
 
-      const response = await api.post("/doctors/login/verify-otp", {
+      const response = await axios.post("https://apizenomiotp.zenomihealth.com/api/v1/doctors/login/verify-otp", {
         otp,
         countryCode,
         phoneNumber,
@@ -152,7 +151,7 @@ export const createLoginAuthSlice: StateCreator<LoginAuthState> = (
         throw new Error("Order ID is missing. Please request OTP again.");
       }
 
-      const response = await api.post("/users/verify-otp", {
+      const response = await axios.post("https://apizenomiotp.zenomihealth.com/api/v1/users/verify-otp", {
         otp,
         countryCode,
         phoneNumber,
