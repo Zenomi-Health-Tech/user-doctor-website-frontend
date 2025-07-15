@@ -27,6 +27,7 @@ interface AuthContextType {
   isUser: boolean;
   userName: string | null;
   userType: 'DOCTOR' | 'USER' | null;
+  isPaid: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -80,6 +81,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const isUser = user?.type === 'USER';
   const userName = user?.name || null;
   const userType = user?.type || null;
+  const isPaid = user?.isPaid || false;
+
 
   const contextValue = {
     user,
@@ -90,6 +93,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     isUser,
     userName,
     userType,
+    isPaid
   };
 
   return (

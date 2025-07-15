@@ -29,6 +29,7 @@ const AvailableSlotsPage = lazy(() => import("@/components/internal/Appointments
 
 
 export default function AppRouter() {
+  // Only wrap dashboard and other main pages in HomeLayout
   const privateRoutes = [
     {
       path: "/",
@@ -105,6 +106,7 @@ export default function AppRouter() {
     },
   ];
 
+  // Public routes (no layout)
   const publicRoutes = [
     {
       path: "/404",
@@ -154,20 +156,7 @@ export default function AppRouter() {
         />
       ),
     },
-    {
-      path: "/doctor/payment-onboard",
-      element: (
-        <ProtectedRoute
-          element={
-            <Suspense fallback={<div>Loading...</div>}>
-              <PaymentOnboard />
-            </Suspense>
-          }
-          isPublic
-          // alreadyLoggedInRedirect="/dashboard"
-        />
-      ),
-    },
+    
     {
       path: "/login",
       element: (
@@ -222,6 +211,19 @@ export default function AppRouter() {
           isPublic
           alreadyLoggedInRedirect="/dashboard"
         />
+      ),
+    },
+    {
+      path: "/doctor/payment-onboard",
+      element: (
+        // <ProtectedRoute
+          // element={
+            <Suspense fallback={<div>Loading...</div>}>
+              <PaymentOnboard />
+            </Suspense>
+          // }
+        
+        // />
       ),
     },
     {

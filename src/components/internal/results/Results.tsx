@@ -234,37 +234,19 @@ export default function Results() {
                         rel="noopener noreferrer"
                         className="px-6 py-2 rounded-full bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white font-semibold text-base shadow hover:opacity-90 transition text-center"
                       >
-                        View Report
+                        Download Report
                       </a>
-                      <a
+                      {/* <a
                         href={result.reportDownload}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="px-6 py-2 rounded-full bg-gradient-to-r from-[#F6C851] to-[#F9D423] text-[#704180] font-semibold text-base shadow hover:opacity-90 transition text-center"
                       >
                         Download Report
-                      </a>
+                      </a> */}
                     </div>
-                    {/* Recommended Courses */}
-                    <div className="mt-2">
-                      <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-3">Recommended Courses</h3>
-                      <div className="flex flex-col gap-2 sm:gap-3">
-                        {result.courseRecommendations && result.courseRecommendations.length > 0 ? (
-                          result.courseRecommendations.map((course, idx) => (
-                            <div key={idx} className="flex items-center bg-white rounded-xl shadow p-3 sm:p-4 max-w-full sm:max-w-lg border border-gray-100">
-                              <div className="flex-1">
-                                <div className="font-bold text-sm sm:text-base mb-1">{course.courseName}</div>
-                                <div className="text-gray-500 text-xs sm:text-sm mb-1 flex items-center gap-2">
-                                  <a href={course.courseLink.split(',')[0]} target="_blank" rel="noopener noreferrer" className="text-[#704180] font-semibold underline">Go to Course</a>
-                                </div>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-gray-500">No course recommendations.</div>
-                        )}
-                      </div>
-                    </div>
+                    
+                    
                   </div>
                 )}
               </div>

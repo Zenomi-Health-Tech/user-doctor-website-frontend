@@ -39,6 +39,8 @@ const ReferredPatientsList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [freeReferralsUsed, setFreeReferralsUsed] = useState<number | null>(null);
+  const maxFreeReferrals = 5;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -85,6 +87,9 @@ const ReferredPatientsList: React.FC = () => {
         });
         if (response.data && response.data.data) {
           setReferralCode(response.data.data.referralCode || response.data.data.code || null);
+          if (typeof response.data.data.freeReferralsUsed === 'number') {
+            setFreeReferralsUsed(response.data.data.freeReferralsUsed);
+          }
         }
       } catch (error) {
         setReferralCode(null);
@@ -105,7 +110,8 @@ const ReferredPatientsList: React.FC = () => {
           token = '';
         }
       }
-      const response = await api.post('/stripe/create-doctor-checkout', {}, {
+      // NOTE: The payment amount should be set to 1,000 rupees in the backend for this endpoint.
+      const response = await api.post('/stripe/create-doctor-checkout', { amount: 1000 }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.data && response.data.url) {
@@ -150,6 +156,13 @@ const ReferredPatientsList: React.FC = () => {
         </div>
       </div>
       {/* Referral Code Banner */}
+      {freeReferralsUsed !== null && (
+        <div className="mb-2 text-base font-semibold text-[#8B2D6C] text-center">
+          {freeReferralsUsed < maxFreeReferrals
+            ? `${freeReferralsUsed}/${maxFreeReferrals} Free Referrals Used`
+            : 'No Free Referrals Left'}
+        </div>
+      )}
       {referralCode && (
         <div className="bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] rounded-xl px-6 py-4 mb-8 flex items-center justify-between shadow">
           <div className="text-white text-lg font-semibold">Your Referral Code:</div>
