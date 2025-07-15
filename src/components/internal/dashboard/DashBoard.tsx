@@ -87,6 +87,8 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState<Course[]>([]);
   const [submittingQuiz, setSubmittingQuiz] = useState(false);
+  const [showProcessing, setShowProcessing] = useState(false);
+  const [processingTime, setProcessingTime] = useState(0);
 console.log(isDoctor , "isDoctor");
 
   
@@ -306,6 +308,7 @@ console.log(isDoctor , "isDoctor");
       }
     }
     setSubmittingQuiz(true);
+    setShowProcessing(true); // <-- show processing timer
     try {
       // Format answers to match API expectations
       const formattedAnswers = answers.map(a => ({
@@ -335,6 +338,7 @@ console.log(isDoctor , "isDoctor");
     } finally {
       setLoading(false);
       setSubmittingQuiz(false);
+      setShowProcessing(false); // <-- hide processing timer
     }
   };
   console.log(selectedTest?.id);
@@ -343,6 +347,20 @@ console.log(isDoctor , "isDoctor");
     navigate(`/patients/${id}`);
   };
 
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (showProcessing) {
+      setProcessingTime(0); // reset timer
+      interval = setInterval(() => {
+        setProcessingTime((prev) => prev + 1);
+      }, 1000);
+    } else if (!showProcessing && processingTime !== 0) {
+      setProcessingTime(0);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [showProcessing]);
 
   if (loading) return <div>Loading...</div>;
 
@@ -515,6 +533,14 @@ console.log(isDoctor , "isDoctor");
                           : 'bg-gray-200 opacity-80'
                       }`}
                   >
+                    {/* Badge at top right */}
+                    <div className="absolute top-4 right-4">
+                      {test.testStatus === 'COMPLETED' ? (
+                        <span className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow">Completed</span>
+                      ) : (
+                        <span className="bg-yellow-400 text-white text-xs font-bold px-3 py-1 rounded-full shadow">Pending</span>
+                      )}
+                    </div>
                     <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 font-['Poppins']">
                       <img src={test.image_url} alt={test.name} className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl object-cover" />
                       <div className="flex-1 w-full">
@@ -522,12 +548,12 @@ console.log(isDoctor , "isDoctor");
                         <p className={`text-sm sm:text-base font-['Poppins'] ${test.testStatus === 'COMPLETED' ? 'text-white' : 'text-gray-300'}`}>{test.description || 'No description available'}</p>
                         <button
                           className={`mt-4 px-4 py-2 sm:px-6 sm:py-2 rounded-full font-semibold text-sm sm:text-base font-['Poppins']
-                            ${(test.testStatus === 'COMPLETED' || test.testStatus === 'UNLOCKED')
+                            ${test.testStatus === 'UNLOCKED'
                               ? 'bg-white text-[#704180] hover:bg-gray-100'
                               : 'bg-gray-400 text-gray-200 cursor-not-allowed'
                             }`}
                           onClick={() => setSelectedTest(test)}
-                          disabled={!(test.testStatus === 'COMPLETED' || test.testStatus === 'UNLOCKED')}
+                          disabled={test.testStatus !== 'UNLOCKED'}
                         >
                           Take test
                         </button>
@@ -723,40 +749,19 @@ console.log(isDoctor , "isDoctor");
           </div>
       </div>
       )}
-      {!isDoctor &&  courses.length && completedCount !== tests.length  && (
-        <div className="mt-10 w-full max-w-md mx-auto">
-          <h2 className="text-xl sm:text-2xl font-normal mb-4">Continue learning</h2>
-          <div className="flex flex-col gap-4 sm:gap-6 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-[#8B2D6C]/40 scrollbar-track-transparent pr-2">
-            {courses.map(course => (
-              <div
-                key={course.id}
-                className="rounded-3xl p-4 sm:p-8 bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white flex flex-col md:flex-row items-center md:items-start justify-between shadow-lg relative min-h-[140px] md:min-h-[180px] w-full max-w-md mx-auto"
-              >
-                <div className="flex-1 min-w-0 w-full">
-                  <div className="uppercase text-xs sm:text-sm tracking-widest text-[#D1B3E0] mb-2">Category - {course.category}</div>
-                  <div className="text-base sm:text-2xl font-bold mb-2 break-words">{course.title}</div>
-                  <a
-                    href={course.courseLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block mt-4 px-4 py-2 sm:px-6 sm:py-3 rounded-full bg-white text-[#8B2D6C] font-semibold text-sm sm:text-lg shadow hover:bg-[#F3EAF7] transition w-full sm:w-auto text-center"
-                  >
-                    Continue →
-                  </a>
-                </div>
-                {/* Decorative shapes (optional, for background) */}
-                <div className="hidden md:block absolute right-8 top-8 opacity-20 pointer-events-none select-none">
-                  <svg width="120" height="120">
-                    <circle cx="30" cy="30" r="30" fill="#fff" />
-                    <rect x="60" y="20" width="40" height="40" fill="#fff" />
-                    <circle cx="90" cy="90" r="25" fill="#fff" />
-                  </svg>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {showProcessing && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+    <div className="bg-white rounded-3xl p-10 w-full max-w-lg shadow-lg flex flex-col items-center relative">
+      <div className="flex items-center gap-4 mb-4">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#8B2D6C]"></div>
+        <span className="text-xl font-semibold text-[#8B2D6C]">Zenomi is processing your results...</span>
+      </div>
+      <div className="text-lg text-gray-700">
+        Time elapsed: {Math.floor(processingTime / 60)}:{(processingTime % 60).toString().padStart(2, '0')}
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

@@ -4,6 +4,11 @@ import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext'; // Import useAuth from the new context
 import { useToast } from '@/hooks/use-toast';
+import { LogOut } from 'lucide-react';
+
+
+const TERMS_AND_CONDITIONS = `Zenomi Health - Terms and Conditions\n\nEffective Date: June 1st, 2025\n\nThese Terms and Conditions ("Terms") govern your use of the Zenomi Health website and mobile application (collectively, the "Service") provided by Zenomi Health ("we," "our," or "us"). By using the Service, you agree to these Terms. If you do not agree, please do not use the Service.\n\n1. Use of Service\nYou must be at least 18 years old (India) or 13 years old (USA) to use the Service. You are responsible for any activity that occurs under your account.\n\n2. Acceptable Use\nBy using the Service, you agree not to:\n- Copy, modify, or reverse-engineer any part of the Service;\n- Use the Service for illegal or harmful purposes;\n- Upload harmful or unlawful content;\n- Violate the rights of others, including privacy or intellectual property rights.\n\n3. Intellectual Property\nAll content in the Service is the property of Zenomi Health or its licensors and is protected by copyright and other laws. You may use the content only for your personal, non-commercial use.\n\n4. Data Handling and Security\nWe do not sell or share your data with third parties. All data you provide is encrypted and stored securely in compliance with applicable privacy laws. See our Privacy Policy for more details.\n\n5. User-Generated Content\nYou retain ownership of content you upload. By submitting content, you grant Zenomi Health a worldwide, non-exclusive license to use it in connection with the Service.\n\n6. Termination\nWe may suspend or terminate your account if you violate these Terms. You may also delete your account at any time.\n\n7. Disclaimer of Warranties\nThe Service is provided "as is" and "as available" without warranties of any kind. We do not guarantee the Service will always be secure or error-free.\n\n8. Limitation of Liability\nTo the fullest extent permitted by law, Zenomi Health will not be liable for any indirect, incidental, or consequential damages arising from your use of the Service.\n\n9. Governing Law\nUSA Users: Governed by the laws of the United States and the state of incorporation.\nIndia Users: Governed by the laws of India, with disputes subject to the courts of Ntew Delhi.\n\n10. Changes to Terms\nWe may update these Terms from time to time. Continued use of the Service after changes means you accept the revised Terms.\n\n11. Contact Us\nFor questions about these Terms, contact us at: support@zenomihealth.com`;
+const PRIVACY_POLICY = `Zenomi Health - Privacy Policy\n\nEffective Date: June 1st, 2025\n\nAt Zenomi Health, your privacy is important to us. This Privacy Policy explains how we collect, use, and protect your information when you use our website and mobile application (together, the "Service").\n\n1. Information We Collect\nWe may collect the following types of information:\nPersonal Information (e.g., name, email address) provided during account creation or contact with support.\nHealth and Wellness Information submitted by you for use within the Service.\nUsage Data such as app interactions, session length, and device details (used solely for internal improvement).\nWe do not collect or share your data with third parties. Your data is securely stored and encrypted in compliance with applicable laws.\n\n2. How We Use Your Information\nWe use your information to:\n- Provide and personalize our services;\n- Respond to support inquiries;\n- Improve app functionality and user experience;\n- Ensure security and integrity of our systems.\n\n3. Data Security\nWe employ industry-standard encryption and secure storage methods to protect your personal and health data. Access is strictly limited to authorized personnel only.\n\n4. No Third-Party Sharing\nWe do not share, sell, or rent your data to third parties. We do not use advertising or analytics services that access your personal data.\n\n5. Your Rights\nDepending on your jurisdiction:\nUSA (CCPA/other): You may request access to, correction of, or deletion of your data.\nIndia (DPDP Act 2023): You have the right to access, update, correct, or withdraw consent for data use.\nTo make a request, contact: privacy@zenomihealth.com\n\n6. Data Retention\nWe retain personal and health data only as long as necessary for your use of the Service, or as required by law. You may request deletion of your data at any time.\n\n7. International Users\nYour data may be stored in secure servers located in the United States. By using our Service, you consent to such transfer and storage in accordance with this policy.\n\n8. Children’s Privacy\nOur services are not directed to individuals under the age of 13 (USA) or under 18 (India). We do not knowingly collect data from minors.\n\n9. Changes to This Policy\nWe may update this policy from time to time. When we do, we will revise the "Effective Date" and notify users through the app or website.\n\n10. Contact Us\nFor any questions or concerns about your privacy, contact us at: privacy@zenomihealth.com`;
 
 interface DoctorProfile {
   id: string;
@@ -50,6 +55,8 @@ export default function Profile() {
 
   const [editMode, setEditMode] = useState(false);
   const [step, setStep] = useState(1);
+  const [showTerms, setShowTerms] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -242,17 +249,23 @@ export default function Profile() {
               <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
               About Us
               </button>
-              <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
-              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
-              Terms & Conditions
+              <button
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition"
+                onClick={() => setShowTerms(true)}
+              >
+                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
+                Terms & Conditions
               </button>
               <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
               <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
               My plans
               </button>
-              <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
-              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
-              Privacy Policy
+              <button
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition"
+                onClick={() => setShowPrivacy(true)}
+              >
+                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
+                Privacy Policy
               </button>
               <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
               <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
@@ -404,6 +417,40 @@ export default function Profile() {
             </form>
           </main>
         </div>
+        {/* Terms Modal */}
+        {showTerms && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div className="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-lg relative overflow-y-auto max-h-[80vh]">
+              <button
+                className="absolute top-4 right-4 text-2xl text-gray-400 hover:text-gray-600"
+                onClick={() => setShowTerms(false)}
+              >
+                &times;
+              </button>
+              <h2 className="text-2xl font-bold mb-4 text-center">Zenomi Health - Terms and Conditions</h2>
+              <pre className="whitespace-pre-wrap text-gray-700 text-sm max-h-[60vh] overflow-y-auto">
+                {TERMS_AND_CONDITIONS}
+              </pre>
+            </div>
+          </div>
+        )}
+        {/* Privacy Policy Modal */}
+        {showPrivacy && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div className="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-lg relative overflow-y-auto max-h-[80vh]">
+              <button
+                className="absolute top-4 right-4 text-2xl text-gray-400 hover:text-gray-600"
+                onClick={() => setShowPrivacy(false)}
+              >
+                &times;
+              </button>
+              <h2 className="text-2xl font-bold mb-4 text-center">Zenomi Health - Privacy Policy</h2>
+              <pre className="whitespace-pre-wrap text-gray-700 text-sm max-h-[60vh] overflow-y-auto">
+                {PRIVACY_POLICY}
+              </pre>
+            </div>
+          </div>
+        )}
       </div>
     );
   } else if (!isDoctor) {
@@ -423,17 +470,23 @@ export default function Profile() {
               <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
               About Us
               </button>
-              <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
-              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
-              Terms & Conditions
+              <button
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition"
+                onClick={() => setShowTerms(true)}
+              >
+                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
+                Terms & Conditions
               </button>
-              <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
+              {/* <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
               <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
               My plans
-              </button>
-              <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
-              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
-              Privacy Policy
+              </button> */}
+              <button
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition"
+                onClick={() => setShowPrivacy(true)}
+              >
+                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
+                Privacy Policy
               </button>
               <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
               <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
@@ -444,7 +497,7 @@ export default function Profile() {
             onClick={handleLogout}
               className="flex items-center gap-2 mt-4 md:mt-8 text-[#E11D48] font-medium hover:underline"
           >
-              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className=""><path d="M15 12l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" /></svg>
+            <LogOut />
             Logout
           </button>
           </aside>
@@ -538,6 +591,40 @@ export default function Profile() {
             </form>
           </main>
         </div>
+        {/* Terms Modal */}
+        {showTerms && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div className="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-lg relative overflow-y-auto max-h-[80vh]">
+              <button
+                className="absolute top-4 right-4 text-2xl text-gray-400 hover:text-gray-600"
+                onClick={() => setShowTerms(false)}
+              >
+                &times;
+              </button>
+              <h2 className="text-2xl font-bold mb-4 text-center">Zenomi Health - Terms and Conditions</h2>
+              <pre className="whitespace-pre-wrap text-gray-700 text-sm max-h-[60vh] overflow-y-auto">
+                {TERMS_AND_CONDITIONS}
+              </pre>
+            </div>
+          </div>
+        )}
+        {/* Privacy Policy Modal */}
+        {showPrivacy && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div className="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-lg relative overflow-y-auto max-h-[80vh]">
+              <button
+                className="absolute top-4 right-4 text-2xl text-gray-400 hover:text-gray-600"
+                onClick={() => setShowPrivacy(false)}
+              >
+                &times;
+              </button>
+              <h2 className="text-2xl font-bold mb-4 text-center">Zenomi Health - Privacy Policy</h2>
+              <pre className="whitespace-pre-wrap text-gray-700 text-sm max-h-[60vh] overflow-y-auto">
+                {PRIVACY_POLICY}
+              </pre>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

@@ -2,6 +2,7 @@ import topresultimage from '@/assets/topResultImage.png'
 import { useEffect, useState } from 'react';
 import api from '@/utils/api';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 
 interface Analytics {
   id: string;
@@ -23,6 +24,7 @@ export default function Results() {
   const [analytics, setAnalytics] = useState<Analytics[]>([]);
   const [openCycle, setOpenCycle] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { userName } = useAuth();
 
   useEffect(() => {
     async function fetchAnalytics() {
@@ -31,6 +33,9 @@ export default function Results() {
     }
     fetchAnalytics();
   }, []);
+
+  console.log(analytics);
+  
 
   const checklist = [
     "Start Your Daily Mental Health Check-In",
@@ -46,13 +51,18 @@ export default function Results() {
           <div>No results found.</div>
         ) : (
           analytics.map((result) => {
-            const barData = [
+            let barData = [
               { label: "Sleep", value: result.normalizedScores?.Sleep },
               { label: "Nutrition", value: result.normalizedScores?.Nutrition },
               { label: "PHQ-9", value: result.normalizedScores?.["PHQ-9"] },
-              { label: "Emotional-H", value: result.normalizedScores?.["Emotional Intelligence"] },
+              { label: "Emotional-H", value: result.normalizedScores?.["Emotional Fitness"] },
               { label: "GAD-7", value: result.normalizedScores?.["GAD-7"] },
             ];
+            // Ensure values are 0-100
+            barData = barData.map(bar => ({
+              ...bar,
+              value: typeof bar.value === 'number' ? bar.value : 0
+            }));
             const lastUpdated = new Date(result.updatedAt).toLocaleDateString();
             const testsCompleted = result.testsCompleted;
             const isOpen = openCycle === result.id;
@@ -71,66 +81,76 @@ export default function Results() {
                 {isOpen && (
                   <div className="px-2 sm:px-6 pb-4 sm:pb-6 pt-2">
                     <div className="flex items-center gap-2 mb-4 flex-wrap">
-                      <span className="text-sm sm:text-base font-medium">{testsCompleted} of 3 tests completed</span>
-                      <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-[#4E8041] text-white text-base sm:text-lg">✔</span>
-                      <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-[#4E8041] text-white text-base sm:text-lg">✔</span>
-                      <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-gray-200 text-gray-400 text-base sm:text-lg">✔</span>
+                      <span className="text-sm sm:text-base font-medium">{testsCompleted} of 5 tests completed</span>
+                      {Array.from({ length: 5 }).map((_, idx) => (
+                        <span
+                          key={idx}
+                          className={`w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full text-base sm:text-lg ${idx < testsCompleted ? 'bg-[#4E8041] text-white' : 'bg-gray-200 text-gray-400'}`}
+                        >
+                          ✔
+                        </span>
+                      ))}
                     </div>
                     {/* Bar Chart */}
                     <div className="rounded-2xl p-2 sm:p-6 mb-4 sm:mb-6 min-h-[220px] sm:min-h-[400px] flex items-center justify-center overflow-x-auto">
                       <div className="w-[420px] sm:w-[700px]">
                         <svg width="100%" height="220" viewBox="0 0 700 220" className="hidden sm:block">
                           {/* Y axis grid lines */}
-                          {[0, 2, 4, 6, 8, 10].map((y) => (
+                          {[0, 20, 40, 60, 80, 100].map((y) => (
                             <line
                               key={y}
                               x1={60}
                               x2={660}
-                              y1={200 - y * 18}
-                              y2={200 - y * 18}
+                              y1={200 - y * 2}
+                              y2={200 - y * 2}
                               stroke="#E5E0EA"
                               strokeWidth={1}
                             />
                           ))}
                           {/* Bars */}
-                          {barData.map((bar, i) => (
-                            <g key={bar.label}>
-                              <rect
-                                x={90 + i * 110}
-                                y={200 - (bar.value ?? 0) * 18}
-                                width={60}
-                                height={(bar.value ?? 0) * 18}
-                                rx={12}
-                                fill="url(#barGradient)"
-                              />
-                              <text
-                                x={120 + i * 110}
-                                y={200 - (bar.value ?? 0) * 18 - 10}
-                                textAnchor="middle"
-                                fontSize="16"
-                                fill="#704180"
-                                fontWeight="bold"
-                              >
-                                {(bar.value ?? 0) > 0 ? bar.value : ''}
-                              </text>
-                              <text
-                                x={120 + i * 110}
-                                y={220}
-                                textAnchor="middle"
-                                fontSize="14"
-                                fill="#231942"
-                                fontWeight="400"
-                              >
-                                {bar.label}
-                              </text>
-                            </g>
-                          ))}
+                          {barData.map((bar, i) => {
+                            let barColor = '#4E8041'; // green
+                            if (bar.value > 60) barColor = '#E74C3C'; // red
+                            else if (bar.value > 40) barColor = '#F6C851'; // yellow
+                            return (
+                              <g key={bar.label}>
+                                <rect
+                                  x={90 + i * 110}
+                                  y={200 - bar.value * 2}
+                                  width={60}
+                                  height={bar.value * 2}
+                                  rx={12}
+                                  fill={barColor}
+                                />
+                                <text
+                                  x={120 + i * 110}
+                                  y={200 - bar.value * 2 - 10}
+                                  textAnchor="middle"
+                                  fontSize="16"
+                                  fill="#704180"
+                                  fontWeight="bold"
+                                >
+                                  {/* {bar.value > 0 ? Math.round(bar.value) : ''} */}
+                                </text>
+                                <text
+                                  x={120 + i * 110}
+                                  y={220}
+                                  textAnchor="middle"
+                                  fontSize="14"
+                                  fill="#231942"
+                                  fontWeight="400"
+                                >
+                                  {bar.label}
+                                </text>
+                              </g>
+                            );
+                          })}
                           {/* Y axis labels */}
-                          {[0, 2, 4, 6, 8, 10].map((y) => (
+                          {[0, 20, 40, 60, 80, 100].map((y) => (
                             <text
                               key={y}
                               x={50}
-                              y={200 - y * 18 + 8}
+                              y={200 - y * 2 + 8}
                               fontSize="12"
                               fill="#231942"
                               textAnchor="end"
@@ -139,64 +159,62 @@ export default function Results() {
                               {y < 10 ? `0${y}` : y}
                             </text>
                           ))}
-                          {/* Gradient */}
-                          <defs>
-                            <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
-                              <stop offset="5%" stopColor="#704180" />
-                              <stop offset="95%" stopColor="#8B2D6C" />
-                            </linearGradient>
-                          </defs>
                         </svg>
                         {/* Mobile SVG */}
                         <svg width="100%" height="160" viewBox="0 0 420 160" className="block sm:hidden">
-                          {[0, 2, 4, 6, 8, 10].map((y) => (
+                          {[0, 20, 40, 60, 80, 100].map((y) => (
                             <line
                               key={y}
                               x1={40}
                               x2={400}
-                              y1={140 - y * 12}
-                              y2={140 - y * 12}
+                              y1={140 - y * 1.2}
+                              y2={140 - y * 1.2}
                               stroke="#E5E0EA"
                               strokeWidth={1}
                             />
                           ))}
-                          {barData.map((bar, i) => (
-                            <g key={bar.label}>
-                              <rect
-                                x={60 + i * 70}
-                                y={140 - (bar.value ?? 0) * 12}
-                                width={36}
-                                height={(bar.value ?? 0) * 12}
-                                rx={8}
-                                fill="url(#barGradientMob)"
-                              />
-                              <text
-                                x={78 + i * 70}
-                                y={140 - (bar.value ?? 0) * 12 - 6}
-                                textAnchor="middle"
-                                fontSize="10"
-                                fill="#704180"
-                                fontWeight="bold"
-                              >
-                                {(bar.value ?? 0) > 0 ? bar.value : ''}
-                              </text>
-                              <text
-                                x={78 + i * 70}
-                                y={158}
-                                textAnchor="middle"
-                                fontSize="10"
-                                fill="#231942"
-                                fontWeight="400"
-                              >
-                                {bar.label}
-                              </text>
-                            </g>
-                          ))}
-                          {[0, 2, 4, 6, 8, 10].map((y) => (
+                          {barData.map((bar, i) => {
+                            let barColor = '#4E8041'; // green
+                            if (bar.value > 60) barColor = '#E74C3C'; // red
+                            else if (bar.value > 40) barColor = '#F6C851'; // yellow
+                            return (
+                              <g key={bar.label}>
+                                <rect
+                                  x={60 + i * 70}
+                                  y={140 - bar.value * 1.2}
+                                  width={36}
+                                  height={bar.value * 1.2}
+                                  rx={8}
+                                  fill={barColor}
+                                />
+                                <text
+                                  x={78 + i * 70}
+                                  y={140 - bar.value * 1.2 - 6}
+                                  textAnchor="middle"
+                                  fontSize="10"
+                                  fill="#704180"
+                                  fontWeight="bold"
+                                >
+                                  {bar.value > 0 ? Math.round(bar.value) : ''}
+                                </text>
+                                <text
+                                  x={78 + i * 70}
+                                  y={158}
+                                  textAnchor="middle"
+                                  fontSize="10"
+                                  fill="#231942"
+                                  fontWeight="400"
+                                >
+                                  {bar.label}
+                                </text>
+                              </g>
+                            );
+                          })}
+                          {[0, 20, 40, 60, 80, 100].map((y) => (
                             <text
                               key={y}
                               x={32}
-                              y={140 - y * 12 + 5}
+                              y={140 - y * 1.2 + 5}
                               fontSize="9"
                               fill="#231942"
                               textAnchor="end"
@@ -205,14 +223,27 @@ export default function Results() {
                               {y < 10 ? `0${y}` : y}
                             </text>
                           ))}
-                          <defs>
-                            <linearGradient id="barGradientMob" x1="0" y1="0" x2="1" y2="0">
-                              <stop offset="5%" stopColor="#704180" />
-                              <stop offset="95%" stopColor="#8B2D6C" />
-                            </linearGradient>
-                          </defs>
                         </svg>
                       </div>
+                    </div>
+                    {/* Report Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                      <a
+                        href={result.reportView}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-6 py-2 rounded-full bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white font-semibold text-base shadow hover:opacity-90 transition text-center"
+                      >
+                        View Report
+                      </a>
+                      <a
+                        href={result.reportDownload}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-6 py-2 rounded-full bg-gradient-to-r from-[#F6C851] to-[#F9D423] text-[#704180] font-semibold text-base shadow hover:opacity-90 transition text-center"
+                      >
+                        Download Report
+                      </a>
                     </div>
                     {/* Recommended Courses */}
                     <div className="mt-2">
@@ -248,7 +279,7 @@ export default function Results() {
           <img src={topresultimage} alt="Therapist" className="w-36 h-20 sm:w-52 sm:h-32 object-cover rounded-xl mb-3 sm:mb-4" />
           <div className="font-semibold text-base sm:text-lg mb-1 text-center">Talk to a therapist?</div>
           <div className="text-gray-500 text-center mb-3 sm:mb-4">Book your session now</div>
-          <button onClick={() => navigate('/appointments/set-availability-user')} className="px-4 sm:px-6 py-2 rounded-full font-medium text-sm sm:text-base text-white" style={{background: 'linear-gradient(89.79deg, #704180 5.07%, #8B2D6C 95.83%)'}}>Book now</button>
+          <button onClick={() => navigate('/appointments')} className="px-4 sm:px-6 py-2 rounded-full font-medium text-sm sm:text-base text-white" style={{background: 'linear-gradient(89.79deg, #704180 5.07%, #8B2D6C 95.83%)'}}>Book now</button>
         </div>
         {/* Checklist Card */}
         <div className="bg-white rounded-3xl shadow p-6 sm:p-8 flex flex-col items-center border border-[#BCBCBC]">
@@ -319,7 +350,7 @@ export default function Results() {
               </text>
             </svg>
           </div>
-          <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2 text-center">Welcome to Zenomi ,<span className="text-[#8B2D6C]">Lily</span></h3>
+          <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2 text-center">Welcome to Zenomi ,<span className="text-[#8B2D6C]">{userName || 'there'}</span></h3>
           <p className="text-gray-500 text-center mb-4 sm:mb-6 text-xs sm:text-base">Experience your AHA! moment by completing this simple steps</p>
           <ul className="w-full space-y-2 sm:space-y-3">
             {checklist.map((item) => (
