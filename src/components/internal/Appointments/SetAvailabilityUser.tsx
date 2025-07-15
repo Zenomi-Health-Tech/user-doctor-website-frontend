@@ -3,7 +3,6 @@ import Cookies from 'js-cookie';
 import api from '@/utils/api';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
-import { useNavigate } from 'react-router-dom';
 
 
 
@@ -28,7 +27,6 @@ type Doctor = {
 
 
 export default function SetAvailabilityUser() {
-  const navigate = useNavigate();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [selectedDate, setSelectedDate] = useState(() => {
     const now = new Date();
@@ -84,42 +82,40 @@ export default function SetAvailabilityUser() {
     });
   };
 
-  if (!doctors.length) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
-        <div className="text-xl font-semibold mb-4 text-gray-700">No Open Slots Available</div>
-        <button
-          className="px-6 py-2 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-lg shadow hover:opacity-90 transition"
-          onClick={() => navigate(-1)}
-        >
-          Back
-        </button>
-      </div>
-    );
-  }
-
   // Doctor Card UI
   const doctor = doctors[0];
-  const initials = doctor.doctorName.split(' ').map(n => n[0]).join('').toUpperCase();
-  const truncatedSpec = doctor.specialization.length > 22 ? doctor.specialization.slice(0, 20) + '..' : doctor.specialization;
+  const initials = doctor?.doctorName?.split(' ').map(n => n[0]).join('').toUpperCase() || '';
+  const truncatedSpec = doctor?.specialization?.length > 22 ? doctor.specialization.slice(0, 20) + '..' : doctor?.specialization || '';
 
   return (
     <div className="w-full p-0 m-0 font-['Poppins'] min-h-[600px]">
       <div className="p-8 w-full">
-        {/* Doctor Card at the top */}
-        <div className="flex items-center bg-white rounded-2xl border border-[#E5E5E5] p-4 mb-8 shadow-sm max-w-md">
-          {doctor.photoUrl ? (
-            <img src={doctor.photoUrl} alt={doctor.doctorName} className="w-14 h-14 rounded-xl object-cover bg-[#F8F2F9] mr-4" />
-          ) : (
-            <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[#F8F2F9] text-[#8B2D6C] text-xl font-bold mr-4">
-              {initials}
+        {/* Doctor Card at the top (if doctor data exists) */}
+        {doctor ? (
+          <div className="flex items-center bg-white rounded-2xl border border-[#E5E5E5] p-4 mb-8 shadow-sm max-w-md">
+            {doctor.photoUrl ? (
+              <img src={doctor.photoUrl} alt={doctor.doctorName} className="w-14 h-14 rounded-xl object-cover bg-[#F8F2F9] mr-4" />
+            ) : (
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[#F8F2F9] text-[#8B2D6C] text-xl font-bold mr-4">
+                {initials}
+              </div>
+            )}
+            <div>
+              <div className="font-bold text-lg text-black">Dr.{doctor.doctorName}</div>
+              <div className="text-sm text-gray-700">Specialist in {truncatedSpec}</div>
             </div>
-          )}
-          <div>
-            <div className="font-bold text-lg text-black">Dr.{doctor.doctorName}</div>
-            <div className="text-sm text-gray-700">Specialist in {truncatedSpec}</div>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center bg-white rounded-2xl border border-[#E5E5E5] p-4 mb-8 shadow-sm max-w-md">
+            <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[#F8F2F9] text-[#8B2D6C] text-xl font-bold mr-4">
+              --
+            </div>
+            <div>
+              <div className="font-bold text-lg text-black">No Doctor Available</div>
+              <div className="text-sm text-gray-700">No specialization info</div>
+            </div>
+          </div>
+        )}
         <div className="flex flex-col items-center w-full">
           {/* Calendar and Slots Card - full width, centered */}
           <div className="bg-white rounded-2xl p-6 shadow-md w-full max-w-2xl flex flex-col items-center mx-auto">
@@ -146,27 +142,13 @@ export default function SetAvailabilityUser() {
             {/* Slots Section */}
             <div className="w-full">
               <h2 className="text-xl font-semibold mb-4">Slots Available</h2>
-              {/* <div className="flex border-b mb-4">
-                {TABS.map((tab) => (
-                  <button
-                    key={tab}
-                    className={`px-4 py-2 text-base font-medium focus:outline-none transition border-b-2 ${activeTab === tab ? 'border-[#8B2D6C] text-[#8B2D6C]' : 'border-transparent text-gray-500'}`}
-                    onClick={() => setActiveTab(tab)}
-                    type="button"
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div> */}
-              {(() => {
-                const doctor = doctors[0];
+              {doctor && doctor.availabilities ? (() => {
                 const availability = doctor.availabilities.find(a =>
                   a.date.split('T')[0] === selectedDateUTC
                 );
                 if (!availability || !availability.timeSlots.length) {
                   return <div className="text-gray-500 mb-4">No slots available for this date.</div>;
                 }
-                
                 return (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
                     {availability.timeSlots.map((slot) => {
@@ -185,7 +167,7 @@ export default function SetAvailabilityUser() {
                     })}
                   </div>
                 );
-              })()}
+              })() : <div className="text-gray-500 mb-4">No slots available for this date.</div>}
               <button
                 className="w-full py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-lg shadow hover:opacity-90 transition"
                 onClick={handleBook}

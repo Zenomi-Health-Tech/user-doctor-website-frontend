@@ -26,7 +26,7 @@ export function NavMain({
     <SidebarGroup className="h-[calc(100vh-160px)] overflow-y-auto custom-scrollbar">
       <SidebarMenu className="px-4 py-2">
         {items.map((item) => {
-          const isActivePage = location.pathname === item.url;
+          const isActivePage = location.pathname === item.url || location.pathname.startsWith(item.url + '/');
           return (
             <SidebarMenuItem key={item.title} className="mb-3">
               <Link

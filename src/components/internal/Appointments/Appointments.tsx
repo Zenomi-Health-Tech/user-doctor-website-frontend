@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "@/utils/api";
 import Cookies from "js-cookie";
-import { Search, SlidersHorizontal, Calendar } from "lucide-react";
+import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from '@/context/AuthContext';
 import topresultimage from '@/assets/topResultImage.png'
@@ -222,6 +222,14 @@ export default function Appointments() {
         <h1 className="text-3xl font-semibold mb-6 text-gray-800">
           Appointment Details
         </h1>
+        <div className="flex justify-end mb-4">
+          <button
+            className="px-6 py-2 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-lg shadow hover:opacity-90 transition"
+            onClick={() => navigate('/appointments/set-availability')}
+          >
+            Set Availability
+          </button>
+        </div>
         <div className="flex items-center justify-between mb-8">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -234,18 +242,13 @@ export default function Appointments() {
             />
           </div>
           <div className="flex gap-2 ml-4">
-            <button
-              onClick={() => navigate("/appointments/available-slots")}
-              className="p-3 rounded-full bg-white border border-gray-200 shadow-sm"
-            >
-              <SlidersHorizontal className="w-5 h-5 text-gray-500" />
-            </button>
-            <button
+           
+            {/* <button
               className="p-3 rounded-full bg-white border border-gray-200 shadow-sm"
               onClick={() => navigate("/appointments/set-availability")}
             >
               <Calendar className="w-5 h-5 text-gray-500" />
-            </button>
+            </button> */}
           </div>
         </div>
         {/* Tabs */}

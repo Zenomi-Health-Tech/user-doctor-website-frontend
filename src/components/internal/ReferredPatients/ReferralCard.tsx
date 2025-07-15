@@ -6,6 +6,8 @@ import TouchImage from '@/assets/mobileTouchRefer.svg';
 
 const ReferralCard: React.FC = () => {
   const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [freeReferralsUsed, setFreeReferralsUsed] = useState<number | null>(null);
+  const maxFreeReferrals = 5;
 
   useEffect(() => {
     const fetchReferralCode = async () => {
@@ -24,6 +26,9 @@ const ReferralCard: React.FC = () => {
         });
         if (response.data && response.data.data) {
           setReferralCode(response.data.data.referralCode || response.data.data.code || null);
+          if (typeof response.data.data.freeReferralsUsed === 'number') {
+            setFreeReferralsUsed(response.data.data.freeReferralsUsed);
+          }
         }
       } catch (error) {
         setReferralCode(null);
@@ -43,7 +48,8 @@ const ReferralCard: React.FC = () => {
           token = '';
         }
       }
-      const response = await api.post('/stripe/create-doctor-checkout', {}, {
+      // NOTE: The payment amount should be set to 1,000 rupees in the backend for this endpoint.
+      const response = await api.post('/stripe/create-doctor-checkout', { amount: 1000 }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.data && response.data.url) {
@@ -56,6 +62,14 @@ const ReferralCard: React.FC = () => {
 
   return (
     <div className="w-full flex flex-col gap-6">
+      {/* Free Referrals Status */}
+      {freeReferralsUsed !== null && (
+        <div className="mb-2 text-base font-semibold text-[#8B2D6C] text-center">
+          {freeReferralsUsed < maxFreeReferrals
+            ? `${freeReferralsUsed}/${maxFreeReferrals} Free Referrals Used`
+            : 'No Free Referrals Left'}
+        </div>
+      )}
       {/* Referral Offer Card */}
       <div className="bg-[#8B2D6C] rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between relative overflow-hidden mb-4">
         <div className="flex-1">
