@@ -106,13 +106,15 @@ export default function SetAvailabilityUser() {
             </div>
           </div>
         ) : (
-          <div className="flex items-center bg-white rounded-2xl border border-[#E5E5E5] p-4 mb-8 shadow-sm max-w-md">
-            <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[#F8F2F9] text-[#8B2D6C] text-xl font-bold mr-4">
-              --
-            </div>
-            <div>
-              <div className="font-bold text-lg text-black">No Doctor Available</div>
-              <div className="text-sm text-gray-700">No specialization info</div>
+          <div className="w-full flex justify-center py-8">
+            <div className="flex items-center bg-white rounded-2xl border border-[#E5E5E5] p-4 mb-8 shadow-sm max-w-md w-full">
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[#F8F2F9] text-[#8B2D6C] text-xl font-bold mr-4">
+                --
+              </div>
+              <div>
+                <div className="font-bold text-lg text-black">No Doctor Available</div>
+                <div className="text-sm text-gray-700">No specialization info</div>
+              </div>
             </div>
           </div>
         )}
