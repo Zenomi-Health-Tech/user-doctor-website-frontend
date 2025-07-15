@@ -3,6 +3,7 @@ import Cookies from 'js-cookie';
 import api from '@/utils/api';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
+import { useNavigate } from 'react-router-dom';
 
 
 
@@ -27,6 +28,7 @@ type Doctor = {
 
 
 export default function SetAvailabilityUser() {
+  const navigate = useNavigate();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [selectedDate, setSelectedDate] = useState(() => {
     const now = new Date();
@@ -83,7 +85,17 @@ export default function SetAvailabilityUser() {
   };
 
   if (!doctors.length) {
-    return <div className="p-8">Loading doctor info...</div>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
+        <div className="text-xl font-semibold mb-4 text-gray-700">No Open Slots Available</div>
+        <button
+          className="px-6 py-2 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-lg shadow hover:opacity-90 transition"
+          onClick={() => navigate(-1)}
+        >
+          Back
+        </button>
+      </div>
+    );
   }
 
   // Doctor Card UI

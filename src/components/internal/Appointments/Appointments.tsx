@@ -51,7 +51,7 @@ interface UserAppointment {
 }
 
 export default function Appointments() {
-  const { isDoctor, isUser } = useAuth();
+  const { isDoctor, isUser, userName } = useAuth();
   const navigate = useNavigate();
 
   // --- Doctor State & Logic ---
@@ -512,7 +512,7 @@ export default function Appointments() {
                 </text>
               </svg>
             </div>
-            <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2 text-center">Welcome to Zenomi ,<span className="text-[#8B2D6C]">Lily</span></h3>
+            <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2 text-center">Welcome to Zenomi ,<span className="text-[#8B2D6C]">{userName || 'there'}</span></h3>
             <p className="text-gray-500 text-center mb-4 sm:mb-6 text-xs sm:text-base">Experience your AHA! moment by completing this simple steps</p>
             <ul className="w-full space-y-2 sm:space-y-3">
               {checklist.map((item) => (
