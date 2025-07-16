@@ -169,9 +169,11 @@ const PatientDetails: React.FC = () => {
 
       {/* Tests Done Section as Dropdown/Accordion */}
       <div className="bg-white rounded-2xl p-6 mb-8 shadow border border-gray-100">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl md:text-2xl font-semibold text-gray-800">Total Assessments Cycles done <span className="text-[#8B2D6C]">({patient.tests.length})</span></h2>
-        </div>
+        {patient.tests.length > 0 && (
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl md:text-2xl font-semibold text-gray-800">Total Assessments Cycles done <span className="text-[#8B2D6C]">({patient.tests.length})</span></h2>
+          </div>
+        )}
         <div className="grid gap-4 md:grid-cols-1">
           {patient.tests.length === 0 && (
             <div className="text-gray-500">No tests available.</div>
@@ -292,7 +294,7 @@ const PatientDetails: React.FC = () => {
         </div>
       )}
       {!patient.isCourseAssigned && (
-        <div className="bg-white rounded-2xl p-6 shadow border border-gray-100 mt-4">
+        <div className=" rounded-2xl p-6  border border-gray-100 mt-4">
           <button
             onClick={handleAssignCourse}
             disabled={assigning}
