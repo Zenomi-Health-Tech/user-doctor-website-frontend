@@ -270,7 +270,7 @@ export default function Profile() {
               </button>
               <button
                 className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition"
-                onClick={() => setShowAbout(true)}
+                onClick={() => window.open('https://zenomihealth.com', '_blank')}
               >
                 <svg
                   width="20"
@@ -640,7 +640,7 @@ export default function Profile() {
                 </svg>
                 Personal Information
               </button>
-              <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
+              <button  onClick={() => window.open('https://zenomihealth.com', '_blank')} className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
                 <svg
                   width="20"
                   height="20"

@@ -338,8 +338,6 @@ export default function Dashboard() {
         answer: a.answer,
       }));
 
-      console.log("Submitting answers:", formattedAnswers); // Debug log
-
       await axios.post(
         `https://zenomiai.elitceler.com/api/score-test/${currentTestId}`,
         { answers: formattedAnswers },
@@ -355,12 +353,13 @@ export default function Dashboard() {
       );
       setTests(res.data);
       setCurrentTestId(null);
+      setShowProcessing(false); // Hide processing card when API returns
     } catch (error) {
       console.error("Failed to submit quiz:", error);
       alert("Failed to submit quiz. Please try again.");
+      setShowProcessing(false);
     } finally {
       setLoading(false);
-      setShowProcessing(false); // <-- hide processing timer
     }
   };
   console.log(selectedTest?.id);
@@ -369,15 +368,26 @@ export default function Dashboard() {
     navigate(`/patients/${id}`);
   };
 
+  // Ensure processingTime is set to 30 whenever showProcessing becomes true
+  useEffect(() => {
+    if (showProcessing) {
+      setProcessingTime(30);
+    }
+  }, [showProcessing]);
+
+  // The countdown effect (should not set to 30, just decrease)
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (showProcessing) {
-      setProcessingTime(0); // reset timer
       interval = setInterval(() => {
-        setProcessingTime((prev) => prev + 1);
+        setProcessingTime((prev) => {
+          if (prev <= 1) {
+            setShowProcessing(false);
+            return 0;
+          }
+          return prev - 1;
+        });
       }, 1000);
-    } else if (!showProcessing && processingTime !== 0) {
-      setProcessingTime(0);
     }
     return () => {
       if (interval) clearInterval(interval);
@@ -565,7 +575,7 @@ export default function Dashboard() {
                     <div className="bg-white rounded-2xl p-4 flex items-center justify-between shadow">
                       <div className="flex items-center gap-4">
                         <img
-                          src="/public/zenomiLogo.png"
+                          src="https://zenomi.s3.ap-south-1.amazonaws.com/testanimations/WhatsApp_Image_2025-06-16_at_15.32.46_e9afbbd2.webp"
                           alt="Processing"
                           style={{ width: "64px", height: "64px", objectFit: "contain", display: "block" }}
                         />
@@ -658,8 +668,8 @@ export default function Dashboard() {
                             >
                               {test.description || "No description available"}
                             </p>
-                            {/* Only show Take test button if test is UNLOCKED */}
-                            {test.testStatus === "UNLOCKED" && (
+                            {/* Only show Take test button if test is UNLOCKED and not currently processing */}
+                            {test.testStatus === "UNLOCKED" && (!showProcessing || currentTestId !== test.id) && (
                               <button
                                 className={`mt-4 px-4 py-2 sm:px-6 sm:py-2 rounded-full font-semibold text-sm sm:text-base font-['Poppins']
                                 bg-white text-[#704180] hover:bg-gray-100`}
@@ -838,22 +848,7 @@ export default function Dashboard() {
             >
               &times;
             </button>
-            {/* Splash image as icon (optional, can remove if not needed) */}
-            {selectedTest.splash_image_s3_key ? (
-              <div
-                className="w-28 h-28 mb-4 rounded-2xl bg-center bg-cover flex items-center justify-center z-10"
-                style={{
-                  backgroundImage: `url(${selectedTest.image_url})`,
-                  backgroundColor: "#F8F3FA",
-                }}
-              />
-            ) : (
-              <img
-                src={selectedTest.image_url}
-                alt={selectedTest.name}
-                className="w-24 h-24 mb-4 z-10"
-              />
-            )}
+          
             <div
               style={{
                 background: "rgba(255,255,255,0.75)",
@@ -912,11 +907,17 @@ export default function Dashboard() {
       {showQuiz && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div
-            className="bg-[#F8F3FA] rounded-xl sm:rounded-2xl p-4 sm:p-6 w-full max-w-md shadow-lg flex flex-col items-center relative font-['Urbanist'] max-h-[90vh] overflow-y-auto"
+            className="bg-[#F8F3FA] rounded-xl sm:rounded-2xl p-4 sm:p-6 w-full max-w-md shadow-lg flex flex-col items-center relative font-['Urbanist'] max-h-[90vh] overflow-y-auto scrollbar-none"
             style={{
               boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.18)",
+              scrollbarWidth: "none", // Firefox
+              msOverflowStyle: "none", // IE/Edge
             }}
           >
+            {/* Hide scrollbar for Webkit browsers */}
+            <style>{`
+              .scrollbar-none::-webkit-scrollbar { display: none; }
+            `}</style>
             <h2 className="text-2xl font-bold mb-2 text-left w-full">
               {selectedTest?.name || "Test"} Quiz
             </h2>

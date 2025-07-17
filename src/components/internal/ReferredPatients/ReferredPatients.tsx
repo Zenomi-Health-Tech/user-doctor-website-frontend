@@ -39,7 +39,7 @@ const ReferredPatientsList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [referralCode, setReferralCode] = useState<string | null>(null);
-  const [freeReferralsUsed, setFreeReferralsUsed] = useState<number | null>(null);
+  const [freeReferralsGenerated, setFreeReferralsGenerated] = useState<number>(0);
   const maxFreeReferrals = 5;
   const navigate = useNavigate();
 
@@ -71,6 +71,27 @@ const ReferredPatientsList: React.FC = () => {
         setLoading(false);
       }
     };
+    const fetchDoctorProfile = async () => {
+      try {
+        const authCookie = Cookies.get('auth');
+        let token = '';
+        if (authCookie) {
+          try {
+            token = JSON.parse(authCookie).token;
+          } catch (e) {
+            token = '';
+          }
+        }
+        const response = await api.get('/doctors/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.data && response.data.data) {
+          setFreeReferralsGenerated(response.data.data.freeReferralsGenerated || 0);
+        }
+      } catch (error) {
+        setFreeReferralsGenerated(0);
+      }
+    };
     const fetchReferralCode = async () => {
       try {
         const authCookie = Cookies.get('auth');
@@ -87,15 +108,13 @@ const ReferredPatientsList: React.FC = () => {
         });
         if (response.data && response.data.data) {
           setReferralCode(response.data.data.referralCode || response.data.data.code || null);
-          if (typeof response.data.data.freeReferralsUsed === 'number') {
-            setFreeReferralsUsed(response.data.data.freeReferralsUsed);
-          }
         }
       } catch (error) {
         setReferralCode(null);
       }
     };
     fetchPatients();
+    fetchDoctorProfile();
     fetchReferralCode();
   }, []);
 
@@ -142,6 +161,18 @@ const ReferredPatientsList: React.FC = () => {
   return (
     <div className="p-8 min-h-screen font-['Poppins'] ">
       <h1 className="text-3xl font-semibold mb-6 text-gray-800">Referral patients</h1>
+      {/* Referral Status Banner */}
+      {freeReferralsGenerated !== null && (
+        freeReferralsGenerated >= maxFreeReferrals ? (
+          <div className="mb-4 p-4 rounded-xl bg-red-100 border border-red-300 text-red-700 text-center font-normal text-lg">
+            You have used all your free referrals. To refer more patients, please upgrade your plan.
+          </div>
+        ) : (
+          <div className="mb-4 p-4 rounded-xl bg-green-100 border border-green-300 text-green-700 text-center font-semibold text-lg">
+            {maxFreeReferrals - freeReferralsGenerated} free referrals left.
+          </div>
+        )
+      )}
       {/* Referral Offer Card */}
       <div className="bg-[#8B2D6C] rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between mb-8 relative overflow-hidden">
         <div className="flex-1">
@@ -156,13 +187,6 @@ const ReferredPatientsList: React.FC = () => {
         </div>
       </div>
       {/* Referral Code Banner */}
-      {freeReferralsUsed !== null && (
-        <div className="mb-2 text-base font-semibold text-[#8B2D6C] text-center">
-          {freeReferralsUsed < maxFreeReferrals
-            ? `${freeReferralsUsed}/${maxFreeReferrals} Free Referrals Used`
-            : 'No Free Referrals Left'}
-        </div>
-      )}
       {referralCode && (
         <div className="bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] rounded-xl px-6 py-4 mb-8 flex items-center justify-between shadow">
           <div className="text-white text-lg font-semibold">Your Referral Code:</div>
