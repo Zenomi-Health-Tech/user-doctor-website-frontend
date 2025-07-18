@@ -89,7 +89,7 @@ const DoctorRegistrationForm = () => {
             if (data.govtId) formData.append('govtId', data.govtId);
             formData.append('countryCode', countryCode);
             const response = await axios.post(
-                'http://ec2-3-109-123-74.ap-south-1.compute.amazonaws.com:3000/api/v1/doctors/register',
+                'https://zenomi.elitceler.com/api/v1/doctors/register',
                 formData,
                 {
                     headers: {
