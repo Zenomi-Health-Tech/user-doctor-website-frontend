@@ -28,7 +28,7 @@ function RegisterComponent() {
                                 className="w-[160px] h-[163px] mb-8"
                                 loading="lazy"
                             />
-                            <h1 className="text-4xl font-semibold mb-4">Welcome, Lily!</h1>
+                            <h1 className="text-4xl font-semibold mb-4">Welcome!</h1>
                             <p className="text-lg opacity-90">
                                 Let's take your first step toward better mental and physical wellness.
                             </p>

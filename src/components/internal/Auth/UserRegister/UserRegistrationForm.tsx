@@ -27,6 +27,7 @@ const UserRegistrationForm = () => {
     const { toast } = useToast();
     const [countryCode, setCountryCode] = useState('+91');
     const navigate = useNavigate();
+    const [referralCodeDigits, setReferralCodeDigits] = useState("");
 
 
     const {
@@ -57,11 +58,11 @@ const UserRegistrationForm = () => {
     const onSubmit = async (data: UserFormData) => {
         setLoading(true);
         try {
-            const response = await axios.post('https://zenomi.elitceler.com/api/v1/users/register-user', {
-                ...data,
-                countryCode,
-                dob: new Date(data.dob).toISOString(),
-            });
+            // Compose the full referral code
+            const referralCode = referralCodeDigits ? `Zenomi-${referralCodeDigits}` : undefined;
+            const payload = { ...data, countryCode, dob: new Date(data.dob).toISOString(), referralCode };
+
+            const response = await axios.post('https://zenomi.elitceler.com/api/v1/users/register-user', payload);
 
             toast({
                 title: "Success",
@@ -199,13 +200,26 @@ const UserRegistrationForm = () => {
 
                 {/* Referral Code Input */}
                 <div>
-                    <input
-                        {...register('referralCode')}
-                        type="text"
-                        placeholder="Enter Doctor Referral Code"
-                        className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2"
-                        style={{ '--tw-ring-color': '#704180' } as React.CSSProperties}
-                    />
+                    {/* <label className="block mb-1 font-medium">Doctor Referral Code</label> */}
+                    <div className="flex items-center">
+                        <span className="bg-gray-100 px-3 py-3 rounded-l-xl border border-gray-200 border-r-0 text-gray-500 select-none">
+                            Zenomi-
+                        </span>
+                        <input
+                            type="text"
+                            maxLength={4}
+                            inputMode="numeric"
+                            className="w-full p-3 rounded-r-xl border border-gray-200 focus:outline-none focus:ring-2"
+                            placeholder="1234"
+                            value={referralCodeDigits}
+                            onChange={e => {
+                                // Only allow digits
+                                const val = e.target.value.replace(/[^0-9]/g, "");
+                                setReferralCodeDigits(val);
+                                setValue("referralCode", val, { shouldValidate: true });
+                            }}
+                        />
+                    </div>
                     {errors.referralCode && (
                         <p className="text-red-500 text-sm mt-1">{errors.referralCode.message}</p>
                     )}

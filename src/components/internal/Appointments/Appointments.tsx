@@ -360,82 +360,88 @@ export default function Appointments() {
               Previous
             </button>
           </div>
-          {userLoading ? (
-            <div className="flex  h-40 text-xl">Loading appointments...</div>
-          ) : userAppointmentsToShow.length === 0 ? (
-            <div className=" text-gray-500 text-lg mt-10">No appointments found.</div>
-          ) : (
-            <div className="space-y-6">
-              {userAppointmentsToShow.map((appt) => {
-                // Get initials
-                const initials = appt.doctor.name
-                  .split(' ')
-                  .map((n) => n[0])
-                  .join('')
-                  .toUpperCase();
-                // Format date (e.g., Sunday, 12 June)
-                const dateObj = new Date(appt.preferredDate);
-                const dateStr = dateObj.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
-                // Format time range (for now, just show start time)
-                const start = appt.preferredTime.slice(11,16); // 'HH:mm'
-                // Helper to add 30 minutes to 'HH:mm' string
-                function add30Minutes(timeStr: string) {
-                  const [h, m] = timeStr.split(':').map(Number);
-                  const date = new Date(0, 0, 0, h, m + 30, 0, 0);
-                  const hh = date.getHours().toString().padStart(2, '0');
-                  const mm = date.getMinutes().toString().padStart(2, '0');
-                  return `${hh}:${mm}`;
-                }
-                const end = add30Minutes(start);
-                const startTimeStr = start;
-                const endTimeStr = end;
-                return (
-                  <div
-                    key={appt.id}
-                    className="bg-white rounded-2xl border border-[#E5E5E5] shadow-sm p-4 sm:p-6 flex flex-col gap-4 max-w-full sm:max-w-xl "
-                    style={{ boxShadow: '0px 2px 12px 0px #0000000A' }}
-                  >
-                    <div className="flex items-center gap-4">
-                      {appt.doctor.photoUrl ? (
-                        <img
-                          src={appt.doctor.photoUrl}
-                          alt={appt.doctor.name}
-                          className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl object-cover bg-[#F8F2F9]"
-                        />
-                      ) : (
-                        <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-[#F8F2F9] text-[#B06AB3] text-2xl font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                          {initials}
-                        </div>
-                      )}
-                      <div className="flex flex-col justify-center ml-2">
-                        <div className="text-lg sm:text-2xl font-bold text-[#1A2343]" style={{ fontFamily: 'Poppins, sans-serif' }}>{appt.doctor.name}</div>
-                        <div className="text-base sm:text-lg text-gray-500 font-medium" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                          Specialist in {appt.doctor.specialization}
-                        </div>
-                      </div>
-                    </div>
-                    <hr className="my-2 border-[#ECECEC]" />
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-8 text-gray-700 mb-2">
-                      <div className="flex items-center gap-2">
-                        <svg width="20" height="20" fill="none" stroke="#1A2343" strokeWidth="2"><rect x="3" y="5" width="16" height="14" rx="4" /><path d="M8 3v4M14 3v4" /></svg>
-                        <span className="text-sm sm:text-base font-medium">{dateStr}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <svg width="20" height="20" fill="none" stroke="#1A2343" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="M11 7v4l2 2" /></svg>
-                        <span className="text-sm sm:text-base font-medium">{startTimeStr} - {endTimeStr}</span>
-                      </div>
-                    </div>
-                    {/* <button
-                      className="w-full mt-2 py-4 rounded-full text-white font-semibold text-lg shadow hover:opacity-90 transition"
-                      style={{ background: 'linear-gradient(90deg, #704180 6.54%, #8B2D6C 90.65%)' }}
+          {/* Scrollable appointments list */}
+          <div className="overflow-y-auto max-h-[70vh] pr-2 scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <style>{`
+              .scrollbar-none::-webkit-scrollbar { display: none; }
+            `}</style>
+            {userLoading ? (
+              <div className="flex  h-40 text-xl">Loading appointments...</div>
+            ) : userAppointmentsToShow.length === 0 ? (
+              <div className=" text-gray-500 text-lg mt-10">No appointments found.</div>
+            ) : (
+              <div className="space-y-6">
+                {userAppointmentsToShow.map((appt) => {
+                  // Get initials
+                  const initials = appt.doctor.name
+                    .split(' ')
+                    .map((n) => n[0])
+                    .join('')
+                    .toUpperCase();
+                  // Format date (e.g., Sunday, 12 June)
+                  const dateObj = new Date(appt.preferredDate);
+                  const dateStr = dateObj.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+                  // Format time range (for now, just show start time)
+                  const start = appt.preferredTime.slice(11,16); // 'HH:mm'
+                  // Helper to add 30 minutes to 'HH:mm' string
+                  function add30Minutes(timeStr: string) {
+                    const [h, m] = timeStr.split(':').map(Number);
+                    const date = new Date(0, 0, 0, h, m + 30, 0, 0);
+                    const hh = date.getHours().toString().padStart(2, '0');
+                    const mm = date.getMinutes().toString().padStart(2, '0');
+                    return `${hh}:${mm}`;
+                  }
+                  const end = add30Minutes(start);
+                  const startTimeStr = start;
+                  const endTimeStr = end;
+                  return (
+                    <div
+                      key={appt.id}
+                      className="bg-white rounded-2xl border border-[#E5E5E5] shadow-sm p-4 sm:p-6 flex flex-col gap-4 max-w-full sm:max-w-xl "
+                      style={{ boxShadow: '0px 2px 12px 0px #0000000A' }}
                     >
-                      Reschedule
-                    </button> */}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                      <div className="flex items-center gap-4">
+                        {appt.doctor.photoUrl ? (
+                          <img
+                            src={appt.doctor.photoUrl}
+                            alt={appt.doctor.name}
+                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl object-cover bg-[#F8F2F9]"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-[#F8F2F9] text-[#B06AB3] text-2xl font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                            {initials}
+                          </div>
+                        )}
+                        <div className="flex flex-col justify-center ml-2">
+                          <div className="text-lg sm:text-2xl font-bold text-[#1A2343]" style={{ fontFamily: 'Poppins, sans-serif' }}>{appt.doctor.name}</div>
+                          <div className="text-base sm:text-lg text-gray-500 font-medium" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                            Specialist in {appt.doctor.specialization}
+                          </div>
+                        </div>
+                      </div>
+                      <hr className="my-2 border-[#ECECEC]" />
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-8 text-gray-700 mb-2">
+                        <div className="flex items-center gap-2">
+                          <svg width="20" height="20" fill="none" stroke="#1A2343" strokeWidth="2"><rect x="3" y="5" width="16" height="14" rx="4" /><path d="M8 3v4M14 3v4" /></svg>
+                          <span className="text-sm sm:text-base font-medium">{dateStr}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <svg width="20" height="20" fill="none" stroke="#1A2343" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="M11 7v4l2 2" /></svg>
+                          <span className="text-sm sm:text-base font-medium">{startTimeStr} - {endTimeStr}</span>
+                        </div>
+                      </div>
+                      {/* <button
+                        className="w-full mt-2 py-4 rounded-full text-white font-semibold text-lg shadow hover:opacity-90 transition"
+                        style={{ background: 'linear-gradient(90deg, #704180 6.54%, #8B2D6C 90.65%)' }}
+                      >
+                        Reschedule
+                      </button> */}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
         {/* Right: Cards */}
         <div className="w-full lg:w-[350px] flex flex-col gap-4 sm:gap-6 font-['Poppins'] mt-6 lg:mt-0">

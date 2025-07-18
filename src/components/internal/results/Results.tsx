@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import api from '@/utils/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import tickmark from "@/assets/tickmark.svg"
 
 interface Analytics {
   id: string;
@@ -87,7 +88,7 @@ export default function Results() {
                           key={idx}
                           className={`w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full text-base sm:text-lg ${idx < testsCompleted ? 'bg-[#4E8041] text-white' : 'bg-gray-200 text-gray-400'}`}
                         >
-                          ✔
+                          <img src={tickmark} alt="tickmark" />
                         </span>
                       ))}
                     </div>
@@ -117,9 +118,9 @@ export default function Results() {
                                 <rect
                                   x={90 + i * 110}
                                   y={200 - bar.value * 2}
-                                  width={60}
+                                  width={40}
                                   height={bar.value * 2}
-                                  rx={12}
+                                  rx={12} // Slightly rounded ends
                                   fill={barColor}
                                 />
                                 <text
@@ -133,7 +134,7 @@ export default function Results() {
                                   {/* {bar.value > 0 ? Math.round(bar.value) : ''} */}
                                 </text>
                                 <text
-                                  x={120 + i * 110}
+                                  x={110 + i * 110}
                                   y={220}
                                   textAnchor="middle"
                                   fontSize="14"
@@ -184,7 +185,7 @@ export default function Results() {
                                   y={140 - bar.value * 1.2}
                                   width={36}
                                   height={bar.value * 1.2}
-                                  rx={8}
+                                  rx={8} // Slightly rounded ends
                                   fill={barColor}
                                 />
                                 <text
