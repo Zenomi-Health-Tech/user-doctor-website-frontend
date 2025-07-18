@@ -201,26 +201,6 @@ const DoctorRegistrationForm = () => {
                             )}
                         </div>
                         <div>
-                            <PhoneInput
-                                country="in"
-                                onlyCountries={['in']}
-                                onChange={handlePhoneChange}
-                                inputStyle={{
-                                    width: "100%",
-                                    height: "48px",
-                                    fontSize: "16px",
-                                    borderRadius: "12px",
-                                    border: "1px solid #e2e8f0",
-                                    backgroundColor: "#f9fafb",
-                                }}
-                                containerStyle={{ width: "100%" }}
-                                buttonStyle={{ borderRadius: "12px 0 0 12px", border: "1px solid #e2e8f0" }}
-                            />
-                            {errors.phoneNumber && (
-                                <p className="text-red-500 text-sm mt-1">{errors.phoneNumber.message}</p>
-                            )}
-                        </div>
-                        <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Doctor Photo*</label>
                             <Controller
                                 control={control}
@@ -372,6 +352,43 @@ const DoctorRegistrationForm = () => {
                             />
                             {errors.workLocation && (
                                 <p className="text-red-500 text-sm mt-1">{errors.workLocation.message}</p>
+                            )}
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Select currency*</label>
+                            <select
+                                className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 bg-gray-50 mb-2"
+                                style={{ '--tw-ring-color': '#704180' } as React.CSSProperties}
+                                value={countryCode}
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    setCountryCode(val);
+                                }}
+                            >
+                                <option value="+91">INR (₹)</option>
+                                <option value="+1">USD ($)</option>
+                                <option value="+44">GBP (£)</option>
+                                {/* Add more currencies/country codes as needed */}
+                            </select>
+                        </div>
+                        <div>
+                            <PhoneInput
+                                country="in"
+                                onlyCountries={['in']}
+                                onChange={handlePhoneChange}
+                                inputStyle={{
+                                    width: "100%",
+                                    height: "48px",
+                                    fontSize: "16px",
+                                    borderRadius: "12px",
+                                    border: "1px solid #e2e8f0",
+                                    backgroundColor: "#f9fafb",
+                                }}
+                                containerStyle={{ width: "100%" }}
+                                buttonStyle={{ borderRadius: "12px 0 0 12px", border: "1px solid #e2e8f0" }}
+                            />
+                            {errors.phoneNumber && (
+                                <p className="text-red-500 text-sm mt-1">{errors.phoneNumber.message}</p>
                             )}
                         </div>
                         <div>

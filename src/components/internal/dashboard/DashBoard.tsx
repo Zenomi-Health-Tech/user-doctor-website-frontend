@@ -94,6 +94,8 @@ export default function Dashboard() {
   const [showProcessing, setShowProcessing] = useState(false);
   const [processingTime, setProcessingTime] = useState(0);
   console.log(isDoctor, "isDoctor");
+  // Add a state to track the last completed test name
+  const [lastCompletedTestName, setLastCompletedTestName] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -333,17 +335,41 @@ export default function Dashboard() {
     setShowProcessing(true); // Show processing card immediately
     setShowQuiz(false); // Close the quiz modal/dialog immediately
     try {
+      // Find the current test object
+      const currentTest = tests.find(t => t.id === currentTestId);
+      const isPHQorGAD = currentTest && (currentTest.name?.toUpperCase().includes('PHQ') || currentTest.name?.toUpperCase().includes('GAD'));
+      // Debug log
+      console.log('Submitting quiz:', { answers, questions });
       // Format answers to match API expectations
-      const formattedAnswers = answers.map((a) => ({
-        question: a.question,
-        answer: a.answer,
-      }));
+      const formattedAnswers = answers.map((a, idx) => {
+        const q = questions[idx];
+        if (q && q.questionType === "SCALE" && typeof a.answer === "string") {
+          if (isPHQorGAD && Array.isArray(q.scaleOptions)) {
+            // For PHQ and GAD, use the index of the selected option (compare only the label part)
+            const selectedIdx = q.scaleOptions.findIndex((opt: string) => opt === a.answer);
+            if (selectedIdx === -1) {
+              alert('Please answer all questions before submitting.');
+              throw new Error('Invalid answer for PHQ/GAD: ' + a.answer);
+            }
+            return { question: a.question, answer: String(selectedIdx) };
+          } else {
+            // Default: extract score after colon
+            const parts = a.answer.split(":");
+            const score = parts.length > 1 ? parts[1] : a.answer;
+            return { question: a.question, answer: score };
+          }
+        }
+        return { question: a.question, answer: a.answer };
+      });
 
       await axios.post(
         `https://zenomiai.elitceler.com/api/score-test/${currentTestId}`,
         { answers: formattedAnswers },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      // Find the test name for the just-completed test
+      const completedTest = tests.find(t => t.id === currentTestId);
+      setLastCompletedTestName(completedTest?.name || null);
       setShowCompletionDialog(true);
       // Re-fetch tests after submission to update completed count
       const res = await axios.get(
@@ -752,11 +778,11 @@ export default function Dashboard() {
                 <div className="bg-white rounded-3xl shadow p-4 sm:p-6 flex flex-col items-center border border-[#BCBCBC]">
                   <img
                     src={topresultimage}
-                    alt="Therapist"
+                    alt="Doctor"
                     className="w-36 h-20 sm:w-52 sm:h-32 object-cover rounded-xl mb-3 sm:mb-4"
                   />
                   <div className="font-semibold text-base sm:text-lg mb-1 text-center">
-                    Talk to a therapist?
+                    Talk to a Doctor?
                   </div>
                   <div className="text-gray-500 text-center mb-3 sm:mb-4">
                     Book your session now
@@ -898,7 +924,8 @@ export default function Dashboard() {
                 </span>
               </div>
               <button
-                className="w-full py-2 rounded-full text-white font-semibold text-lg mb-3 z-10"
+                className="w-full py-2 rounded-full t
+                ext-white font-semibold text-lg mb-3 z-10"
                 style={{
                   background:
                     "linear-gradient(90deg, #704180 6.54%, #8B2D6C 90.65%)",
@@ -1008,16 +1035,16 @@ export default function Dashboard() {
                           />
                         );
                       }
+                      // SCALE question
                       return (q.scaleOptions || []).map((option: string) => (
                         <button
                           key={option}
                           className={`w-full py-4 rounded-full border-2 text-lg font-medium ${
-                            answers[currentQuestion]?.answer ===
-                            option.split(":")[0]
+                            answers[currentQuestion]?.answer === option
                               ? "bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white"
                               : "border-[#8B2D6C] text-[#704180] bg-white"
                           }`}
-                          onClick={() => handleAnswer(option)}
+                          onClick={() => handleAnswer(option)} // Pass the full option string
                         >
                           {option.split(":")[0]}
                         </button>
@@ -1063,7 +1090,7 @@ export default function Dashboard() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white rounded-3xl p-10 w-full max-w-lg shadow-lg flex flex-col items-center relative">
             <h2 className="text-2xl font-bold mb-2 text-center">
-              You've Completed the Sleep Test!
+              You've Completed the {lastCompletedTestName || 'Test'}!
             </h2>
             <p className="text-gray-600 text-center mb-6">
               Your results are ready and personalized just for you.
@@ -1082,7 +1109,12 @@ export default function Dashboard() {
             {completedCount !== tests.length && (
               <button
                 className="w-full py-3 rounded-full border border-[#8B2D6C] text-[#8B2D6C] font-semibold text-lg"
-                onClick={() => setShowCompletionDialog(false)}
+                onClick={() => {
+                  setShowCompletionDialog(false);
+                  // Find the next unlocked test
+                  const nextTest = tests.find(t => t.testStatus === 'UNLOCKED');
+                  if (nextTest) setSelectedTest(nextTest);
+                }}
               >
                 Take next test
               </button>

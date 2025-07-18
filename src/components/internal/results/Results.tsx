@@ -235,7 +235,7 @@ export default function Results() {
                         rel="noopener noreferrer"
                         className="px-6 py-2 rounded-full bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white font-semibold text-base shadow hover:opacity-90 transition text-center"
                       >
-                        Download Report
+                        Download Summary Report
                       </a>
                       {/* <a
                         href={result.reportDownload}
@@ -257,10 +257,10 @@ export default function Results() {
       </div>
       {/* Right Column */}
       <div className="w-full lg:w-[350px] flex flex-col gap-4 sm:gap-6 font-['Poppins'] mt-4 lg:mt-0">
-        {/* Therapist Card */}
+        {/* Doctor Card */}
         <div className="bg-white rounded-3xl shadow p-4 sm:p-6 flex flex-col items-center border border-[#BCBCBC]">
-          <img src={topresultimage} alt="Therapist" className="w-36 h-20 sm:w-52 sm:h-32 object-cover rounded-xl mb-3 sm:mb-4" />
-          <div className="font-semibold text-base sm:text-lg mb-1 text-center">Talk to a therapist?</div>
+          <img src={topresultimage} alt="Doctor" className="w-36 h-20 sm:w-52 sm:h-32 object-cover rounded-xl mb-3 sm:mb-4" />
+          <div className="font-semibold text-base sm:text-lg mb-1 text-center">Talk to a Doctor?</div>
           <div className="text-gray-500 text-center mb-3 sm:mb-4">Book your session now</div>
           <button onClick={() => navigate('/appointments')} className="px-4 sm:px-6 py-2 rounded-full font-medium text-sm sm:text-base text-white" style={{background: 'linear-gradient(89.79deg, #704180 5.07%, #8B2D6C 95.83%)'}}>Book now</button>
         </div>
