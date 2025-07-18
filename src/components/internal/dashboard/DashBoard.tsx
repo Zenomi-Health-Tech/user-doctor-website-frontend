@@ -21,6 +21,7 @@ interface Test {
   description: string | null;
   question_count: number;
   splash_image_s3_key?: string; // Add splash_image_s3_key to the Test interface
+  unlockDependency?: string;
 }
 
 // Define the WebSocket report data interface here or import if defined elsewhere
@@ -682,15 +683,27 @@ export default function Dashboard() {
                         </div>
                         {test.testStatus !== "COMPLETED" &&
                           test.testStatus !== "UNLOCKED" && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 rounded-3xl font-['Poppins']">
-                              <span className="text-white text-base sm:text-lg font-bold font-['Poppins']">
-                                <span role="img" aria-label="lock">
-                                  🔒
-                                </span>{" "}
-                                {test.testStatus === "UNLOCKED"
-                                  ? `Complete the ${test.name} to unlock`
-                                  : "Locked"}
-                              </span>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80  rounded-3xl z-10">
+                              {/* Lock icon in a circular, semi-transparent black background */}
+                              <div className="mb-6 flex flex-col items-center">
+                                <div className="w-16 h-16 rounded-full bg-black bg-opacity-40 flex items-center justify-center mb-4">
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="w-8 h-8 text-white"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                  >
+                                    <rect x="7" y="11" width="10" height="7" rx="3.5" stroke="currentColor" strokeWidth="2" fill="none" />
+                                    <path d="M12 15v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                    <path d="M8 11V8a4 4 0 018 0v3" stroke="currentColor" strokeWidth="2" fill="none" />
+                                  </svg>
+                                </div>
+                                <span className="text-white text-xl sm:text-xl font-normal text-center drop-shadow-lg">
+                                  Complete the <span className="font-normal">{test.unlockDependency || test.name || 'test'}</span> to unlock
+                                </span>
+                              </div>
                             </div>
                           )}
                       </div>
