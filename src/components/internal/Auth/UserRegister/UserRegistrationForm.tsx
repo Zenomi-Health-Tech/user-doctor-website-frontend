@@ -57,7 +57,7 @@ const UserRegistrationForm = () => {
     const onSubmit = async (data: UserFormData) => {
         setLoading(true);
         try {
-            const response = await axios.post('http://ec2-3-109-123-74.ap-south-1.compute.amazonaws.com:3000/api/v1/users/register-user', {
+            const response = await axios.post('https://zenomi.elitceler.com/api/v1/users/register-user', {
                 ...data,
                 countryCode,
                 dob: new Date(data.dob).toISOString(),

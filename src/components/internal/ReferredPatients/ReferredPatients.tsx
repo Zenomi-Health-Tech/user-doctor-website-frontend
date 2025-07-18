@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, SlidersHorizontal, ArrowRight } from 'lucide-react';
 import TouchImage from '@/assets/mobileTouchRefer.svg'
 import circles from '@/assets/Cricles.svg'
+import bgPlans from '@/assets/bgPlans.png';
 
 interface TestReport {
   id: string;
@@ -156,6 +157,135 @@ const ReferredPatientsList: React.FC = () => {
 
   if (loading) {
     return <div className="flex justify-center items-center h-screen text-xl">Loading referred patients...</div>;
+  }
+
+  if (freeReferralsGenerated >= maxFreeReferrals) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center font-['Poppins'] relative w-full" style={{ position: 'relative' }}>
+        {/* Background image */}
+        <div
+          className="absolute inset-0 w-full h-full z-0"
+          style={{
+            backgroundImage: `url(${bgPlans})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            filter: 'brightness(0.7)',
+          }}
+        />
+        {/* Overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#8B2D6C]/80 to-[#704180]/80 z-10" />
+        <div className="relative z-20 w-full flex flex-col items-center justify-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2 text-center">
+            Select a Subscription Plan to Continue
+          </h2>
+          <p className="text-lg text-white/80 mb-8 text-center">
+            Select our best plans catered for doctors
+          </p>
+          <div className="w-full max-w-5xl px-4 flex flex-col items-center">
+            <div className="hidden md:flex w-full justify-center items-end gap-8 mb-8">
+              {/* Pro Plan (left) */}
+              <div className="flex-1 max-w-xs bg-white/10 rounded-3xl p-8 flex flex-col items-center shadow-lg border border-white/20 backdrop-blur-md scale-90 opacity-70 transition-all duration-300">
+                <div className="text-xl font-bold mb-2 text-white">Pro Plan</div>
+                <div className="text-4xl font-bold text-white mb-1">1k</div>
+                <div className="text-white/80 mb-4 text-sm">/per patient after 5 referral used</div>
+                <ul className="text-white/90 text-left mb-6 space-y-2">
+                  <li>✔️ Includes 5 free patients</li>
+                  <li>✔️ Ideal for independent professionals</li>
+                  <li>✔️ Scale as needed</li>
+                  <li>✔️ Personalized training</li>
+                </ul>
+                <button className="w-full py-3 rounded-full bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white font-semibold shadow hover:opacity-90 transition">
+                  Pay for plan
+                </button>
+              </div>
+              {/* Starter Plan (center, prominent) */}
+              <div className="flex-1 max-w-md bg-white/20 rounded-3xl p-12 flex flex-col items-center shadow-2xl border border-white/30 backdrop-blur-md scale-105 z-10 transition-all duration-300">
+                <div className="text-2xl font-bold mb-2 text-white">Starter Plan</div>
+                <div className="text-5xl font-bold text-white mb-1">10k</div>
+                <div className="text-white/80 mb-4 text-lg">/onetime</div>
+                <ul className="text-white/90 text-left mb-8 space-y-3 text-lg">
+                  <li>✔️ Covers initial setup</li>
+                  <li>✔️ System integration</li>
+                  <li>✔️ Personalized onboarding</li>
+                  <li>✔️ Personalized training</li>
+                </ul>
+                <button className="w-full py-4 rounded-full bg-white text-[#8B2D6C] font-semibold text-lg shadow hover:bg-[#F3EAF7] transition">
+                  Pay for plan
+                </button>
+              </div>
+              {/* Enterprise Plan (right) */}
+              <div className="flex-1 max-w-xs bg-white/10 rounded-3xl p-8 flex flex-col items-center shadow-lg border border-white/20 backdrop-blur-md scale-90 opacity-70 transition-all duration-300">
+                <div className="text-xl font-bold mb-2 text-white">Enterprise Plan</div>
+                <div className="text-4xl font-bold text-white mb-1">50k</div>
+                <div className="text-white/80 mb-4 text-sm">/onetime</div>
+                <ul className="text-white/90 text-left mb-6 space-y-2">
+                  <li>✔️ Tailored for clinics/hospitals</li>
+                  <li>✔️ High-capacity features + analytics</li>
+                  <li>✔️ Multi-location / team access</li>
+                </ul>
+                <button className="w-full py-3 rounded-full bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white font-semibold shadow hover:opacity-90 transition">
+                  Pay for plan
+                </button>
+              </div>
+            </div>
+            {/* Mobile: horizontal scroll */}
+            <div className="flex md:hidden gap-8 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-8 w-full">
+              {/* Pro Plan */}
+              <div className="min-w-[320px] max-w-xs bg-white/10 rounded-3xl p-8 flex flex-col items-center snap-center shadow-lg border border-white/20 backdrop-blur-md">
+                <div className="text-xl font-bold mb-2 text-white">Pro Plan</div>
+                <div className="text-4xl font-bold text-white mb-1">1k</div>
+                <div className="text-white/80 mb-4 text-sm">/per patient after 5 referral used</div>
+                <ul className="text-white/90 text-left mb-6 space-y-2">
+                  <li>✔️ Includes 5 free patients</li>
+                  <li>✔️ Ideal for independent professionals</li>
+                  <li>✔️ Scale as needed</li>
+                  <li>✔️ Personalized training</li>
+                </ul>
+                <button className="w-full py-3 rounded-full bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white font-semibold shadow hover:opacity-90 transition">
+                  Pay for plan
+                </button>
+              </div>
+              {/* Starter Plan */}
+              <div className="min-w-[320px] max-w-xs bg-white/20 rounded-3xl p-12 flex flex-col items-center snap-center shadow-2xl border border-white/30 backdrop-blur-md">
+                <div className="text-2xl font-bold mb-2 text-white">Starter Plan</div>
+                <div className="text-5xl font-bold text-white mb-1">10k</div>
+                <div className="text-white/80 mb-4 text-lg">/onetime</div>
+                <ul className="text-white/90 text-left mb-8 space-y-3 text-lg">
+                  <li>✔️ Covers initial setup</li>
+                  <li>✔️ System integration</li>
+                  <li>✔️ Personalized onboarding</li>
+                  <li>✔️ Personalized training</li>
+                </ul>
+                <button className="w-full py-4 rounded-full bg-white text-[#8B2D6C] font-semibold text-lg shadow hover:bg-[#F3EAF7] transition">
+                  Pay for plan
+                </button>
+              </div>
+              {/* Enterprise Plan */}
+              <div className="min-w-[320px] max-w-xs bg-white/10 rounded-3xl p-8 flex flex-col items-center snap-center shadow-lg border border-white/20 backdrop-blur-md">
+                <div className="text-xl font-bold mb-2 text-white">Enterprise Plan</div>
+                <div className="text-4xl font-bold text-white mb-1">50k</div>
+                <div className="text-white/80 mb-4 text-sm">/onetime</div>
+                <ul className="text-white/90 text-left mb-6 space-y-2">
+                  <li>✔️ Tailored for clinics/hospitals</li>
+                  <li>✔️ High-capacity features + analytics</li>
+                  <li>✔️ Multi-location / team access</li>
+                </ul>
+                <button className="w-full py-3 rounded-full bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white font-semibold shadow hover:opacity-90 transition">
+                  Pay for plan
+                </button>
+              </div>
+            </div>
+            {/* Scroll indicator dots */}
+            <div className="flex justify-center gap-3 mt-4">
+              <span className="w-8 h-3 rounded-full bg-[#F6C851] inline-block" />
+              <span className="w-3 h-3 rounded-full bg-white/70 inline-block" />
+              <span className="w-3 h-3 rounded-full bg-white/70 inline-block" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
