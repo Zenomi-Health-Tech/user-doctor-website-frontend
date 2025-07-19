@@ -1,1 +1,0 @@
-import{j as t}from"./index-1Hvr9aaJ.js";function e(){return t.jsx("div",{className:"flex gap-8 p-8 bg-[#FAF8FB] min-h-screen font-['Poppins']",children:t.jsx("h1",{children:"Settings"})})}const s=()=>t.jsx(e,{});export{s as default};

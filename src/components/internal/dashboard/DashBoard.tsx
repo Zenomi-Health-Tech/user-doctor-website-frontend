@@ -259,8 +259,8 @@ export default function Dashboard() {
     // Handle different answer types
     let answerValue = answer;
     if (q.questionType === "SCALE") {
-      // For scale options, take only the text part before the colon
-      answerValue = answer.split(":")[0];
+      // For scale options, store the full option string (not just the label)
+      answerValue = answer; // answer is already the full option string from the button
     } else if (Array.isArray(answer)) {
       // If it's an array, take the first element
       answerValue = answer[0];
@@ -345,7 +345,7 @@ export default function Dashboard() {
         const q = questions[idx];
         if (q && q.questionType === "SCALE" && typeof a.answer === "string") {
           if (isPHQorGAD && Array.isArray(q.scaleOptions)) {
-            // For PHQ and GAD, use the index of the selected option (compare only the label part)
+            // For PHQ and GAD, use the index of the selected option (compare full string)
             const selectedIdx = q.scaleOptions.findIndex((opt: string) => opt === a.answer);
             if (selectedIdx === -1) {
               alert('Please answer all questions before submitting.');
@@ -353,10 +353,9 @@ export default function Dashboard() {
             }
             return { question: a.question, answer: String(selectedIdx) };
           } else {
-            // Default: extract score after colon
-            const parts = a.answer.split(":");
-            const score = parts.length > 1 ? parts[1] : a.answer;
-            return { question: a.question, answer: score };
+            // For all other SCALE quizzes, submit only the label before the colon
+            const label = a.answer.split(":")[0];
+            return { question: a.question, answer: label };
           }
         }
         return { question: a.question, answer: a.answer };
@@ -861,227 +860,220 @@ export default function Dashboard() {
           )}
         </div>
       </div>
-      {/* Right Column (for regular users) */}
-
       {selectedTest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+        <div 
+        style={{
+          backgroundImage: `url(${selectedTest.splash_image_s3_key})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          position: 'fixed',
+          width: '100vw',
+          height: '100vh',
+          top: 0,
+          left: 0,
+          zIndex: 50,
+        }}
+        className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#fff7fa] to-[#f8f3fa] p-0 m-0 fixed top-0 left-0 z-50">
           <div
-            className={`rounded-3xl p-16 w-full max-w-lg shadow-lg flex flex-col items-center relative font-['Urbanist']`}
-            style={
-              selectedTest.splash_image_s3_key
-                ? {
-                    backgroundImage: `url(${selectedTest.splash_image_s3_key})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                    backgroundRepeat: "no-repeat",
-                    backgroundColor: "#F8F3FA",
-                    position: "relative",
-                  }
-                : { backgroundColor: "#fff" }
-            }
+            className="w-full max-w-xl rounded-3xl shadow-lg flex flex-col items-center relative  p-0 sm:p-8 min-h-[500px] mx-auto"
+           
           >
-            {/* Close button (optional) */}
-            <button
-              className="absolute top-4 right-4 text-2xl text-gray-400 hover:text-gray-600 z-10"
-              onClick={() => setSelectedTest(null)}
-            >
-              &times;
-            </button>
-          
-            <div
-              style={{
-                background: "rgba(255,255,255,0.75)",
-                boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
-                backdropFilter: "blur(12px)",
-                padding: "32px",
-                borderRadius: "32px",
-              }}
-            >
-              <h2 className="text-2xl font-bold mb-2 text-center z-10">
-                Ready for Your {selectedTest.name}?
-              </h2>
-              <p className="text-gray-600 text-center mb-6 z-10">
-                {selectedTest.description || "No description available"}
-              </p>
-              <div className="flex justify-center flex-wrap gap-3 mb-8 z-10">
-                <span className="bg-[#F3EAF7] text-[#704180] px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium">
-                  <span role="img" aria-label="timer">
-                    ⏱
-                  </span>{" "}
-                  Takes 3 mins
-                </span>
-                <span className="bg-[#F3EAF7] text-[#704180] px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium">
-                  <span role="img" aria-label="questions">
-                    📋
-                  </span>{" "}
-                  {selectedTest.question_count} Questions
-                </span>
-                <span className="bg-[#F3EAF7] text-[#704180] px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium">
-                  <span role="img" aria-label="results">
-                    🎯
-                  </span>{" "}
-                  Personalized Results
-                </span>
-              </div>
+            {/* Optional: overlay for readability */}
+            <div className="absolute inset-0 rounded-3xl" style={{ background: selectedTest.splash_image_s3_key ? 'rgba(255,255,255,0.85)' : 'transparent', zIndex: 1 }}></div>
+            <div className="relative z-10 w-full flex flex-col items-center">
               <button
-                className="w-full py-2 rounded-full t
-                ext-white font-semibold text-lg mb-3 z-10"
-                style={{
-                  background:
-                    "linear-gradient(90deg, #704180 6.54%, #8B2D6C 90.65%)",
-                }}
-                onClick={handleStartTest}
-              >
-                Start test
-              </button>
-              <button
-                className="w-full py-2 rounded-full border border-[#8B2D6C] text-[#8B2D6C] font-semibold text-lg z-10"
+                className="absolute top-4 right-4 text-2xl text-gray-400 hover:text-gray-600 z-10"
                 onClick={() => setSelectedTest(null)}
               >
-                Cancel
+                &times;
               </button>
+              <div className="flex flex-col items-center justify-center w-full">
+                {selectedTest.image_url && (
+                  <img
+                    src={selectedTest.image_url}
+                    alt="Splash"
+                    className="w-24 h-24 object-contain mb-6 mt-8"
+                  />
+                )}
+                <h2 className="text-2xl font-bold mb-2 text-center z-10 mt-4">
+                  Ready for Your {selectedTest.name}?
+                </h2>
+                <p className="text-gray-600 text-center mb-6 z-10">
+                  {selectedTest.description || "No description available"}
+                </p>
+                <div className="flex justify-center flex-wrap gap-3 mb-8 z-10">
+                  <span className="bg-[#F3EAF7] text-[#704180] px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium">
+                    <span role="img" aria-label="timer">
+                      ⏱
+                    </span>{" "}
+                    Takes 3 mins
+                  </span>
+                  <span className="bg-[#F3EAF7] text-[#704180] px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium">
+                    <span role="img" aria-label="questions">
+                      📋
+                    </span>{" "}
+                    {selectedTest.question_count} Questions
+                  </span>
+                  <span className="bg-[#F3EAF7] text-[#704180] px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium">
+                    <span role="img" aria-label="results">
+                      🎯
+                    </span>{" "}
+                    Personalized Results
+                  </span>
+                </div>
+                <button
+                  className="w-full py-2 rounded-full text-white font-semibold text-lg mb-3 z-10"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, #704180 6.54%, #8B2D6C 90.65%)",
+                  }}
+                  onClick={handleStartTest}
+                >
+                  Start test
+                </button>
+                <button
+                  className="w-full py-2 rounded-full border border-[#8B2D6C] text-[#8B2D6C] font-semibold text-lg z-10"
+                  onClick={() => setSelectedTest(null)}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
       {showQuiz && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+        <div className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#fff7fa] to-[#f8f3fa] p-0 m-0 fixed top-0 left-0 z-50">
           <div
-            className="bg-[#F8F3FA] rounded-xl sm:rounded-2xl p-4 sm:p-6 w-full max-w-md shadow-lg flex flex-col items-center relative font-['Urbanist'] max-h-[90vh] overflow-y-auto scrollbar-none"
-            style={{
-              boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.18)",
-              scrollbarWidth: "none", // Firefox
-              msOverflowStyle: "none", // IE/Edge
-            }}
+            className="w-full max-w-2xl mx-auto flex flex-col items-center justify-center min-h-screen"
           >
-            {/* Hide scrollbar for Webkit browsers */}
-            <style>{`
-              .scrollbar-none::-webkit-scrollbar { display: none; }
-            `}</style>
-            <h2 className="text-2xl font-bold mb-2 text-left w-full">
-              {selectedTest?.name || "Test"} Quiz
-            </h2>
-            {loadingQuestions ? (
-              <div className="flex items-center justify-center h-[350px]">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B2D6C] mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading questions...</p>
-                </div>
-              </div>
-            ) : questions.length > 0 ? (
-              <>
-                {/* Progress bar */}
-                <div className="w-full flex items-center mb-6">
-                  <div className="flex-1 h-3 bg-gray-200 rounded-full">
-                    <div
-                      className="h-3 rounded-full bg-gradient-to-r from-[#F3C96B] to-[#E5E0EA]"
-                      style={{
-                        width: `${
-                          ((currentQuestion + 1) / questions.length) * 100
-                        }%`,
-                      }}
-                    />
+            <div
+              className="w-full bg-white rounded-3xl shadow-lg flex flex-col items-center relative font-['Urbanist'] p-0 sm:p-6"
+              style={{ minHeight: '500px' }}
+            >
+              <h2 className="text-2xl font-bold mb-2 text-left w-full px-8 pt-8">
+                {selectedTest?.name || "Test"} Quiz
+              </h2>
+              {loadingQuestions ? (
+                <div className="flex items-center justify-center h-[350px]">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B2D6C] mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading questions...</p>
                   </div>
                 </div>
-                <div className="w-full bg-[#F8F3FA] rounded-2xl p-8 flex flex-col items-center">
-                  <div className="text-center mb-4 text-gray-700 font-semibold">
-                    Question {String(currentQuestion + 1).padStart(2, "0")}/
-                    {questions.length}
+              ) : questions.length > 0 ? (
+                <>
+                  {/* Progress bar */}
+                  <div className="w-full flex items-center mb-6 px-8">
+                    <div className="flex-1 h-3 bg-gray-200 rounded-full">
+                      <div
+                        className="h-3 rounded-full bg-gradient-to-r from-[#F3C96B] to-[#E5E0EA]"
+                        style={{
+                          width: `${((currentQuestion + 1) / questions.length) * 100}%`,
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div className="text-center text-xl font-bold mb-8">
-                    {questions[currentQuestion]?.question}
+                  <div className="w-full bg-[#F8F3FA] rounded-2xl p-8 flex flex-col items-center">
+                    <div className="text-center mb-4 text-gray-700 font-semibold">
+                      Question {String(currentQuestion + 1).padStart(2, "0")}/{questions.length}
+                    </div>
+                    <div className="text-center text-xl font-bold mb-8">
+                      {questions[currentQuestion]?.question}
+                    </div>
+                    <div className="flex flex-col gap-4 w-full max-w-xl">
+                      {/* Render input based on type */}
+                      {(() => {
+                        const q = questions[currentQuestion];
+                        if (!q) return null;
+                        if (q.questionType === "NUMBER") {
+                          return (
+                            <input
+                              type="number"
+                              className="w-full py-4 rounded-full border-2 border-[#8B2D6C] text-lg font-medium px-6"
+                              value={answers[currentQuestion]?.answer || ""}
+                              onChange={(e) => handleAnswer(e.target.value)}
+                            />
+                          );
+                        }
+                        if (q.questionType === "BOOLEAN") {
+                          return (
+                            <div className="flex gap-4">
+                              {["Yes", "No"].map((option) => (
+                                <button
+                                  key={option}
+                                  className={`flex-1 py-4 rounded-full border-2 text-lg font-medium ${
+                                    answers[currentQuestion]?.answer === option
+                                      ? "bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white"
+                                      : "border-[#8B2D6C] text-[#704180] bg-white"
+                                  }`}
+                                  onClick={() => handleAnswer(option)}
+                                >
+                                  {option}
+                                </button>
+                              ))}
+                            </div>
+                          );
+                        }
+                        if (q.questionType === "TEXT") {
+                          return (
+                            <textarea
+                              className="w-full py-4 rounded-2xl border-2 border-[#8B2D6C] text-lg font-medium px-6"
+                              rows={4}
+                              value={answers[currentQuestion]?.answer || ""}
+                              onChange={(e) => handleAnswer(e.target.value)}
+                            />
+                          );
+                        }
+                        // SCALE question
+                        return (q.scaleOptions || []).map((option: string) => (
+                          <button
+                            key={option}
+                            className={`w-full py-4 rounded-full border-2 text-lg font-medium ${
+                              answers[currentQuestion]?.answer === option
+                                ? "bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white"
+                                : "border-[#8B2D6C] text-[#704180] bg-white"
+                            }`}
+                            onClick={() => handleAnswer(option)} // Pass the full option string
+                          >
+                            {option.split(":")[0]}
+                          </button>
+                        ));
+                      })()}
+                    </div>
+                    <div className="flex justify-between w-full mt-8">
+                      <button
+                        className="px-8 py-2 rounded-full border-2 border-[#8B2D6C] text-[#8B2D6C] font-medium"
+                        onClick={handlePrev}
+                        disabled={currentQuestion === 0}
+                      >
+                        Previous
+                      </button>
+                      <button
+                        className="px-8 py-2 rounded-full bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white font-medium"
+                        onClick={handleNext}
+                        disabled={
+                          submittingQuiz ||
+                          !answers[currentQuestion] ||
+                          !answers[currentQuestion].answer
+                        }
+                      >
+                        {submittingQuiz
+                          ? "Submitting..."
+                          : currentQuestion === questions.length - 1
+                          ? "Submit"
+                          : "Next"}
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-4 w-full max-w-xl">
-                    {/* Render input based on type */}
-                    {(() => {
-                      const q = questions[currentQuestion];
-                      if (!q) return null;
-                      if (q.questionType === "NUMBER") {
-                        return (
-                          <input
-                            type="number"
-                            className="w-full py-4 rounded-full border-2 border-[#8B2D6C] text-lg font-medium px-6"
-                            value={answers[currentQuestion]?.answer || ""}
-                            onChange={(e) => handleAnswer(e.target.value)}
-                          />
-                        );
-                      }
-                      if (q.questionType === "BOOLEAN") {
-                        return (
-                          <div className="flex gap-4">
-                            {["Yes", "No"].map((option) => (
-                              <button
-                                key={option}
-                                className={`flex-1 py-4 rounded-full border-2 text-lg font-medium ${
-                                  answers[currentQuestion]?.answer === option
-                                    ? "bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white"
-                                    : "border-[#8B2D6C] text-[#704180] bg-white"
-                                }`}
-                                onClick={() => handleAnswer(option)}
-                              >
-                                {option}
-                              </button>
-                            ))}
-                          </div>
-                        );
-                      }
-                      if (q.questionType === "TEXT") {
-                        return (
-                          <textarea
-                            className="w-full py-4 rounded-2xl border-2 border-[#8B2D6C] text-lg font-medium px-6"
-                            rows={4}
-                            value={answers[currentQuestion]?.answer || ""}
-                            onChange={(e) => handleAnswer(e.target.value)}
-                          />
-                        );
-                      }
-                      // SCALE question
-                      return (q.scaleOptions || []).map((option: string) => (
-                        <button
-                          key={option}
-                          className={`w-full py-4 rounded-full border-2 text-lg font-medium ${
-                            answers[currentQuestion]?.answer === option
-                              ? "bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white"
-                              : "border-[#8B2D6C] text-[#704180] bg-white"
-                          }`}
-                          onClick={() => handleAnswer(option)} // Pass the full option string
-                        >
-                          {option.split(":")[0]}
-                        </button>
-                      ));
-                    })()}
-                  </div>
-                  <div className="flex justify-between w-full mt-8">
-                    <button
-                      className="px-8 py-2 rounded-full border-2 border-[#8B2D6C] text-[#8B2D6C] font-medium"
-                      onClick={handlePrev}
-                      disabled={currentQuestion === 0}
-                    >
-                      Previous
-                    </button>
-                    <button
-                      className="px-8 py-2 rounded-full bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white font-medium"
-                      onClick={handleNext}
-                      disabled={
-                        submittingQuiz ||
-                        !answers[currentQuestion] ||
-                        !answers[currentQuestion].answer
-                      }
-                    >
-                      {submittingQuiz
-                        ? "Submitting..."
-                        : currentQuestion === questions.length - 1
-                        ? "Submit"
-                        : "Next"}
-                    </button>
-                  </div>
+                </>
+              ) : (
+                <div className="flex items-center justify-center h-[350px]">
+                  <p className="text-gray-600">No questions available</p>
                 </div>
-              </>
-            ) : (
-              <div className="flex items-center justify-center h-[350px]">
-                <p className="text-gray-600">No questions available</p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}

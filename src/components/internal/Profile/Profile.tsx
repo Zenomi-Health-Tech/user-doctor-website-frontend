@@ -63,7 +63,7 @@ export default function Profile() {
   useEffect(() => {
     const fetchProfile = async () => {
       setLoading(true);
-
+    
       const authCookie = Cookies.get("auth");
       let token = "";
       if (authCookie) {
@@ -73,7 +73,7 @@ export default function Profile() {
           token = "";
         }
       }
-
+      
       if (isDoctor) {
         const response = await api.get("/doctors/profile", {
           headers: { Authorization: `Bearer ${token}` },
@@ -83,7 +83,7 @@ export default function Profile() {
         const response = await api.get("/users/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
+        
         if (
           response.data.data.dob &&
           typeof response.data.data.dob === "string"
@@ -112,8 +112,8 @@ export default function Profile() {
     setDoctorForm(
       (prev) =>
         ({
-          ...prev,
-          [name]: value,
+      ...prev,
+      [name]: value,
         } as DoctorProfile)
     );
   };
@@ -124,8 +124,8 @@ export default function Profile() {
       setDoctorForm(
         (prev) =>
           ({
-            ...prev,
-            [name]: files[0],
+        ...prev,
+        [name]: files[0],
           } as DoctorProfile)
       );
     }
@@ -163,8 +163,8 @@ export default function Profile() {
           description: "Doctor Profile Editted!",
           variant: "default",
           className: "bg-green-500 text-white",
-        });
-        window.location.reload();
+      });
+      window.location.reload();
       }
       setEditMode(false);
     } catch (err) {
@@ -282,7 +282,7 @@ export default function Profile() {
                 >
                   <circle cx="10" cy="10" r="8" />
                 </svg>
-                About Us
+              About Us
               </button>
               <button
                 className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition"
@@ -298,7 +298,7 @@ export default function Profile() {
                 >
                   <circle cx="10" cy="10" r="8" />
                 </svg>
-                Terms & Conditions
+              Terms & Conditions
               </button>
               <button
                 className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition"
@@ -314,7 +314,7 @@ export default function Profile() {
                 >
                   <circle cx="10" cy="10" r="8" />
                 </svg>
-                My plans
+              My plans
               </button>
               <button
                 className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition"
@@ -330,7 +330,7 @@ export default function Profile() {
                 >
                   <circle cx="10" cy="10" r="8" />
                 </svg>
-                Privacy Policy
+              Privacy Policy
               </button>
               {/* <button
                 className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition"
@@ -340,40 +340,31 @@ export default function Profile() {
               Report an issue
               </button> */}
             </nav>
-            <button
-              onClick={handleLogout}
+        <button
+          onClick={handleLogout}
               className="flex items-center gap-2 mt-8 text-[#E11D48] font-medium hover:underline"
-            >
-              <svg
-                width="20"
-                height="20"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className=""
-              >
-                <path d="M15 12l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
-              </svg>
-              Logout
-            </button>
+        >
+               <LogOut />
+          Logout
+        </button>
           </aside>
           {/* Main Card */}
           <main className="flex-1 flex flex-col items-center justify-center py-12 px-8">
             <div className="flex flex-col items-center mb-8">
               {doctor.profilePicture ? (
-                <img
+          <img
                   src={
                     typeof doctor.profilePicture === "string"
-                      ? doctor.profilePicture
+                    ? doctor.profilePicture
                       : URL.createObjectURL(doctor.profilePicture)
                   }
-                  alt={doctor.name}
+            alt={doctor.name}
                   className="w-20 h-20 rounded-full object-cover bg-[#F8F2F9] mb-2"
-                />
+          />
               ) : (
                 <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] flex items-center justify-center text-white text-3xl font-bold mb-2">
                   {doctor.name.charAt(0)}
-                </div>
+        </div>
               )}
               <div className="text-2xl font-bold text-[#1A2343] mt-2">
                 Dr.{doctor.name}
@@ -499,7 +490,7 @@ export default function Profile() {
                     >
                       Edit Profile
                     </button>
-                  </div>
+              </div>
                 </>
               )}
             </form>
@@ -669,7 +660,7 @@ Zenomi Health also partners with schools and healthcare institutions to offer sp
                 >
                   <circle cx="10" cy="10" r="8" />
                 </svg>
-                About Us
+              About Us
               </button>
               <button
                 className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition"
@@ -685,7 +676,7 @@ Zenomi Health also partners with schools and healthcare institutions to offer sp
                 >
                   <circle cx="10" cy="10" r="8" />
                 </svg>
-                Terms & Conditions
+              Terms & Conditions
               </button>
               {/* <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
               <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
@@ -705,26 +696,26 @@ Zenomi Health also partners with schools and healthcare institutions to offer sp
                 >
                   <circle cx="10" cy="10" r="8" />
                 </svg>
-                Privacy Policy
+              Privacy Policy
               </button>
               {/* <button className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
               <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2"><circle cx="10" cy="10" r="8" /></svg>
               Report an issue
               </button> */}
             </nav>
-            <button
-              onClick={handleLogout}
+          <button
+            onClick={handleLogout}
               className="flex items-center gap-2 mt-4 md:mt-8 text-[#E11D48] font-medium hover:underline"
-            >
+          >
               <LogOut />
-              Logout
-            </button>
+            Logout
+          </button>
           </aside>
           {/* Main Card */}
           <main className="flex-1 flex flex-col items-center justify-center py-6 sm:py-10 md:py-12 px-2 sm:px-4 md:px-8">
             <div className="flex flex-col items-center mb-6 sm:mb-8">
-              {user.profilePicture ? (
-                <img
+            {user.profilePicture ? (
+              <img
                   src={
                     typeof user.profilePicture === "string"
                       ? user.profilePicture
@@ -732,14 +723,14 @@ Zenomi Health also partners with schools and healthcare institutions to offer sp
                       ? URL.createObjectURL(user.profilePicture)
                       : undefined
                   }
-                  alt={user.name}
+                alt={user.name}
                   className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover bg-[#F8F2F9] mb-2"
-                />
-              ) : (
+              />
+            ) : (
                 <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] flex items-center justify-center text-white text-2xl sm:text-3xl font-bold mb-2">
-                  {user.name.charAt(0)}
-                </div>
-              )}
+                {user.name.charAt(0)}
+              </div>
+            )}
               <div className="text-lg sm:text-2xl font-bold text-[#1A2343]">
                 {user.name}
               </div>
@@ -784,15 +775,15 @@ Zenomi Health also partners with schools and healthcare institutions to offer sp
                 placeholder="Phone Number*"
                 readOnly={!editMode}
               />
-
+           
               {!editMode ? (
-                <button
+          <button
                   type="button"
                   onClick={handleEdit}
                   className="w-full mt-4 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-base sm:text-lg shadow hover:opacity-90 transition"
-                >
-                  Edit Profile
-                </button>
+          >
+            Edit Profile
+          </button>
               ) : (
                 <div className="flex gap-3 sm:gap-4 mt-4">
                   <button
