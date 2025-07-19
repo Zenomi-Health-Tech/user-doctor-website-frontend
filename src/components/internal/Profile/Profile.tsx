@@ -270,7 +270,7 @@ export default function Profile() {
               </button>
               <button
                 className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition"
-                onClick={() => window.open('https://zenomihealth.com', '_blank')}
+                onClick={() => setShowAbout(true)}
               >
                 <svg
                   width="20"
@@ -344,16 +344,7 @@ export default function Profile() {
           onClick={handleLogout}
               className="flex items-center gap-2 mt-8 text-[#E11D48] font-medium hover:underline"
         >
-              <svg
-                width="20"
-                height="20"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className=""
-              >
-                <path d="M15 12l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
-              </svg>
+               <LogOut />
           Logout
         </button>
           </aside>
@@ -553,14 +544,29 @@ export default function Profile() {
               >
                 &times;
               </button>
-              <h2 className="text-2xl font-bold mb-4 text-center">About Us</h2>
-              <div className="text-gray-700 text-base max-h-[60vh] overflow-y-auto">
-                <p>
-                  Zenomi Health is committed to providing accessible, secure,
-                  and innovative healthcare solutions for everyone. Our platform
-                  empowers users and doctors to manage health and wellness with
-                  ease and confidence.
-                </p>
+              <h2 className="text-2xl font-bold mb-4 text-center font-['Poppins']">About Us</h2>
+              <div className="text-gray-700 text-base max-h-[60vh] overflow-y-auto whitespace-pre-line font-['Poppins']">
+                {`
+We empower young minds by combining neuroscience-informed assessments with personalized wellness strategies. Our platform evaluates key domains—emotional regulation, nutrition, and sleep—using validated tools to understand each individual's unique profile.
+
+Based on these insights, we craft tailored plans that support cognitive performance, emotional resilience, and overall mental well-being. By addressing foundational pillars of youth development, we help them to build habits that enhance focus, mood stability, and long-term brain health.
+
+01.
+How does Zenomi Health help you?
+At Zenomi, our mission is to equip young minds with the tools they need to thrive—emotionally, cognitively, and socially. We offer systematic assessments that inform evidence-based recommendations and personalized content that enable emotional regulation, resilience, focus, and self-awareness. By nurturing these foundational skills, we aim to transform mental wellness into a lifelong strength. Our commitment is to help individuals excel in school, flourish in their careers, and form deeper, healthier relationships. Zenomi is paving the way for a generation empowered to lead lives of purpose, balance, and lasting well-being.
+
+02.
+Assessments
+At Zenomi Health, we provide structured assessments that evaluate key aspects of a student's overall well-being, including sleep patterns, nutritional habits, and emotional resilience. These assessments are thoughtfully designed to capture a holistic view of a young individual's mental and physical wellness. By identifying areas of strength and concern, our platform enables early support, informed guidance, and personalized course recommendations tailored to each student's unique needs. This approach empowers students to better understand themselves and take proactive steps toward healthier habits, improved focus, and long-term emotional stability—both in and outside the classroom.
+
+03.
+AI Recommendations
+Zenomi Health uses AI-driven insights to translate assessment results into personalized learning pathways. Based on each student's scores across domains like sleep, nutrition, and emotional wellness, our system recommends targeted courses and modules designed to address their specific needs. This intelligent matching ensures that students receive support that is timely, relevant, and impactful—helping them build healthier habits, improve self-regulation, and strengthen their overall well-being. By aligning evidence-based content with individual profiles, Zenomi creates a truly customized wellness journey for every learner.
+
+04.
+Workshops
+Zenomi Health also partners with schools and healthcare institutions to offer specialized workshops. For educators, our training focuses on understanding student behavior through the lens of mental wellness—equipping teachers with practical tools to support emotional development, manage classroom stress, and foster positive student-teacher relationships. For clinicians, our workshops emphasize developmentally informed, compassionate approaches to working with young patients, integrating mental health best practices into everyday care. These programs aim to equip teachers and clinicians with practical tools to better understand and support young individuals. They strengthen the network of care by aligning efforts across schools, families, and healthcare providers. This creates safe, supportive environments where children and adolescents can grow emotionally, mentally, and socially.
+        `}
               </div>
             </div>
           </div>
@@ -640,7 +646,10 @@ export default function Profile() {
                 </svg>
                 Personal Information
               </button>
-              <button  onClick={() => window.open('https://zenomihealth.com', '_blank')} className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition">
+              <button
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-[#F8F2F9] transition"
+                onClick={() => setShowAbout(true)}
+              >
                 <svg
                   width="20"
                   height="20"
@@ -812,6 +821,42 @@ export default function Profile() {
               <pre className="whitespace-pre-wrap text-gray-700 text-sm max-h-[60vh] overflow-y-auto">
                 {TERMS_AND_CONDITIONS}
               </pre>
+            </div>
+          </div>
+        )}
+          {showAbout && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div className="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-lg relative overflow-y-auto max-h-[80vh]">
+              <button
+                className="absolute top-4 right-4 text-2xl text-gray-400 hover:text-gray-600"
+                onClick={() => setShowAbout(false)}
+              >
+                &times;
+              </button>
+              <h2 className="text-2xl font-bold mb-4 text-center font-['Poppins']">About Us</h2>
+              <div className="text-gray-700 text-base max-h-[60vh] overflow-y-auto whitespace-pre-line font-['Poppins']">
+                {`
+We empower young minds by combining neuroscience-informed assessments with personalized wellness strategies. Our platform evaluates key domains—emotional regulation, nutrition, and sleep—using validated tools to understand each individual's unique profile.
+
+Based on these insights, we craft tailored plans that support cognitive performance, emotional resilience, and overall mental well-being. By addressing foundational pillars of youth development, we help them to build habits that enhance focus, mood stability, and long-term brain health.
+
+01.
+How does Zenomi Health help you?
+At Zenomi, our mission is to equip young minds with the tools they need to thrive—emotionally, cognitively, and socially. We offer systematic assessments that inform evidence-based recommendations and personalized content that enable emotional regulation, resilience, focus, and self-awareness. By nurturing these foundational skills, we aim to transform mental wellness into a lifelong strength. Our commitment is to help individuals excel in school, flourish in their careers, and form deeper, healthier relationships. Zenomi is paving the way for a generation empowered to lead lives of purpose, balance, and lasting well-being.
+
+02.
+Assessments
+At Zenomi Health, we provide structured assessments that evaluate key aspects of a student's overall well-being, including sleep patterns, nutritional habits, and emotional resilience. These assessments are thoughtfully designed to capture a holistic view of a young individual's mental and physical wellness. By identifying areas of strength and concern, our platform enables early support, informed guidance, and personalized course recommendations tailored to each student's unique needs. This approach empowers students to better understand themselves and take proactive steps toward healthier habits, improved focus, and long-term emotional stability—both in and outside the classroom.
+
+03.
+AI Recommendations
+Zenomi Health uses AI-driven insights to translate assessment results into personalized learning pathways. Based on each student's scores across domains like sleep, nutrition, and emotional wellness, our system recommends targeted courses and modules designed to address their specific needs. This intelligent matching ensures that students receive support that is timely, relevant, and impactful—helping them build healthier habits, improve self-regulation, and strengthen their overall well-being. By aligning evidence-based content with individual profiles, Zenomi creates a truly customized wellness journey for every learner.
+
+04.
+Workshops
+Zenomi Health also partners with schools and healthcare institutions to offer specialized workshops. For educators, our training focuses on understanding student behavior through the lens of mental wellness—equipping teachers with practical tools to support emotional development, manage classroom stress, and foster positive student-teacher relationships. For clinicians, our workshops emphasize developmentally informed, compassionate approaches to working with young patients, integrating mental health best practices into everyday care. These programs aim to equip teachers and clinicians with practical tools to better understand and support young individuals. They strengthen the network of care by aligning efforts across schools, families, and healthcare providers. This creates safe, supportive environments where children and adolescents can grow emotionally, mentally, and socially.
+        `}
+              </div>
             </div>
           </div>
         )}

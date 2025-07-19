@@ -179,7 +179,7 @@ const OTPForm: React.FC<OTPFormProps> = ({ onSuccess }) => {
             <span>Verifying...</span>
           </div>
         ) : (
-          "Send OTP"
+          "Submit OTP"
         )}
       </Button>
     </form>

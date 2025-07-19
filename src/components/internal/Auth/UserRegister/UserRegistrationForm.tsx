@@ -205,8 +205,8 @@ const UserRegistrationForm = () => {
                         <span className="bg-gray-100 px-3 py-3 rounded-l-xl border border-gray-200 border-r-0 text-gray-500 select-none">
                             Zenomi-
                         </span>
-                        <input
-                            type="text"
+                    <input
+                        type="text"
                             maxLength={4}
                             inputMode="numeric"
                             className="w-full p-3 rounded-r-xl border border-gray-200 focus:outline-none focus:ring-2"
@@ -218,7 +218,7 @@ const UserRegistrationForm = () => {
                                 setReferralCodeDigits(val);
                                 setValue("referralCode", val, { shouldValidate: true });
                             }}
-                        />
+                    />
                     </div>
                     {errors.referralCode && (
                         <p className="text-red-500 text-sm mt-1">{errors.referralCode.message}</p>

@@ -92,19 +92,19 @@ export default function SetAvailabilityUser() {
       <div className="p-8 w-full">
         {/* Doctor Card at the top (if doctor data exists) */}
         {doctor ? (
-          <div className="flex items-center bg-white rounded-2xl border border-[#E5E5E5] p-4 mb-8 shadow-sm max-w-md">
-            {doctor.photoUrl ? (
-              <img src={doctor.photoUrl} alt={doctor.doctorName} className="w-14 h-14 rounded-xl object-cover bg-[#F8F2F9] mr-4" />
-            ) : (
-              <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[#F8F2F9] text-[#8B2D6C] text-xl font-bold mr-4">
-                {initials}
-              </div>
-            )}
-            <div>
-              <div className="font-bold text-lg text-black">Dr.{doctor.doctorName}</div>
-              <div className="text-sm text-gray-700">Specialist in {truncatedSpec}</div>
+        <div className="flex items-center bg-white rounded-2xl border border-[#E5E5E5] p-4 mb-8 shadow-sm max-w-md">
+          {doctor.photoUrl ? (
+            <img src={doctor.photoUrl} alt={doctor.doctorName} className="w-14 h-14 rounded-xl object-cover bg-[#F8F2F9] mr-4" />
+          ) : (
+            <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[#F8F2F9] text-[#8B2D6C] text-xl font-bold mr-4">
+              {initials}
             </div>
+          )}
+          <div>
+            <div className="font-bold text-lg text-black">Dr.{doctor.doctorName}</div>
+            <div className="text-sm text-gray-700">Specialist in {truncatedSpec}</div>
           </div>
+        </div>
         ) : (
           <div className="w-full flex justify-center py-8">
             <div className="flex items-center bg-white rounded-2xl border border-[#E5E5E5] p-4 mb-8 shadow-sm max-w-md w-full">
