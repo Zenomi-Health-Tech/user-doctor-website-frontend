@@ -115,14 +115,20 @@ export default function Results() {
                             else if (bar.value > 40) barColor = '#F6C851'; // yellow
                             return (
                               <g key={bar.label}>
-                                <rect
-                                  x={90 + i * 110}
-                                  y={200 - bar.value * 2}
-                                  width={40}
-                                  height={bar.value * 2}
-                                  rx={12} // Slightly rounded ends
-                                  fill={barColor}
-                                />
+                               {bar.value > 0 && (
+                                  <path
+                                    d={`
+                                      M${90 + i * 110},${200}
+                                      L${90 + i * 110},${200 - bar.value * 2 + 12}
+                                      Q${90 + i * 110},${200 - bar.value * 2} ${90 + i * 110 + 12},${200 - bar.value * 2}
+                                      L${90 + i * 110 + 28},${200 - bar.value * 2}
+                                      Q${90 + i * 110 + 40},${200 - bar.value * 2} ${90 + i * 110 + 40},${200 - bar.value * 2 + 12}
+                                      L${90 + i * 110 + 40},${200}
+                                      Z
+                                    `}
+                                    fill={barColor}
+                                  />
+                                )}
                                 <text
                                   x={120 + i * 110}
                                   y={200 - bar.value * 2 - 10}
