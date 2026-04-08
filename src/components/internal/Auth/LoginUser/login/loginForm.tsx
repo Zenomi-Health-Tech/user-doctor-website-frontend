@@ -1,12 +1,5 @@
-import React, { useCallback, useState } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import useStore from "@/zustand/store";
-import PhoneInput from "react-phone-input-2";
-import "react-phone-input-2/lib/style.css";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { handleApiError } from "@/utils/errorHandler";
 import { useToast } from "@/hooks/use-toast";
 import { Loader } from "lucide-react";
 import { useGoogleLogin } from "@react-oauth/google";
@@ -15,31 +8,7 @@ import { setAuthCookies } from "@/utils/cookies";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 
-const schema = z.object({
-    phoneNumber: z
-        .string()
-        .min(10, "Phone number must be at least 10 digits")
-        .max(10, "Phone number must be exactly 10 digits"),
-});
-
-type FormData = z.infer<typeof schema>;
-
-interface LoginFormProps {
-    onSuccess: () => void;
-}
-
-const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
-    const {
-        handleSubmit,
-        setValue,
-        formState: { errors },
-    } = useForm<FormData>({
-        resolver: zodResolver(schema),
-    });
-
-    const userRequestOtp = useStore((state) => state.userRequestOtp);
-    const loading = useStore((state) => state.loading);
-    const updatePhoneDetails = useStore((state) => state.updatePhoneDetails);
+const LoginForm: React.FC = () => {
     const { toast } = useToast();
     const navigate = useNavigate();
     const [googleLoading, setGoogleLoading] = useState(false);
@@ -48,28 +17,24 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
         onSuccess: async (tokenResponse) => {
             setGoogleLoading(true);
             try {
-                try {
-                    const response = await axios.post('https://zenomi.elitceler.com/api/v1/users/google-signin', {
-                        idToken: tokenResponse.access_token,
-                    });
-                    const token = response.data?.data?.token || response.data?.token;
-                    if (token) {
-                        Cookies.set('userId', response.data?.data?.user?.id || '', { expires: 7 });
-                        setAuthCookies({ token });
-                        window.location.href = '/';
-                    }
-                } catch (err: any) {
-                    if (err.response?.status === 404) {
-                        toast({ title: "New User", description: "Please register first.", className: "bg-blue-500 text-white" });
-                        navigate('/user/register');
-                    } else {
-                        const errData = err.response?.data;
-                        const msg = (errData && typeof errData === 'object' && errData.message) ? errData.message : 'Sign in failed';
-                        toast({ title: "Error", description: msg, variant: "destructive" });
-                    }
+                const response = await axios.post('https://zenomi.elitceler.com/api/v1/users/google-signin', {
+                    idToken: tokenResponse.access_token,
+                });
+                const token = response.data?.data?.token || response.data?.token;
+                if (token) {
+                    Cookies.set('userId', response.data?.data?.user?.id || '', { expires: 7 });
+                    setAuthCookies({ token });
+                    window.location.href = '/';
                 }
-            } catch (error) {
-                toast({ title: "Error", description: "Google Sign-In failed", variant: "destructive" });
+            } catch (err: any) {
+                if (err.response?.status === 404) {
+                    toast({ title: "New User", description: "Please register first.", className: "bg-blue-500 text-white" });
+                    navigate('/user/register');
+                } else {
+                    const errData = err.response?.data;
+                    const msg = (errData && typeof errData === 'object' && errData.message) ? errData.message : 'Sign in failed';
+                    toast({ title: "Error", description: msg, variant: "destructive" });
+                }
             } finally {
                 setGoogleLoading(false);
             }
@@ -79,65 +44,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
         },
     });
 
-    const onSubmit: SubmitHandler<FormData> = async () => {
-        try {
-            await userRequestOtp();
-            toast({ title: "Success", description: "OTP sent successfully", className: "bg-green-500 text-white" });
-            onSuccess();
-        } catch (error) {
-            toast({ title: "Error", description: handleApiError(error), variant: "destructive" });
-        }
-    };
-
-    const handlePhoneChange = useCallback(
-        (value: string, country: { dialCode?: string }) => {
-            if (!country.dialCode) return;
-            const phoneNumber = value.replace(country.dialCode, "");
-            updatePhoneDetails(`+${country.dialCode}`, phoneNumber);
-            setValue("phoneNumber", phoneNumber);
-        },
-        [setValue, updatePhoneDetails]
-    );
-
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-6 font-['Poppins']">
+        <div className="w-full space-y-6 font-['Poppins']">
             <div className="text-center mb-8">
                 <h1 className="text-2xl font-semibold mb-2">Sign in to your Account</h1>
-                <p className="text-gray-600">Enter your mobile number to get started</p>
-            </div>
-            
-            <div className="space-y-4">
-                <PhoneInput
-                    country="in"
-                    onlyCountries={['in']}
-                    onChange={handlePhoneChange}
-                    inputStyle={{ width: "100%", height: "48px", fontSize: "16px", borderRadius: "12px", border: "1px solid #e2e8f0", backgroundColor: "#f8fafc" }}
-                    containerStyle={{ width: "100%" }}
-                    buttonStyle={{ borderRadius: "12px 0 0 12px", border: "1px solid #e2e8f0" }}
-                />
-                {errors.phoneNumber && (
-                    <p className="text-red-500 text-sm text-center">{errors.phoneNumber.message}</p>
-                )}
-            </div>
-
-            <Button
-                type="submit"
-                disabled={loading}
-                className="w-full cursor-pointer h-12 text-white rounded-xl"
-                style={{ background: 'linear-gradient(89.79deg, #704180 5.07%, #8B2D6C 95.83%)' }}
-            >
-                {loading ? (
-                    <div className="flex items-center justify-center">
-                        <Loader className="animate-spin h-5 w-5 mr-2" />
-                        <span>Sending OTP...</span>
-                    </div>
-                ) : "Send OTP"}
-            </Button>
-
-            <div className="flex items-center gap-3 my-2">
-                <div className="flex-1 h-px bg-gray-200" />
-                <span className="text-gray-400 text-sm">or</span>
-                <div className="flex-1 h-px bg-gray-200" />
+                <p className="text-gray-600">Continue with your Google account</p>
             </div>
 
             <Button
@@ -160,7 +71,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
                     </div>
                 )}
             </Button>
-        </form>
+        </div>
     );
 };
 
