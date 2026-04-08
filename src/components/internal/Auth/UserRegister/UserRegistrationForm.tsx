@@ -18,7 +18,7 @@ const userSchema = z.object({
     gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
     dob: z.string().min(1, 'Date of birth is required'),
     bloodGroup: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']),
-    referralCode: z.string().min(1, 'Referral code is required'),
+    referralCode: z.string().min(1, 'Doctor referral code is required'),
 });
 type UserFormData = z.infer<typeof userSchema>;
 
@@ -77,7 +77,8 @@ const UserRegistrationForm = () => {
 
             console.log('Success:', response.data);
         } catch (error: any) {
-            const errorMessage = error.response?.data?.message || 'Registration failed';
+            const errData = error.response?.data;
+            const errorMessage = (errData && typeof errData === 'object' && errData.message) ? errData.message : 'Registration failed. Please try again.';
             toast({
                 title: "Error",
                 description: errorMessage,
@@ -207,10 +208,10 @@ const UserRegistrationForm = () => {
                         </span>
                     <input
                         type="text"
-                            maxLength={4}
+                            maxLength={6}
                             inputMode="numeric"
                             className="w-full p-3 rounded-r-xl border border-gray-200 focus:outline-none focus:ring-2"
-                            placeholder="1234"
+                            placeholder="123456"
                             value={referralCodeDigits}
                             onChange={e => {
                                 // Only allow digits

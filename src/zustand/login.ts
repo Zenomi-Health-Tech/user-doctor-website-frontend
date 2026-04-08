@@ -132,7 +132,8 @@ export const createLoginAuthSlice: StateCreator<LoginAuthState> = (
 
       return true;
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || "Failed to verify OTP";
+      const errData = error.response?.data;
+      const errorMessage = (errData && typeof errData === 'object' && errData.message) ? errData.message : error.message || "Failed to verify OTP";
       console.error("OTP validation error:", errorMessage);
       set({ error: errorMessage });
       clearAuthCookies();
@@ -175,7 +176,8 @@ export const createLoginAuthSlice: StateCreator<LoginAuthState> = (
 
       return true;
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || "Failed to verify OTP";
+      const errData2 = error.response?.data;
+      const errorMessage = (errData2 && typeof errData2 === 'object' && errData2.message) ? errData2.message : error.message || "Failed to verify OTP";
       console.error("OTP validation error:", errorMessage);
       set({ error: errorMessage });
       clearAuthCookies();
