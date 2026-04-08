@@ -22,7 +22,7 @@ const Component = () => {
       }}
     >
       <div className="absolute inset-0" />
-      <Card className="bg-white/95 backdrop-blur-sm rounded-3xl w-[439px] h-[400px] shadow-xl z-10">
+      <Card className="bg-white/95 backdrop-blur-sm rounded-3xl w-[439px] shadow-xl z-10">
         <div className="w-96 mt-10 mx-auto flex flex-col items-center">
           {/* <img
             src={Logo}
