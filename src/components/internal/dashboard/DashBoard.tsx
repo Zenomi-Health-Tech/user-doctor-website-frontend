@@ -420,15 +420,15 @@ export default function Dashboard() {
     };
   }, [showProcessing]);
 
-  useEffect(() => {
-    if (
-      isDoctor &&
-      isPaid === false &&
-      location.pathname !== "/doctor/payment-onboard"
-    ) {
-      navigate("/doctor/payment-onboard", { replace: true });
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (
+  //     isDoctor &&
+  //     isPaid === false &&
+  //     location.pathname !== "/doctor/payment-onboard"
+  //   ) {
+  //     navigate("/doctor/payment-onboard", { replace: true });
+  //   }
+  // }, []);
 
   if (loading) return <div>Loading...</div>;
 

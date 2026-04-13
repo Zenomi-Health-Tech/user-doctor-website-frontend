@@ -4,14 +4,15 @@ import { getAuthCookies, setAuthCookies, clearAuthCookies } from '@/utils/cookie
 
 // 1. Define the interface for your decoded token payload
 interface DecodedUserToken {
-  doctorId?: string; // Optional, present if type is 'DOCTOR'
-  userId?: string;    // Optional, present if type is 'USER'
-  phoneNumber: string;
-  name: string;
-  type: 'DOCTOR' | 'USER'; // Your specific user types
+  doctorId?: string;
+  userId?: string;
+  phoneNumber?: string;
+  doctorMobileNumber?: string;
+  name?: string;
+  type?: 'DOCTOR' | 'USER';
   iat: number;
   exp: number;
-  isPaid: boolean;
+  isPaid?: boolean;
 }
 
 
@@ -77,11 +78,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Derived state for convenience
   const isAuthenticated = !!user;
-  const isDoctor = user?.type === 'DOCTOR';
-  const isUser = user?.type === 'USER';
+  const isDoctor = user?.type === 'DOCTOR' || !!user?.doctorId;
+  const isUser = user?.type === 'USER' || !!user?.userId;
   const userName = user?.name || null;
-  const userType = user?.type || null;
-  const isPaid = user?.isPaid || false;
+  const userType = user?.type || (user?.doctorId ? 'DOCTOR' : user?.userId ? 'USER' : null);
+  const isPaid = user?.isPaid ?? true;
 
 
   const contextValue = {

@@ -67,7 +67,7 @@ const OTPForm: React.FC<OTPFormProps> = ({ onSuccess }) => {
         });
        
           onSuccess();
-          window.location.reload();
+          window.location.href = "/dashboard";
         
       } else {
         const errorMessage = error || "Invalid OTP. Please try again.";

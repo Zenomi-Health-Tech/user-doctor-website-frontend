@@ -34,73 +34,77 @@ export default function AppRouter() {
     {
       path: "/",
       element: (
-        <HomeLayout>
-          <Suspense fallback={<div>Loading...</div>}>
-            <Outlet />
-          </Suspense>
-        </HomeLayout>
+        <ProtectedRoute
+          element={
+            <HomeLayout>
+              <Suspense fallback={<div>Loading...</div>}>
+                <Outlet />
+              </Suspense>
+            </HomeLayout>
+          }
+        />
       ),
       children: [
         {
-          element: <ProtectedRoute element={<Dashboard />} />,
+          element: <Dashboard />,
           index: true,
         },
         {
           path: "/dashboard",
-          element: <ProtectedRoute element={<Dashboard />} />,
+          element: <Dashboard />,
         },
         {
           path: "/results",
-          element: <ProtectedRoute element={<Results />} />,
+          element: <Results />,
         },
         {
           path: "/patients",
           children: [
             {
               index: true,
-              element: <ProtectedRoute element={<Patients />} />,
+              element: <Patients />,
             },
             {
               path: ":id",
-              element: <ProtectedRoute element={<PatientDetails />} />,
+              element: <PatientDetails />,
             },
           ],
         },
         {
           path: "/appointments",
-          element: <ProtectedRoute element={<Appointments />} />,
+          element: <Appointments />,
         },
         {
           path: "/appointments/set-availability",
-          element: <ProtectedRoute element={<SetAvailability />} />,
+          element: <SetAvailability />,
         },
         {
           path: "/appointments/set-availability-user",
-          element: <ProtectedRoute element={<SetAvailabilityUser />} />,
+          element: <SetAvailabilityUser />,
         },
         {
           path: "/appointments/available-slots",
-          element: <ProtectedRoute element={<AvailableSlotsPage />} />,
+          element: <AvailableSlotsPage />,
         },
         {
           path: "/referred-patients",
-          element: <ProtectedRoute element={<ReferredPatients />} />,
+          element: <ReferredPatients />,
         },
         {
           path: "/profile",
-          element: <ProtectedRoute element={<Profile />} />,
+          element: <Profile />,
         },
         {
           path: "/notifications",
-          element: <ProtectedRoute element={<Notifications />} />,
+          element: <Notifications />,
         },
         {
           path: "/settings",
-          element: <ProtectedRoute element={<Settings />} />,
+          element: <Settings />,
         },
         {
           path: "/support",
-          element: <ProtectedRoute element={<Support />} />,
+          element: <Support />,
         },
       ],
     },
@@ -117,29 +121,17 @@ export default function AppRouter() {
     {
       path: "/doctor/register",
       element: (
-        <ProtectedRoute
-          element={
-            <Suspense fallback={<div>Loading...</div>}>
-              <RegisterScreen />
-            </Suspense>
-          }
-          isPublic
-          alreadyLoggedInRedirect="/dashboard"
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <RegisterScreen />
+        </Suspense>
       ),
     },
     {
       path: "/user/register",
       element: (
-        <ProtectedRoute
-          element={
-            <Suspense fallback={<div>Loading...</div>}>
-              <UseregisterScreen />
-            </Suspense>
-          }
-          isPublic
-          alreadyLoggedInRedirect="/dashboard"
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <UseregisterScreen />
+        </Suspense>
       ),
     },
     {
@@ -152,7 +144,7 @@ export default function AppRouter() {
             </Suspense>
           }
           isPublic
-          // alreadyLoggedInRedirect="/dashboard"
+          alreadyLoggedInRedirect="/dashboard"
         />
       ),
     },
@@ -167,22 +159,16 @@ export default function AppRouter() {
             </Suspense>
           }
           isPublic
-          // alreadyLoggedInRedirect="/dashboard"
+          alreadyLoggedInRedirect="/dashboard"
         />
       ),
     },
     {
       path: "/chooserole",
       element: (
-        <ProtectedRoute
-          element={
-            <Suspense fallback={<div>Loading...</div>}>
-              <ChooseRole />
-            </Suspense>
-          }
-          isPublic
-          // alreadyLoggedInRedirect="/dashboard"
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <ChooseRole />
+        </Suspense>
       ),
     },
     {
@@ -232,6 +218,6 @@ export default function AppRouter() {
     },
   ];
 
-  const routes = useRoutes([...privateRoutes, ...publicRoutes]);
+  const routes = useRoutes([...publicRoutes, ...privateRoutes]);
   return routes;
 }
