@@ -16,8 +16,6 @@ const Support = lazy(() => import("@/pages/Support"));
 const LoginScreen = lazy(() => import("@/components/internal/Auth/DoctorLogin/login/loginScreen"));
 const UserLoginScreen = lazy(() => import("@/components/internal/Auth/LoginUser/login/loginScreen"));
 const ChooseRole = lazy(() => import("@/components/internal/Auth/ChooseRole/page"));
-const OTPComponent = lazy(() => import("@/components/internal/Auth/DoctorLogin/otp/otpScreen"));
-const UserOTPComponent = lazy(() => import("@/components/internal/Auth/LoginUser/otp/otpScreen"));
 const RegisterScreen = lazy(() => import("@/components/internal/Auth/DoctorRegister/DoctorRegisterScreen"));
 const UseregisterScreen = lazy(() => import("@/components/internal/Auth/UserRegister/RegisterScreen"));
 const PatientDetails = lazy(() => import("@/components/internal/Patients/PatientDetails"));
@@ -26,6 +24,7 @@ const ReferredPatients = lazy(() => import("@/components/internal/ReferredPatien
 const SetAvailability = lazy(() => import("@/components/internal/Appointments/SetAvailability"));
 const SetAvailabilityUser = lazy(() => import("@/components/internal/Appointments/SetAvailabilityUser"));
 const AvailableSlotsPage = lazy(() => import("@/components/internal/Appointments/AvailableSlots"));
+const SleepTracker = lazy(() => import("@/pages/SleepTracker"));
 
 
 export default function AppRouter() {
@@ -89,6 +88,10 @@ export default function AppRouter() {
         {
           path: "/referred-patients",
           element: <ReferredPatients />,
+        },
+        {
+          path: "/sleep-tracker",
+          element: <SleepTracker />,
         },
         {
           path: "/profile",
@@ -169,34 +172,6 @@ export default function AppRouter() {
         <Suspense fallback={<div>Loading...</div>}>
           <ChooseRole />
         </Suspense>
-      ),
-    },
-    {
-      path: "/login/otp",
-      element: (
-        <ProtectedRoute
-          element={
-            <Suspense fallback={<div>Loading...</div>}>
-              <OTPComponent />
-            </Suspense>
-          }
-          isPublic
-          alreadyLoggedInRedirect="/dashboard"
-        />
-      ),
-    },
-    {
-      path: "/user/login/otp",
-      element: (
-        <ProtectedRoute
-          element={
-            <Suspense fallback={<div>Loading...</div>}>
-              <UserOTPComponent />
-            </Suspense>
-          }
-          isPublic
-          alreadyLoggedInRedirect="/dashboard"
-        />
       ),
     },
     {

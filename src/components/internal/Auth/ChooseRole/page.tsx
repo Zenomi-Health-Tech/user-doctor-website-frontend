@@ -1,10 +1,17 @@
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import zenomiLogo from "@/assets/zenomiLogo.png";
 import userAvatar from "@/assets/user_avatar.svg";
 import doctorAvatar from "@/assets/doctor_avatar.svg";
 
 const ChooseRole = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleRole = (path: string) => {
+    logout();
+    navigate(path);
+  };
 
   return (
     <div className="flex min-h-screen font-['Poppins'] relative overflow-hidden bg-white lg:bg-[#f8f6fa]">
@@ -82,7 +89,7 @@ const ChooseRole = () => {
 
             {/* User button */}
             <button
-              onClick={() => navigate("/login")}
+              onClick={() => handleRole("/login")}
               className="w-full mt-8 mx-5 p-[7px] rounded-full border border-[#8B2D6C] flex items-center justify-between active:scale-[0.97] transition-transform"
             >
               <span
@@ -96,7 +103,7 @@ const ChooseRole = () => {
 
             {/* Doctor button */}
             <button
-              onClick={() => navigate("/doctor/login")}
+              onClick={() => handleRole("/doctor/login")}
               className="w-full mt-5 mx-5 p-[7px] rounded-full border border-[#8B2D6C] flex items-center justify-between active:scale-[0.97] transition-transform"
             >
               <img src={doctorAvatar} alt="Doctor" className="w-12 h-12 flex-shrink-0" />
@@ -130,7 +137,7 @@ const ChooseRole = () => {
             </div>
             <div className="flex flex-col gap-4">
               <button
-                onClick={() => navigate("/login")}
+                onClick={() => handleRole("/login")}
                 className="group relative w-full p-5 bg-white rounded-2xl border-2 border-transparent shadow-sm transition-all duration-300 hover:shadow-xl hover:border-[#8B2D6C]/20 hover:-translate-y-1"
                 style={{ boxShadow: "0 2px 12px rgba(112, 65, 128, 0.08)" }}
               >
@@ -150,7 +157,7 @@ const ChooseRole = () => {
                 </div>
               </button>
               <button
-                onClick={() => navigate("/doctor/login")}
+                onClick={() => handleRole("/doctor/login")}
                 className="group relative w-full p-5 bg-white rounded-2xl border-2 border-transparent shadow-sm transition-all duration-300 hover:shadow-xl hover:border-[#8B2D6C]/20 hover:-translate-y-1"
                 style={{ boxShadow: "0 2px 12px rgba(112, 65, 128, 0.08)" }}
               >

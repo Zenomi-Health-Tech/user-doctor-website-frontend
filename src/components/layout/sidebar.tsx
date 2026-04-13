@@ -8,7 +8,7 @@ import {
 import { NavMain } from "./NavMain";
 import Logo from "@/assets/zenomiLogo.png";
 import { SidebarHeader } from "./SidebarHeader";
-import {  User, CalendarDays, ChartPie, House, Users, Menu } from 'lucide-react';
+import {  User, CalendarDays, ChartPie, House, Users, Menu, Moon } from 'lucide-react';
 import UserAvatar from "./UserAvatar";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect } from 'react';
@@ -73,6 +73,11 @@ const getNavItems = (isDoctor: boolean) => ({
       title: "Results",
       url: "/results",
       icon: ChartPie,
+    },
+    {
+      title: "Sleep Tracker",
+      url: "/sleep-tracker",
+      icon: Moon,
     },
     {
       title: "Appointments",

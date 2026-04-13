@@ -4,7 +4,6 @@ import Cookies from "js-cookie";
 import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from '@/context/AuthContext';
-import topresultimage from '@/assets/topResultImage.png'
 
 // Doctor types and tabs
 interface Appointment {
@@ -66,12 +65,6 @@ export default function Appointments() {
   const handlePatientClick = (id: string) => {
     navigate(`/patients/${id}`);
   };
-  const checklist = [
-    "Start Your Daily Mental Health Check-In",
-    "Review Your Recent Test Results",
-    "Talk to a Mental Health Expert",
-  ];
-
   useEffect(() => {
     if (!isDoctor) return;
     const fetchAppointments = async () => {
@@ -323,7 +316,7 @@ export default function Appointments() {
               ))
             ) : (
               <div className="text-center text-gray-500 text-lg mt-10">
-                No appointments found.
+                No appointments yet
               </div>
             )}
           </div>
@@ -334,7 +327,7 @@ export default function Appointments() {
 
   // --- User UI ---
   return (
-    <div className="p-2 sm:p-4 md:p-8 min-h-screen font-['Poppins'] ">
+    <div className="p-2 sm:p-4 md:p-8 min-h-screen font-['Poppins'] bg-white">
       <h1 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 text-gray-800">Appointments</h1>
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 w-full">
         {/* Left: Appointments List */}
@@ -368,7 +361,7 @@ export default function Appointments() {
             {userLoading ? (
               <div className="flex  h-40 text-xl">Loading appointments...</div>
             ) : userAppointmentsToShow.length === 0 ? (
-              <div className=" text-gray-500 text-lg mt-10">No appointments found.</div>
+              <div className=" text-gray-500 text-lg mt-10">No appointments yet</div>
             ) : (
               <div className="space-y-6">
                 {userAppointmentsToShow.map((appt) => {
@@ -444,93 +437,17 @@ export default function Appointments() {
           </div>
         </div>
         {/* Right: Cards */}
-        <div className="w-full lg:w-[350px] flex flex-col gap-4 sm:gap-6 font-['Poppins'] mt-6 lg:mt-0">
-          {/* Doctor Card */}
-          <div className="bg-white rounded-3xl shadow p-4 sm:p-6 flex flex-col items-center border border-[#BCBCBC]">
-            <img src={topresultimage} alt="Doctor" className="w-36 h-20 sm:w-52 sm:h-32 object-cover rounded-xl mb-3 sm:mb-4" />
-            <div className="font-semibold text-base sm:text-lg mb-1 text-center">Talk to a Doctor?</div>
-            <div className="text-gray-500 text-center mb-3 sm:mb-4">Book your session now</div>
-            <button onClick={() => navigate('/appointments/set-availability-user')} className="px-4 sm:px-6 py-2 rounded-full font-medium text-sm sm:text-base text-white" style={{background: 'linear-gradient(89.79deg, #704180 5.07%, #8B2D6C 95.83%)'}}>Book now</button>
-          </div>
-          {/* Checklist Card */}
-          <div className="bg-white rounded-3xl shadow p-6 sm:p-8 flex flex-col items-center border border-[#BCBCBC]">
-            {/* Circular Progress */}
-            <div className="mb-3 sm:mb-4">
-              <svg width="60" height="60" className="sm:hidden">
-                <circle
-                  cx="30"
-                  cy="30"
-                  r="26"
-                  stroke="#E5E0EA"
-                  strokeWidth="6"
-                  fill="none"
-                />
-                <circle
-                  cx="30"
-                  cy="30"
-                  r="26"
-                  stroke="#704180"
-                  strokeWidth="6"
-                  fill="none"
-                  strokeDasharray={2 * Math.PI * 26}
-                  strokeDashoffset={2 * Math.PI * 26 * (1 - 0 / 3)}
-                  strokeLinecap="round"
-                />
-                <text
-                  x="50%"
-                  y="50%"
-                  textAnchor="middle"
-                  dy=".3em"
-                  fontSize="0.9em"
-                  fill="#704180"
-                  fontWeight="bold"
-                >
-                  0/3
-                </text>
-              </svg>
-              <svg width="80" height="80" className="hidden sm:block">
-                <circle
-                  cx="40"
-                  cy="40"
-                  r="36"
-                  stroke="#E5E0EA"
-                  strokeWidth="8"
-                  fill="none"
-                />
-                <circle
-                  cx="40"
-                  cy="40"
-                  r="36"
-                  stroke="#704180"
-                  strokeWidth="8"
-                  fill="none"
-                  strokeDasharray={2 * Math.PI * 36}
-                  strokeDashoffset={2 * Math.PI * 36 * (1 - 0 / 3)}
-                  strokeLinecap="round"
-                />
-                <text
-                  x="50%"
-                  y="50%"
-                  textAnchor="middle"
-                  dy=".3em"
-                  fontSize="1.2em"
-                  fill="#704180"
-                  fontWeight="bold"
-                >
-                  0/3
-                </text>
-              </svg>
+        <div className="w-full lg:w-[340px] flex flex-col gap-4 font-['Poppins'] mt-6 lg:mt-0">
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #704180, #8B2D6C)' }}>
+            <div className="p-5 text-white">
+              <div className="text-lg font-bold mb-1">Book a Session</div>
+              <p className="text-white/70 text-sm mb-4">Schedule an appointment with your doctor</p>
+              <button onClick={() => navigate('/appointments/set-availability-user')} className="px-5 py-2 rounded-full bg-white text-[#8B2D6C] text-sm font-semibold hover:bg-gray-100 transition">Book Appointment →</button>
             </div>
-            <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2 text-center">Welcome to Zenomi ,<span className="text-[#8B2D6C]">{userName || 'there'}</span></h3>
-            <p className="text-gray-500 text-center mb-4 sm:mb-6 text-xs sm:text-base">Experience your AHA! moment by completing this simple steps</p>
-            <ul className="w-full space-y-2 sm:space-y-3">
-              {checklist.map((item) => (
-                <li key={item} className="flex items-center justify-between px-2 sm:px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-xs sm:text-base">
-                  <span>{item}</span>
-                  <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-white border border-gray-300 text-gray-400">✔️</span>
-                </li>
-              ))}
-            </ul>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-100 p-5">
+            <h3 className="font-semibold text-gray-900 mb-1">Welcome, <span className="text-[#8B2D6C]">{userName || 'there'}</span> 👋</h3>
+            <p className="text-xs text-gray-400">Manage your appointments and stay on track with your wellness journey.</p>
           </div>
         </div>
       </div>

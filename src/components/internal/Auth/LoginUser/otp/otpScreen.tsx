@@ -21,8 +21,8 @@ function OTPComponent() {
       }}
     >
       <div className="absolute inset-0" />
-      <Card className="bg-white/95 backdrop-blur-sm rounded-3xl w-[439px] shadow-xl z-10 p-8">
-        <div className="w-96 mt-10 mx-auto flex flex-col items-center">
+      <Card className="bg-white/95 backdrop-blur-sm rounded-3xl w-full max-w-md mx-4 shadow-xl z-10 p-6 sm:p-8">
+        <div className="w-full px-4 mt-10 mx-auto flex flex-col items-center">
           {/* <img
             src={Logo}
             alt="Logo"

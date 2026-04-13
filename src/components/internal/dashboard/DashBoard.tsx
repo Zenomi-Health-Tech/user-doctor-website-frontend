@@ -7,7 +7,6 @@ import purplecal from "@/assets/purplecal.png";
 import greencal from "@/assets/greencal.png";
 import { useNavigate } from "react-router-dom";
 import PeopleTest from "@/assets/PeopleTest.svg";
-import topresultimage from "@/assets/topResultImage.png";
 
 // Import the WellnessReport component
 import { useAuth } from "@/context/AuthContext"; // Import useAuth from the new context
@@ -85,7 +84,7 @@ export default function Dashboard() {
   // Add state to store the received report data
   const [doctorAnalytics, setDoctorAnalytics] =
     useState<DoctorAnalyticsData | null>(null); // New state for doctor analytics
-  const { isDoctor, isPaid, userName } = useAuth();
+  const { isDoctor, userName } = useAuth();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const navigate = useNavigate();
@@ -96,6 +95,13 @@ export default function Dashboard() {
   console.log(isDoctor, "isDoctor");
   // Add a state to track the last completed test name
   const [lastCompletedTestName, setLastCompletedTestName] = useState<string | null>(null);
+  const SLEEP_TEST_ID = 'cmb7mnl5e0000qelpn6yjmyt0';
+  const isSleepQuiz = currentTestId === SLEEP_TEST_ID;
+  const [sleepPart, setSleepPart] = useState(0);
+  const [sleepExitOpen, setSleepExitOpen] = useState(false);
+  const [sleepResults, setSleepResults] = useState<{score: number, max: number, assessment: string, sentiment: string} | null>(null);
+  const [hasSleepLog, setHasSleepLog] = useState(false);
+  const [hasAppointment, setHasAppointment] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -202,7 +208,21 @@ export default function Dashboard() {
     }
   }, [isDoctor]);
 
-  // Add a useEffect to trigger PDF download when reportData is received (only for users)
+  // Fetch checklist status
+  useEffect(() => {
+    if (!isDoctor) {
+      api.get('/users/sleep-logs?page=1&limit=1').then(res => {
+        const data = res.data?.data;
+        const logs = Array.isArray(data) ? data : data?.items || data?.logs || [];
+        setHasSleepLog(logs.length > 0);
+      }).catch(() => {});
+      api.get('/users/get-user-appointments').then(res => {
+        const upcoming = res.data?.data?.upcoming_appointments || [];
+        const previous = res.data?.data?.previous_appointments || [];
+        setHasAppointment(upcoming.length > 0 || previous.length > 0);
+      }).catch(() => {});
+    }
+  }, [isDoctor]);
 
   const completedCount =
     tests?.filter((t) => t?.testStatus === "COMPLETED")?.length || 0;
@@ -230,9 +250,10 @@ export default function Dashboard() {
       console.log(res.data, "res of questions");
 
       if (res.data && Array.isArray(res.data)) {
-        setQuestions(res.data);
+        setQuestions(res.data.filter((q: any) => q.questionStatus === 'ACTIVE'));
         setCurrentTestId(selectedTest.id);
         setShowQuiz(true);
+        setSleepPart(0);
         setCurrentQuestion(0);
         setAnswers([]);
         setSelectedTest(null);
@@ -361,15 +382,43 @@ export default function Dashboard() {
         return { question: a.question, answer: a.answer };
       });
 
-      await axios.post(
-        `https://zenomiai.elitceler.com/api/score-test/${currentTestId}`,
-        { answers: formattedAnswers },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      // For sleep test, compute score locally and show results immediately
+      if (currentTestId === SLEEP_TEST_ID) {
+        const scaleMap: Record<string, number> = { 'None': 0, 'Rarely': 1, 'Moderate': 2, 'Severe': 3, 'Very Severe': 4 };
+        let total = 0;
+        formattedAnswers.forEach((a: any) => { total += scaleMap[a.answer] || 0; });
+        setSleepResults({ score: total, max: questions.length * 4, assessment: '', sentiment: '' });
+        setShowQuiz(false);
+        // Fire API in background
+        axios.post(
+          `https://zenomiai.elitceler.com/api/score-test/${currentTestId}`,
+          { answers: formattedAnswers },
+          { headers: { Authorization: `Bearer ${token}` } }
+        ).then(res => {
+          if (res.data) {
+            setSleepResults({
+              score: res.data.user_score ?? total,
+              max: res.data.max_score_for_test ?? questions.length * 4,
+              assessment: res.data.assessment ?? '',
+              sentiment: res.data.sentiment ?? '',
+            });
+          }
+        }).catch(() => {});
+      } else {
+        await axios.post(
+          `https://zenomiai.elitceler.com/api/score-test/${currentTestId}`,
+          { answers: formattedAnswers },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
       // Find the test name for the just-completed test
       const completedTest = tests.find(t => t.id === currentTestId);
       setLastCompletedTestName(completedTest?.name || null);
-      setShowCompletionDialog(true);
+      if (currentTestId !== SLEEP_TEST_ID) {
+        setShowCompletionDialog(true);
+        // Auto-close after 2s and reload
+        setTimeout(() => { setShowCompletionDialog(false); window.location.reload(); }, 2000);
+      }
       // Re-fetch tests after submission to update completed count
       const res = await axios.get(
         "https://zenomiai.elitceler.com/api/testnames",
@@ -430,21 +479,31 @@ export default function Dashboard() {
   //   }
   // }, []);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen bg-white">
+      <div className="flex flex-col items-center gap-4">
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 rounded-full border-4 border-[#F0EBF4]" />
+          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#8B2D6C] animate-spin" />
+        </div>
+        <p className="text-sm text-gray-400 font-['Poppins']">Loading your dashboard...</p>
+      </div>
+    </div>
+  );
 
   // Ensure tests is an array before proceeding
   if (!Array.isArray(tests) && !isDoctor) {
     console.error("Tests is not an array:", tests);
     return <div>Error loading tests. Please try again.</div>;
   }
-  console.log(doctorAnalytics, "doctorAnalytics");
 
-  // Add checklist items for the AHA card
-  const checklist = [
-    "Start Your Daily Mental Health Check-In",
-    "Review Your Recent Test Results",
-    "Talk to a Mental Health Expert",
+  // Checklist items - functional based on actual data
+  const checklistItems = [
+    { label: `Complete all ${tests.length || 5} assessments`, done: completedCount === tests.length && tests.length > 0, action: () => {} },
+    { label: "Log your sleep in Sleep Tracker", done: hasSleepLog, action: () => navigate('/sleep-tracker') },
+    { label: "Book a doctor consultation", done: hasAppointment, action: () => navigate('/appointments') },
   ];
+  const checklistDone = checklistItems.filter(c => c.done).length;
 
   return (
     <div className="relative w-full h-full">
@@ -632,12 +691,6 @@ export default function Dashboard() {
                         <div className="h-4 rounded-full bg-[#F6C851]" style={{ width: '100%' }} />
                       </div>
                       <div className="text-lg mb-4">{completedCount} out of {tests.length} tests completed</div>
-                      <button
-                        className="px-8 py-3 rounded-full bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white font-semibold text-lg shadow hover:opacity-90 transition"
-                        onClick={() => navigate('/results')}
-                      >
-                        View reports
-                      </button>
                     </div>
                     {/* Optional: Illustration on the right */}
                     <img
@@ -647,89 +700,51 @@ export default function Dashboard() {
                     />
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-4 sm:gap-6 font-['Poppins']">
+                  <div className="flex flex-col gap-4 font-['Poppins']">
                     {tests?.map((test) => (
                       <div
                         key={test.id}
-                        className={`rounded-3xl p-4 sm:p-6 relative font-['Poppins'] ${
-                          test.testStatus === "COMPLETED"
-                            ? "bg-gradient-to-r from-[#704180] to-[#8B2D6C]"
-                            : test.testStatus === "UNLOCKED"
-                            ? "bg-gradient-to-r from-[#704180] to-[#8B2D6C] "
-                            : "bg-gray-500 "
-                        }`}
+                        className="rounded-2xl relative overflow-hidden"
+                        style={{ background: 'linear-gradient(135deg, #704180, #8B2D6C)' }}
                       >
-                        {/* Badge at top right */}
-                        <div className="absolute top-4 right-4">
-                          {test.testStatus === "COMPLETED" ? (
-                            <span className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow">
-                              Completed
-                            </span>
-                          ) : (
-                            <span className="bg-yellow-400 text-white text-xs font-bold px-3 py-1 rounded-full shadow">
-                              Pending
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 font-['Poppins']">
-                          <img
-                            src={test.image_url}
-                            alt={test.name}
-                            className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl object-cover"
-                          />
-                          <div className="flex-1 w-full">
-                            <h3
-                              className={`text-lg sm:text-xl font-bold text-white font-['Poppins'] ${
-                                test.testStatus === "COMPLETED"
-                                
-                              }`}
-                            >
-                              {test.name}
-                            </h3>
-                            <p
-                              className={`text-sm sm:text-base text-white font-['Poppins'] ${
-                                test.testStatus === "COMPLETED"
-                                
-                              }`}
-                            >
-                              {test.description || "No description available"}
-                            </p>
-                            {/* Only show Take test button if test is UNLOCKED and not currently processing */}
+                        {/* Corner badge */}
+                        {test.testStatus === "UNLOCKED" && (
+                          <div className="absolute top-0 right-0 z-20 px-4 py-1 text-white text-[10px] font-bold" style={{ background: '#F8AE0E', borderRadius: '0 16px 0 20px' }}>Pending</div>
+                        )}
+                        {test.testStatus === "COMPLETED" && (
+                          <div className="absolute top-0 right-0 z-20 px-4 py-1 text-white text-[10px] font-bold" style={{ background: '#009511', borderRadius: '0 16px 0 20px' }}>Completed</div>
+                        )}
+
+                        <div className="flex items-center gap-3 p-5">
+                          <img src={test.image_url} alt={test.name} className="w-[100px] h-[100px] rounded-xl object-cover flex-shrink-0" />
+                          <div className="flex-1 min-w-0 flex flex-col gap-3">
+                            <div>
+                              <h3 className="text-base font-semibold text-white truncate">{test.name}</h3>
+                              <p className="text-xs text-white/50 line-clamp-2 mt-0.5">{test.description || "No description"}</p>
+                            </div>
                             {test.testStatus === "UNLOCKED" && (!showProcessing || currentTestId !== test.id) && (
-                              <button
-                                className={`mt-4 px-4 py-2 sm:px-6 sm:py-2 rounded-full font-semibold text-sm sm:text-base font-['Poppins']
-                                bg-white text-[#704180] hover:bg-gray-100`}
-                                onClick={() => setSelectedTest(test)}
-                              >
+                              <button onClick={() => setSelectedTest(test)} className="self-start px-6 py-1.5 rounded-full bg-white/25 text-white text-xs font-bold hover:bg-white/35 transition">
                                 Take test
                               </button>
                             )}
+                            {test.testStatus === "COMPLETED" && (
+                              <span className="self-start inline-flex items-center gap-1.5 px-6 py-1.5 rounded-full bg-white/25 text-white text-xs font-bold">
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                Completed ✓
+                              </span>
+                            )}
                           </div>
                         </div>
-                        {test.testStatus !== "COMPLETED" &&
-                          test.testStatus !== "UNLOCKED" && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80  rounded-3xl z-10">
-                              {/* Lock icon in a circular, semi-transparent black background */}
-                              <div className="mb-6 flex flex-col items-center">
-                                <div className="w-16 h-16 rounded-full bg-black bg-opacity-40 flex items-center justify-center mb-4">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="w-8 h-8 text-white"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    strokeWidth={2}
-                                  >
-                                    <rect x="7" y="11" width="10" height="7" rx="3.5" stroke="currentColor" strokeWidth="2" fill="none" />
-                                    <path d="M12 15v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                                    <path d="M8 11V8a4 4 0 018 0v3" stroke="currentColor" strokeWidth="2" fill="none" />
-                                  </svg>
-                                </div>
-                                <span className="text-white text-xl sm:text-xl font-normal text-center drop-shadow-lg">
-                                  Complete the <span className="font-normal">{test.unlockDependency || test.name || 'test'}</span> to unlock
-                                </span>
-                              </div>
-                            </div>
+
+                        {/* Lock overlay */}
+                        {test.testStatus !== "COMPLETED" && test.testStatus !== "UNLOCKED" && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/75 rounded-2xl z-10">
+                            <svg className="w-6 h-6 text-white mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <rect x="7" y="11" width="10" height="7" rx="2" />
+                              <path d="M8 11V8a4 4 0 018 0v3" />
+                            </svg>
+                            <span className="text-white text-sm text-center px-4">Complete <strong>{test.unlockDependency || 'previous test'}</strong> to unlock</span>
+                          </div>
                           )}
                       </div>
                     ))}
@@ -771,96 +786,79 @@ export default function Dashboard() {
                   </div>
                 )}
               </div>
-              {/* Right Column: AHA Checklist Card and Book Therapy Card */}
-              <div className="w-full lg:w-[350px] flex flex-col gap-4 sm:gap-6 font-['Poppins'] mt-4 lg:mt-0">
+              {/* Right Column */}
+              <div className="w-full lg:w-[340px] flex flex-col gap-4 font-['Poppins'] mt-4 lg:mt-0">
                 {/* Book Therapy Card */}
-                <div className="bg-white rounded-3xl shadow p-4 sm:p-6 flex flex-col items-center border border-[#BCBCBC]">
-                  <img
-                    src={topresultimage}
-                    alt="Doctor"
-                    className="w-36 h-20 sm:w-52 sm:h-32 object-cover rounded-xl mb-3 sm:mb-4"
-                  />
-                  <div className="font-semibold text-base sm:text-lg mb-1 text-center">
-                    Talk to a Doctor?
+                <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #704180, #8B2D6C)' }}>
+                  <div className="p-5 text-white">
+                    <div className="text-lg font-bold mb-1">Need to talk?</div>
+                    <p className="text-white/70 text-sm mb-4">Book a session with a mental health expert</p>
+                    <button onClick={() => navigate("/appointments")} className="px-5 py-2 rounded-full bg-white text-[#8B2D6C] text-sm font-semibold hover:bg-gray-100 transition">
+                      Book Appointment →
+                    </button>
                   </div>
-                  <div className="text-gray-500 text-center mb-3 sm:mb-4">
-                    Book your session now
-                  </div>
-                  <button
-                    onClick={() => navigate("/appointments")}
-                    className="px-4 sm:px-6 py-2 rounded-full font-medium text-sm sm:text-base text-white"
-                    style={{
-                      background:
-                        "linear-gradient(89.79deg, #704180 5.07%, #8B2D6C 95.83%)",
-                    }}
-                  >
-                    Book now
-                  </button>
                 </div>
-                {/* Checklist Card */}
-                <div className="bg-white rounded-3xl shadow p-6 sm:p-8 flex flex-col items-center border border-[#BCBCBC]">
-                  {/* Circular Progress */}
-                  <div className="mb-3 sm:mb-4">
-                    <svg width="80" height="80">
-                      <circle
-                        cx="40"
-                        cy="40"
-                        r="36"
-                        stroke="#E5E0EA"
-                        strokeWidth="8"
-                        fill="none"
-                      />
-                      <circle
-                        cx="40"
-                        cy="40"
-                        r="36"
-                        stroke="#704180"
-                        strokeWidth="8"
-                        fill="none"
-                        strokeDasharray={2 * Math.PI * 36}
-                        strokeDashoffset={2 * Math.PI * 36 * (1 - 0 / 3)}
-                        strokeLinecap="round"
-                      />
-                      <text
-                        x="50%"
-                        y="50%"
-                        textAnchor="middle"
-                        dy=".3em"
-                        fontSize="1.2em"
-                        fill="#704180"
-                        fontWeight="bold"
-                      >
-                        0/3
-                      </text>
+                {/* Progress Checklist */}
+                <div className="bg-white rounded-2xl border border-gray-100 p-5">
+                  <div className="flex items-center gap-4 mb-4">
+                    <svg width="56" height="56" className="flex-shrink-0">
+                      <circle cx="28" cy="28" r="24" stroke="#F0EBF4" strokeWidth="5" fill="none" />
+                      <circle cx="28" cy="28" r="24" stroke="#8B2D6C" strokeWidth="5" fill="none"
+                        strokeDasharray={2 * Math.PI * 24}
+                        strokeDashoffset={2 * Math.PI * 24 * (1 - checklistDone / 3)}
+                        strokeLinecap="round" transform="rotate(-90 28 28)" />
+                      <text x="50%" y="50%" textAnchor="middle" dy=".35em" fontSize="14" fill="#8B2D6C" fontWeight="bold">{checklistDone}/3</text>
                     </svg>
+                    <div>
+                      <div className="font-semibold text-gray-900">Your Progress</div>
+                      <div className="text-xs text-gray-400">Complete all steps for your AHA! moment</div>
+                    </div>
                   </div>
-                  <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2 text-center">
-                    Welcome to Zenomi ,
-                    <span className="text-[#8B2D6C]">{userName || "there"}</span>
-                  </h3>
-                  <p className="text-gray-500 text-center mb-4 sm:mb-6 text-xs sm:text-base">
-                    Experience your AHA! moment by completing this simple steps
-                  </p>
-                  <ul className="w-full space-y-2 sm:space-y-3">
-                    {checklist.map((item) => (
-                      <li
-                        key={item}
-                        className="flex items-center justify-between px-2 sm:px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-xs sm:text-base"
-                      >
-                        <span>{item}</span>
-                        <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-white border border-gray-300 text-gray-400">
-                          ✔️
-                        </span>
-                      </li>
+                  <div className="space-y-2">
+                    {checklistItems.map((item, i) => (
+                      <div key={i} onClick={!item.done ? item.action : undefined} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${item.done ? 'bg-green-50' : 'bg-gray-50 hover:bg-gray-100 cursor-pointer'}`}>
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${item.done ? 'bg-green-500 text-white' : 'border-2 border-gray-300'}`}>
+                          {item.done && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>}
+                        </div>
+                        <span className={`flex-1 ${item.done ? 'text-green-700 line-through' : 'text-gray-700'}`}>{item.label}</span>
+                        {!item.done && <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>}
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
               </div>
             </div>
           )}
         </div>
       </div>
-      {selectedTest && (
+      {selectedTest && selectedTest.id === SLEEP_TEST_ID && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ background: '#12132A' }}>
+          {/* Stars */}
+          {[...Array(15)].map((_, i) => (
+            <div key={i} className="absolute rounded-full bg-white" style={{
+              width: 2 + Math.random() * 2, height: 2 + Math.random() * 2,
+              top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`,
+              opacity: 0.1 + Math.random() * 0.3,
+            }} />
+          ))}
+          <div className="w-full max-w-sm flex flex-col items-center text-center relative z-10">
+            <button onClick={() => setSelectedTest(null)} className="absolute top-0 right-0 text-gray-500 hover:text-white text-2xl">&times;</button>
+            <div className="text-6xl mb-6">🌙</div>
+            <h2 className="text-3xl font-extrabold mb-4 bg-gradient-to-r from-[#D4BBFF] via-[#9B8FFF] to-[#6C8AFF] bg-clip-text text-transparent">How's Your Sleep Game?</h2>
+            <p className="text-white/50 text-sm mb-8 leading-relaxed">Answer {selectedTest.question_count} quick questions about your sleep. Get your personalized score + tips to level up your rest. 😴✨</p>
+            <div className="flex flex-wrap justify-center gap-2 mb-8">
+              <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">⏱ Takes 2 mins</span>
+              <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">📋 {selectedTest.question_count} Questions</span>
+              <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">🎯 Personalized</span>
+            </div>
+            <button onClick={handleStartTest} className="w-full py-3.5 rounded-2xl text-white font-bold text-lg mb-3" style={{ background: 'linear-gradient(135deg, #8B5CF6, #6366F1, #4F8AFF)', boxShadow: '0 10px 30px rgba(99,102,241,0.4)' }}>
+              {loadingQuestions ? 'Loading...' : "Let's Go 🚀"}
+            </button>
+            <button onClick={() => setSelectedTest(null)} className="text-white/40 text-sm hover:text-white/60">← Back</button>
+          </div>
+        </div>
+      )}
+      {selectedTest && selectedTest.id !== SLEEP_TEST_ID && (
         <div 
         style={{
           backgroundImage: `url(${selectedTest.splash_image_s3_key})`,
@@ -943,7 +941,87 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-      {showQuiz && (
+      {showQuiz && isSleepQuiz && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: '#1A1D2E' }}>
+          <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 pb-32">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <button onClick={() => setSleepExitOpen(true)} className="text-gray-400 hover:text-white">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+              <span className="text-xs text-gray-500 bg-[#2D3048] px-3 py-1 rounded-full">{sleepPart + 1} / 2</span>
+            </div>
+            <h2 className="text-2xl font-bold text-white text-center mb-1">{sleepPart === 0 ? '😴 Sleep Quality' : '🌙 Lifestyle & Impact'}</h2>
+            <p className="text-sm text-gray-400 text-center mb-4">{sleepPart === 0 ? "How's your actual sleep been?" : 'How sleep affects your daily life'}</p>
+            {/* Progress */}
+            <div className="h-1 bg-[#2D3048] rounded-full mb-1">
+              <div className="h-1 rounded-full transition-all duration-500" style={{ width: `${(answers.filter(a => a?.answer).length / questions.length) * 100}%`, background: 'linear-gradient(90deg, #7C5CFC, #6C8AFF)' }} />
+            </div>
+            <p className="text-xs text-gray-500 text-right mb-6">{answers.filter(a => a?.answer).length} / {questions.length}</p>
+            {/* Questions */}
+            {(() => {
+              const mid = Math.ceil(questions.length / 2);
+              const partQuestions = sleepPart === 0 ? questions.slice(0, mid) : questions.slice(mid);
+              const emojis = ['😴', '👀', '🌅', '😤', '🔍', '📱', '☕', '😠', '📉', '💤'];
+              return partQuestions.map((q: any, idx: number) => {
+                const globalIdx = sleepPart === 0 ? idx : idx + mid;
+                const emoji = emojis[globalIdx] || '❓';
+                const selected = answers[globalIdx]?.answer;
+                return (
+                  <div key={q.id || idx} className="mb-3 p-4 rounded-2xl" style={{ background: '#252840' }}>
+                    <div className="flex items-start gap-3 mb-4">
+                      <span className="text-lg">{emoji}</span>
+                      <span className="text-white text-sm font-semibold leading-snug">{q.question}</span>
+                    </div>
+                    <div className="grid grid-cols-5 gap-2">
+                      {(q.scaleOptions || []).map((option: string, i: number) => (
+                        <button key={option} onClick={() => handleAnswer(option)} className={`py-3 rounded-xl text-center transition-all ${selected === option ? 'text-white' : 'text-gray-400 border border-white/10'}`} style={selected === option ? { background: 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' } : { background: '#2D3048' }}>
+                          <div className="text-lg font-bold">{i}</div>
+                          <div className="text-[9px] mt-0.5">{option}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+            {/* Bottom buttons */}
+            <div className="flex gap-3 mt-6 pb-8">
+              {sleepPart > 0 && (
+                <button onClick={() => setSleepPart(0)} className="flex-1 py-4 rounded-2xl border border-white/20 text-white font-semibold">Back</button>
+              )}
+              {sleepPart === 0 ? (
+                <button onClick={() => {
+                  const mid = Math.ceil(questions.length / 2);
+                  const allPartAnswered = answers.slice(0, mid).every(a => a?.answer);
+                  if (allPartAnswered) setSleepPart(1);
+                }} className="flex-1 py-4 rounded-2xl text-white font-semibold" style={{ background: answers.slice(0, Math.ceil(questions.length / 2)).every(a => a?.answer) ? 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' : '#2D3048', color: answers.slice(0, Math.ceil(questions.length / 2)).every(a => a?.answer) ? 'white' : '#8E8EA0' }}>Next →</button>
+              ) : (
+                <button onClick={() => { if (answers.every(a => a?.answer)) handleSubmitQuiz(); }} className="flex-1 py-4 rounded-2xl text-white font-semibold" style={{ background: answers.every(a => a?.answer) ? 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' : '#2D3048', color: answers.every(a => a?.answer) ? 'white' : '#8E8EA0' }}>Submit Answers ✨</button>
+              )}
+            </div>
+          </div>
+          {/* Exit confirmation */}
+          {sleepExitOpen && (
+            <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50">
+              <div className="w-full max-w-sm mx-4 mb-8 sm:mb-0 rounded-3xl p-6" style={{ background: '#252840' }}>
+                <div className="flex flex-col items-center">
+                  <div className="w-14 h-14 rounded-full bg-red-500/15 flex items-center justify-center mb-4">
+                    <svg className="w-7 h-7 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                  </div>
+                  <h3 className="text-white text-lg font-bold mb-1">Leave Test?</h3>
+                  <p className="text-gray-400 text-sm text-center mb-6">Your answers won't be saved and you'll need to start over.</p>
+                  <div className="flex gap-3 w-full">
+                    <button onClick={() => setSleepExitOpen(false)} className="flex-1 py-3 rounded-2xl text-white font-semibold" style={{ background: 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' }}>Keep Going</button>
+                    <button onClick={() => { setSleepExitOpen(false); setShowQuiz(false); setSleepPart(0); setAnswers([]); }} className="flex-1 py-3 rounded-2xl text-red-400 font-semibold bg-red-500/15">Leave</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      {showQuiz && !isSleepQuiz && (
         <div className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#fff7fa] to-[#f8f3fa] p-0 m-0 fixed top-0 left-0 z-50">
           <div
             className="w-full max-w-2xl mx-auto flex flex-col items-center justify-center min-h-screen"
@@ -1111,6 +1189,82 @@ export default function Dashboard() {
                 Take next test
               </button>
             )}
+          </div>
+        </div>
+      )}
+      {/* Sleep Results Screen */}
+      {sleepResults && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: '#1A1D2E' }}>
+          <div className="max-w-lg mx-auto px-4 py-8 pb-24">
+            <h1 className="text-2xl font-bold text-center mb-1" style={{ color: '#7C5CFC' }}>Your Sleep Report</h1>
+            <p className="text-sm text-gray-400 text-center mb-8">Here's what your answers tell us 🔍</p>
+
+            {/* Global Score */}
+            <div className="rounded-2xl p-8 mb-4 flex flex-col items-center" style={{ background: '#252840' }}>
+              <svg width="130" height="130" className="mb-3">
+                <circle cx="65" cy="65" r="55" stroke="#00D4AA22" strokeWidth="10" fill="none" />
+                <circle cx="65" cy="65" r="55" stroke="#00D4AA" strokeWidth="10" fill="none"
+                  strokeDasharray={2 * Math.PI * 55}
+                  strokeDashoffset={2 * Math.PI * 55 * (1 - (sleepResults.score / sleepResults.max))}
+                  strokeLinecap="round" transform="rotate(-90 65 65)" />
+                <text x="50%" y="50%" textAnchor="middle" dy=".35em" fontSize="32" fill="white" fontWeight="bold">{sleepResults.score}</text>
+              </svg>
+              <p className="text-xs text-gray-400 tracking-wider mb-2">GLOBAL SCORE / {sleepResults.max}</p>
+              <p className="text-sm text-gray-400 text-center">{sleepResults.assessment || (sleepResults.score <= 10 ? "Your sleep health looks great! 🌟" : sleepResults.score <= 20 ? "Your sleep health looks decent! Keep building good habits." : "Your sleep could use some improvement.")}</p>
+            </div>
+
+            {/* Sub scores */}
+            {(() => {
+              const sleepSev = Math.ceil(sleepResults.score / 2);
+              const lifImp = sleepResults.score - sleepSev;
+              const halfMax = Math.ceil(sleepResults.max / 2);
+              const sevLabel = sleepSev <= 5 ? 'Healthy Sleep' : sleepSev <= 10 ? 'Mild Insomnia' : 'Moderate Insomnia';
+              const lifLabel = lifImp <= 5 ? 'Healthy Habits' : lifImp <= 10 ? 'Mild Impact' : 'Moderate Impact';
+              return (
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="rounded-2xl p-5 flex flex-col items-center" style={{ background: '#252840' }}>
+                    <svg width="80" height="80" className="mb-2">
+                      <circle cx="40" cy="40" r="32" stroke="#F7C56922" strokeWidth="7" fill="none" />
+                      <circle cx="40" cy="40" r="32" stroke="#F7C569" strokeWidth="7" fill="none"
+                        strokeDasharray={2 * Math.PI * 32} strokeDashoffset={2 * Math.PI * 32 * (1 - sleepSev / halfMax)}
+                        strokeLinecap="round" transform="rotate(-90 40 40)" />
+                      <text x="50%" y="50%" textAnchor="middle" dy=".35em" fontSize="20" fill="white" fontWeight="bold">{sleepSev}</text>
+                    </svg>
+                    <p className="text-[10px] text-gray-400 tracking-wider">SLEEP SEVERITY / {halfMax}</p>
+                    <p className="text-lg mt-1">🌙</p>
+                    <p className="text-xs text-white font-semibold">{sevLabel}</p>
+                  </div>
+                  <div className="rounded-2xl p-5 flex flex-col items-center" style={{ background: '#252840' }}>
+                    <svg width="80" height="80" className="mb-2">
+                      <circle cx="40" cy="40" r="32" stroke="#00D4AA22" strokeWidth="7" fill="none" />
+                      <circle cx="40" cy="40" r="32" stroke="#00D4AA" strokeWidth="7" fill="none"
+                        strokeDasharray={2 * Math.PI * 32} strokeDashoffset={2 * Math.PI * 32 * (1 - lifImp / (sleepResults.max - halfMax))}
+                        strokeLinecap="round" transform="rotate(-90 40 40)" />
+                      <text x="50%" y="50%" textAnchor="middle" dy=".35em" fontSize="20" fill="white" fontWeight="bold">{lifImp}</text>
+                    </svg>
+                    <p className="text-[10px] text-gray-400 tracking-wider">LIFESTYLE / {sleepResults.max - halfMax}</p>
+                    <p className="text-lg mt-1">💚</p>
+                    <p className="text-xs text-white font-semibold">{lifLabel}</p>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Tips */}
+            <div className="rounded-2xl p-5 mb-4" style={{ background: '#252840' }}>
+              <h3 className="text-white font-bold mb-2">💡 What This Means For You</h3>
+              <p className="text-sm text-gray-400 leading-relaxed">{sleepResults.assessment && sleepResults.sentiment ? `${sleepResults.assessment} — Outlook: ${sleepResults.sentiment} ✨` : 'Keep building healthy sleep habits. Small tweaks like a consistent schedule will keep you at your best. ✨'}</p>
+            </div>
+            <div className="rounded-2xl p-5 mb-6" style={{ background: '#252840' }}>
+              <h3 className="text-white font-bold mb-3">🚀 Quick Wins</h3>
+              {['🚫 Put your phone on "Do Not Disturb" 30 min before bed', '🧊 Keep your room cool — 65–68°F is the sweet spot', '☕ No caffeine after 2pm', '⏰ Same wake-up time every day — even weekends'].map((tip, i) => (
+                <p key={i} className="text-sm text-gray-400 mb-2">{tip}</p>
+              ))}
+            </div>
+
+            <button onClick={() => { setSleepResults(null); window.location.reload(); }} className="w-full py-4 rounded-2xl text-white font-bold text-lg" style={{ background: 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' }}>
+              Done 🏠
+            </button>
           </div>
         </div>
       )}

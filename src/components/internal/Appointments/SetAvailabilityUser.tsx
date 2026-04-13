@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import Cookies from 'js-cookie';
 import api from '@/utils/api';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
+import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 
 
@@ -33,8 +34,9 @@ export default function SetAvailabilityUser() {
     return new Date(now.getFullYear(), now.getMonth(), now.getDate());
   });
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
-  const [loading] = useState(false);
-  const [allSlots] = useState<{ date: string; slots: string[] }[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   const selectedDateUTC = selectedDate.toISOString().split('T')[0];
 
@@ -42,15 +44,12 @@ export default function SetAvailabilityUser() {
 
   useEffect(() => {
     const fetchSlots = async () => {
-      const authCookie = Cookies.get("auth");
-      let token = "";
-      if (authCookie) try { token = JSON.parse(authCookie).token; } catch {}
-      const res = await api.get("/users/get-user-available-slots", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      console.log(res);
-      
-      setDoctors(res.data.data || []);
+      try {
+        const res = await api.get("/users/get-user-available-slots");
+        setDoctors(res.data.data || []);
+      } catch (e) {
+        console.error("Failed to fetch slots", e);
+      }
     };
     fetchSlots();
   }, []);
@@ -67,19 +66,22 @@ export default function SetAvailabilityUser() {
     const slot = availability.timeSlots.find(s => s.id === selectedSlot);
     if (!slot) return;
 
-    const preferredDate = selectedDateUTC;
-    const preferredTimeSlot = slot.startTime.slice(11, 16);
-
-    const authCookie = Cookies.get("auth");
-    let token = "";
-    if (authCookie) try { token = JSON.parse(authCookie).token; } catch {}
-    await api.post("/users/book-appointment", {
-      doctorId: doctor.doctorId,
-      preferredDate,
-      preferredTimeSlot
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    setLoading(true);
+    try {
+      const preferredDate = selectedDateUTC;
+      const preferredTimeSlot = slot.startTime.slice(11, 16);
+      await api.post("/users/book-appointment", {
+        doctorId: doctor.doctorId,
+        preferredDate,
+        preferredTimeSlot
+      });
+      toast({ title: "Success", description: "Appointment booked!", variant: "default", className: "bg-green-500 text-white" });
+      navigate('/appointments');
+    } catch (error: any) {
+      toast({ title: "Error", description: error.response?.data?.message || "Booking failed", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Doctor Card UI
@@ -178,35 +180,6 @@ export default function SetAvailabilityUser() {
                 {loading ? 'Booking...' : 'Book Appointment'}
               </button>
             </div>
-          </div>
-        </div>
-        {/* All Available Slots Section - full width */}
-        <div className="w-full mt-8">
-          <div className="bg-white rounded-2xl p-8 shadow flex flex-col gap-6">
-            <h3 className="text-2xl font-bold mb-2">All Available Slots</h3>
-            {allSlots.length === 0 ? (
-              <p className="text-gray-500">No slots found.</p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {allSlots.map((slotDay) => (
-                  <div key={slotDay.date} className="border rounded-xl p-4 bg-[#FAF8FB]">
-                    <div className="font-semibold text-[#8B2D6C] mb-2">
-                      {new Date(slotDay.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      {(slotDay.slots || []).map((slot, idx) => (
-                        <span
-                          key={idx}
-                          className="inline-block px-3 py-1 rounded-full bg-[#8B2D6C1A] text-[#8B2D6C] text-sm"
-                        >
-                          {slot}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </div>

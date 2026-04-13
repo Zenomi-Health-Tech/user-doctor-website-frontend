@@ -1,86 +1,62 @@
-import { Card, CardFooter } from "@/components/ui/card";
-import { Link, useNavigate } from "react-router-dom";
-import LoginForm from "./loginForm";
-import BackGroundLogo from "@/assets/bgLogo.png";
+import { GoogleLogin } from "@react-oauth/google";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import axios from "axios";
+import { setAuthCookies } from "@/utils/cookies";
+import Cookies from "js-cookie";
+import zenomiLogo from "@/assets/zenomiLogo.png";
 
 const Component = () => {
-  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { login } = useAuth();
 
-  const handleSuccess = () => {
-    console.log("OTP sent successfully!");
-    navigate("/login/otp"); // Redirect to the OTP verification page
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    const idToken = credentialResponse.credential;
+    if (!idToken) {
+      toast({ title: "Error", description: "Google sign-in failed", variant: "destructive" });
+      return;
+    }
+    try {
+      const res = await axios.post("https://zenomi.elitceler.com/api/v1/doctors/google-signin", { idToken });
+      const token = res.data?.data?.token || res.data?.token;
+      const doctorId = res.data?.data?.doctor?.id || res.data?.data?.id;
+      if (token) {
+        setAuthCookies({ token });
+        if (doctorId) Cookies.set("userId", doctorId, { expires: 7 });
+        login(token);
+        window.location.href = "/dashboard";
+      }
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        window.location.href = "/doctor/register";
+      } else {
+        toast({ title: "Error", description: error.response?.data?.message || "Sign-in failed", variant: "destructive" });
+      }
+    }
   };
 
   return (
-    <div 
-      className="flex items-center justify-center min-h-screen relative"
-      style={{
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(${BackGroundLogo})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-      }}
-    >
-      <div className="absolute inset-0" />
-      <Card className="bg-white/95 backdrop-blur-sm rounded-3xl w-[439px] h-[400px] shadow-xl z-10">
-        <div className="w-96 mt-10 mx-auto flex flex-col items-center">
-          {/* <img
-            src={Logo}
-            alt="logo"
-            loading="lazy"
-          /> */}
-          <div>
-            {/* <h1 className="block font-Inter text-xl font-medium text-[#013DC0] mb-4">Login</h1> */}
-            <LoginForm onSuccess={handleSuccess} />
-          </div>
-          <CardFooter className="mt-4 font-light text-gray-700">
-            Don't have an account?
-            <Link to="/doctor/register">
-              <span className="text-[#8B2D6C] ml-1 hover:text-purple-700 transition-colors">
-                Create one
-              </span>
-            </Link>
-          </CardFooter>
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#f8f6fa] to-[#ede7f3] px-4">
+      <div className="w-full max-w-sm bg-white rounded-3xl shadow-xl p-8 sm:p-10 flex flex-col items-center">
+        <img src={zenomiLogo} alt="Zenomi" className="h-10 mb-8" />
+        <h1 className="text-2xl font-bold text-gray-900 mb-1 font-['Poppins']">Welcome back</h1>
+        <p className="text-sm text-gray-500 mb-8 font-['Poppins']">Sign in as Doctor to continue</p>
+        <div className="w-full flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => toast({ title: "Error", description: "Google sign-in failed", variant: "destructive" })}
+            size="large"
+            width="300"
+            text="continue_with"
+            shape="pill"
+          />
         </div>
-      </Card>
+        <p className="text-xs text-gray-400 mt-8 text-center font-['Poppins']">
+          By continuing, you agree to Zenomi's Terms of Service and Privacy Policy
+        </p>
+      </div>
     </div>
   );
 };
 
 export default Component;
-
-
-
-
-// import { Card, CardHeader } from "@/components/ui/card";
-// import Logo from "@/assets/Liv PrivateLimited Transprent 1.svg";
-// import BackGroundLogo from "@/assets/BackgroundImage.svg";
-// import LoginForm from "./loginForm";
-
-// const LoginComponent = () => {
-//   return (
-//     <div
-//       className="flex items-center justify-center h-screen bg-cover bg-center"
-//       style={{ backgroundImage: `url(${BackGroundLogo})` }}
-//     >
-//       <Card className="bg-white rounded-sm md:rounded-2xl lg:rounded-3xl dark:bg-background w-[539px] h-[564px] shadow-lg">
-//         <div className="mx-auto flex flex-col items-center">
-//           <img
-//             src={Logo}
-//             alt="logo"
-//             className="w-[260px] h-[200px]"
-//             loading="lazy"
-//           />
-//           <div className="-mt-8">
-//             <CardHeader className="block font-Inter text-xl font-medium text-[#013DC0]">
-//               Login
-//             </CardHeader>
-//             <LoginForm />
-//           </div>
-//         </div>
-//       </Card>
-//     </div>
-//   );
-// };
-
-// export default LoginComponent;
