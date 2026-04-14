@@ -99,16 +99,16 @@ const PatientsList: React.FC = () => {
               className="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-200"
               onClick={() => handlePatientClick(patient.id)}
             >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-[#8B2D6C1A] flex items-center justify-center text-[#8B2D6C] font-semibold text-lg">
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="w-12 h-12 rounded-full bg-[#8B2D6C1A] flex items-center justify-center text-[#8B2D6C] font-semibold text-lg flex-shrink-0">
                   {patient.name.charAt(0).toUpperCase()}
                 </div>
-                <div>
-                  <p className="font-medium text-gray-800 text-lg">{patient.name}</p>
-                  <p className="text-sm text-gray-500">Joined on {formatDate(patient.updatedAt)}</p>
+                <div className="min-w-0">
+                  <p className="font-medium text-gray-800 text-lg truncate">{patient.name}</p>
+                  <p className="text-sm text-gray-500 truncate">Joined on {formatDate(patient.updatedAt)}</p>
                 </div>
               </div>
-              <ArrowRight className="w-5 h-5 text-gray-500" />
+              <ArrowRight className="w-5 h-5 text-gray-500 flex-shrink-0" />
             </div>
           ))
         ) : (

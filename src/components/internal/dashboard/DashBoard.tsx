@@ -417,6 +417,12 @@ export default function Dashboard() {
       }
       // Find the test name for the just-completed test
       const completedTest = tests.find(t => t.id === currentTestId);
+      // Store nutrition results if it's a nutrition test
+      if (completedTest?.name?.toLowerCase().includes('nutrition')) {
+        setNutritionResults(scoreRes.data);
+      } else {
+        setNutritionResults(null);
+      }
       setLastCompletedTestName(completedTest?.name || null);
       if (currentTestId !== SLEEP_TEST_ID) {
         setShowCompletionDialog(true);
@@ -523,7 +529,7 @@ export default function Dashboard() {
               </h2>
               {/* Analytics Cards */}
               {doctorAnalytics && (
-                <div className="grid grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                   <div
                     className="bg-[#8B2D6C05] rounded-2xl p-6 flex flex-col items-center justify-center shadow cursor-pointer"
                     onClick={() => navigate("/patients")}
@@ -587,10 +593,10 @@ export default function Dashboard() {
                     <div
                       key={appt.id}
                       onClick={() => handlePatientClick(appt.userId)}
-                      className="bg-[#F8F3FA] cursor-pointer rounded-2xl p-4 flex items-center justify-between shadow-sm"
+                      className="bg-[#F8F3FA] cursor-pointer rounded-2xl p-4 flex items-center justify-between shadow-sm gap-3"
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="bg-[#E5E0EA] p-3 rounded-full">
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className="bg-[#E5E0EA] p-3 rounded-full flex-shrink-0">
                           <svg
                             className="w-6 h-6 text-[#704180]"
                             fill="none"
@@ -606,8 +612,8 @@ export default function Dashboard() {
                             ></path>
                           </svg>
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-800">
+                        <div className="min-w-0">
+                          <p className="font-medium text-gray-800 truncate">
                             {appt.user?.name || "Unknown"}
                           </p>
                           <p className="text-sm text-gray-500">
@@ -1190,36 +1196,86 @@ export default function Dashboard() {
 
       {showCompletionDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-3xl p-10 w-full max-w-lg shadow-lg flex flex-col items-center relative">
-            <h2 className="text-2xl font-bold mb-2 text-center">
-              You've Completed the {lastCompletedTestName || 'Test'}!
-            </h2>
-            <p className="text-gray-600 text-center mb-6">
-              Your results are ready and personalized just for you.
-            </p>
-            <button
-              className="w-full py-3 rounded-full text-white font-semibold text-lg mb-3"
-              style={{
-                background:
-                  "linear-gradient(90deg, #704180 6.54%, #8B2D6C 90.65%)",
-              }}
-              onClick={() => handleHomeScreen()}
-            >
-              Back to homescreen
-            </button>
-            {/* Only show 'Take next test' if not all tests are completed */}
-            {completedCount !== tests.length && (
-              <button
-                className="w-full py-3 rounded-full border border-[#8B2D6C] text-[#8B2D6C] font-semibold text-lg"
-                onClick={() => {
-                  setShowCompletionDialog(false);
-                  // Find the next unlocked test
-                  const nextTest = tests.find(t => t.testStatus === 'UNLOCKED');
-                  if (nextTest) setSelectedTest(nextTest);
-                }}
-              >
-                Take next test
-              </button>
+          <div className="bg-white rounded-3xl p-10 w-full max-w-lg shadow-lg flex flex-col items-center relative max-h-[90vh] overflow-y-auto">
+            {nutritionResults ? (
+              <>
+                <h2 className="text-2xl font-bold mb-1 text-center">Your Results ⚡</h2>
+                <p className="text-gray-500 text-sm mb-6">Here's your nutritional health snapshot</p>
+                {/* Score Gauge */}
+                {(() => {
+                  const nr = nutritionResults.data || nutritionResults;
+                  const userScore = nr.user_score ?? nr.score ?? 0;
+                  const maxScore = nr.max_score_for_test ?? nr.max_score ?? 75;
+                  const pct = maxScore > 0 ? Math.round((userScore / maxScore) * 100) : 0;
+                  const label = pct >= 80 ? 'Excellent' : pct >= 60 ? 'Good' : pct >= 40 ? 'Fair' : pct >= 20 ? 'Needs Work' : 'Poor';
+                  const assessment = nr.assessment || '';
+                  const insights = (nr.short_insights || '').replace(/<[^>]*>/g, '').split(/\d+\.\s+/).filter((s: string) => s.trim());
+                  return (
+                    <>
+                      <div className="relative w-44 h-44 mb-6">
+                        <svg viewBox="0 0 120 120" className="w-full h-full -rotate-[135deg]">
+                          <circle cx="60" cy="60" r="50" fill="none" stroke="#e5e7eb" strokeWidth="10" strokeLinecap="round" strokeDasharray={`${1.5 * Math.PI * 50} ${2 * Math.PI * 50}`} />
+                          <circle cx="60" cy="60" r="50" fill="none" stroke="#2D9F83" strokeWidth="10" strokeLinecap="round" strokeDasharray={`${1.5 * Math.PI * 50 * pct / 100} ${2 * Math.PI * 50}`} />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="text-4xl font-bold">{pct}</span>
+                          <span className="text-sm font-medium" style={{ color: pct >= 60 ? '#2D9F83' : pct >= 40 ? '#F59E0B' : '#EF4444' }}>{label}</span>
+                        </div>
+                      </div>
+                      {assessment && <p className="text-gray-600 font-medium mb-4">{assessment}</p>}
+                      {insights.length > 0 && (
+                        <div className="w-full bg-gray-50 rounded-2xl p-5 mb-6">
+                          <p className="font-bold mb-3">💡 Recommendations</p>
+                          {insights.map((tip: string, i: number) => (
+                            <div key={i} className="flex gap-2 mb-2">
+                              <span className="text-[#2D9F83] font-bold">→</span>
+                              <p className="text-sm text-gray-600 leading-relaxed">{tip.trim()}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+                <button
+                  className="w-full py-3 rounded-full text-white font-semibold text-lg"
+                  style={{ background: "linear-gradient(90deg, #704180 6.54%, #8B2D6C 90.65%)" }}
+                  onClick={() => { setNutritionResults(null); handleHomeScreen(); }}
+                >
+                  Done
+                </button>
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-bold mb-2 text-center">
+                  You've Completed the {lastCompletedTestName || 'Test'}!
+                </h2>
+                <p className="text-gray-600 text-center mb-6">
+                  Your results are ready and personalized just for you.
+                </p>
+                <button
+                  className="w-full py-3 rounded-full text-white font-semibold text-lg mb-3"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, #704180 6.54%, #8B2D6C 90.65%)",
+                  }}
+                  onClick={() => handleHomeScreen()}
+                >
+                  Back to homescreen
+                </button>
+                {completedCount !== tests.length && (
+                  <button
+                    className="w-full py-3 rounded-full border border-[#8B2D6C] text-[#8B2D6C] font-semibold text-lg"
+                    onClick={() => {
+                      setShowCompletionDialog(false);
+                      const nextTest = tests.find(t => t.testStatus === 'UNLOCKED');
+                      if (nextTest) setSelectedTest(nextTest);
+                    }}
+                  >
+                    Take next test
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>

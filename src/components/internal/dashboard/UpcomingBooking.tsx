@@ -63,7 +63,7 @@ const AppointmentsTable: React.FC = () => {
   return (
     <>
       <h1 className='text-[#013DC0] p-4 text-xl'>Upcoming Bookings</h1>
-      <div className='border border-[#E8F1FD] rounded-xl'>
+      <div className='border border-[#E8F1FD] rounded-xl overflow-x-auto'>
 
         <Table>
           <TableHeader className="bg-[#E9F4FF]">
@@ -81,9 +81,9 @@ const AppointmentsTable: React.FC = () => {
             {appointments.map((appointment, index) => (
               <TableRow key={appointment.patientId}>
                 <TableCell>{index + 1}.</TableCell> {/* Serial number (1-based index) */}
-                <TableCell>{appointment.patientName}</TableCell>
+                <TableCell><span className="truncate block max-w-[200px]">{appointment.patientName}</span></TableCell>
                 <TableCell>{appointment.patientPhoneNumber}</TableCell>
-                <TableCell>{appointment.patientEmail}</TableCell>
+                <TableCell><span className="truncate block max-w-[200px]">{appointment.patientEmail}</span></TableCell>
                 <TableCell>{new Date(appointment.patientAppointmentDate).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <Badge

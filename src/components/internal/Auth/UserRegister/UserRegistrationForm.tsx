@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader } from 'lucide-react';
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-import axios from 'axios';
+import api from '@/utils/api';
 import { useNavigate } from "react-router-dom";
 
 
@@ -18,7 +18,7 @@ const userSchema = z.object({
     gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
     dob: z.string().min(1, 'Date of birth is required'),
     bloodGroup: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']),
-    referralCode: z.string().min(1, 'Referral code is required'),
+    referralCode: z.string().min(1, 'Doctor referral code is required'),
 });
 type UserFormData = z.infer<typeof userSchema>;
 
@@ -62,7 +62,7 @@ const UserRegistrationForm = () => {
             const referralCode = referralCodeDigits ? `Zenomi-${referralCodeDigits}` : undefined;
             const payload = { ...data, countryCode, dob: new Date(data.dob).toISOString(), referralCode };
 
-            const response = await axios.post('https://zenomi.elitceler.com/api/v1/users/register-user', payload);
+            const response = await api.post('/users/register-user', payload);
 
             toast({
                 title: "Success",
@@ -77,7 +77,8 @@ const UserRegistrationForm = () => {
 
             console.log('Success:', response.data);
         } catch (error: any) {
-            const errorMessage = error.response?.data?.message || 'Registration failed';
+            const errData = error.response?.data;
+            const errorMessage = (errData && typeof errData === 'object' && errData.message) ? errData.message : 'Registration failed. Please try again.';
             toast({
                 title: "Error",
                 description: errorMessage,
@@ -202,15 +203,15 @@ const UserRegistrationForm = () => {
                 <div>
                     {/* <label className="block mb-1 font-medium">Doctor Referral Code</label> */}
                     <div className="flex items-center">
-                        <span className="bg-gray-100 px-3 py-3 rounded-l-xl border border-gray-200 border-r-0 text-gray-500 select-none">
+                        <span className="bg-gray-100 px-3 py-3 rounded-l-xl border border-gray-200 border-r-0 text-gray-500 select-none whitespace-nowrap shrink-0">
                             Zenomi-
                         </span>
                     <input
                         type="text"
-                            maxLength={4}
+                            maxLength={6}
                             inputMode="numeric"
                             className="w-full p-3 rounded-r-xl border border-gray-200 focus:outline-none focus:ring-2"
-                            placeholder="1234"
+                            placeholder="123456"
                             value={referralCodeDigits}
                             onChange={e => {
                                 // Only allow digits

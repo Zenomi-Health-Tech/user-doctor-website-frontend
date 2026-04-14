@@ -7,13 +7,12 @@ import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 
 const TIME_SLOTS = {
-  Morning: ['10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '12:00 PM'],
-  Afternoon: ['12:30 PM', '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM'],
-  Evening: ['03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM', '05:00 PM'],
-  Night: ['05:30 PM', '06:00 PM', '06:30 PM', '07:00 PM', '07:30 PM'],
+  Morning: ['06:00 AM', '06:30 AM', '07:00 AM', '07:30 AM', '08:00 AM', '08:30 AM', '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM'],
+  Afternoon: ['12:00 PM', '12:30 PM', '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM'],
+  Evening: ['05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM', '07:00 PM', '07:30 PM', '08:00 PM', '08:30 PM', '09:00 PM', '09:30 PM'],
 };
 
-const TABS = ['Morning', 'Afternoon', 'Evening', 'Night'] as const;
+const TABS = ['Morning', 'Afternoon', 'Evening'] as const;
 type TabType = typeof TABS[number];
 
 function toLocalISOString(date: Date) {
@@ -88,7 +87,37 @@ export default function SetAvailability() {
     fetchAllSlots();
   }, []);
 
+  const isSlotPast = (slot: string): boolean => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (selectedDate.getTime() > today.getTime()) return false;
+    if (selectedDate.getTime() < today.getTime()) return true;
+    // Same day — check time
+    const [hourMin, period] = slot.split(' ');
+    let [hour, min] = hourMin.split(':').map(Number);
+    if (period === 'PM' && hour !== 12) hour += 12;
+    if (period === 'AM' && hour === 12) hour = 0;
+    const slotTime = new Date(selectedDate);
+    slotTime.setHours(hour, min, 0, 0);
+    return slotTime <= now;
+  };
+
+  const getAvailableSlots = (tab: TabType): string[] => {
+    return TIME_SLOTS[tab].filter((slot) => !isSlotPast(slot));
+  };
+
+  const handleSelectAll = (tab: TabType) => {
+    const available = getAvailableSlots(tab);
+    const allSelected = available.every((s) => selectedSlots.includes(s));
+    if (allSelected) {
+      setSelectedSlots((prev) => prev.filter((s) => !available.includes(s)));
+    } else {
+      setSelectedSlots((prev) => [...new Set([...prev, ...available])]);
+    }
+  };
+
   const handleSlotClick = (slot: string) => {
+    if (isSlotPast(slot)) return;
     setSelectedSlots((prev) =>
       prev.includes(slot) ? prev.filter((s) => s !== slot) : [...prev, slot]
     );
@@ -155,6 +184,7 @@ export default function SetAvailability() {
               <DayPicker
                 mode="single"
                 selected={selectedDate}
+                disabled={{ before: new Date() }}
                 onSelect={(date) => {
                   if (date) {
                     // Always set time to midnight to avoid time drift
@@ -165,7 +195,7 @@ export default function SetAvailability() {
                 className="rounded-xl shadow-sm border"
                 styles={{
                   caption: { color: '#1A2343', fontWeight: 600 },
-                  day_selected: { background: 'linear-gradient(90deg, #8B2D6C 0%, #C6426E 100%)', color: 'white' },
+                  day_selected: { background: 'linear-gradient(90deg, #8B2D6C 0%, #704180 100%)', color: 'white' },
                   day: { borderRadius: '9999px', fontWeight: 500 },
                 }}
               />
@@ -186,23 +216,42 @@ export default function SetAvailability() {
                 ))}
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
-                {TIME_SLOTS[activeTab].map((slot: string) => (
-                  <button
-                    key={slot}
-                    className={`py-2 rounded-full border w-full ${
-                      selectedSlots.includes(slot)
-                        ? 'bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white border-none'
-                        : 'bg-white text-gray-700 border-gray-300'
-                    }`}
-                    onClick={() => handleSlotClick(slot)}
-                    type="button"
-                  >
-                    {slot}
-                  </button>
-                ))}
+                {getAvailableSlots(activeTab).length === 0 ? (
+                  <p className="text-gray-400 col-span-3 text-center py-4">No available slots</p>
+                ) : (
+                  getAvailableSlots(activeTab).map((slot: string) => (
+                    <button
+                      key={slot}
+                      className={`py-2 rounded-full border w-full ${
+                        selectedSlots.includes(slot)
+                          ? 'bg-gradient-to-r from-[#8B2D6C] to-[#704180] text-white border-none'
+                          : 'bg-white text-gray-700 border-gray-300'
+                      }`}
+                      onClick={() => handleSlotClick(slot)}
+                      type="button"
+                    >
+                      {slot}
+                    </button>
+                  ))
+                )}
               </div>
+              {getAvailableSlots(activeTab).length > 0 && (
+                <div className="flex justify-end mb-4">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectAll(activeTab)}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium ${
+                      getAvailableSlots(activeTab).every((s) => selectedSlots.includes(s))
+                        ? 'bg-[#8B2D6C] text-white'
+                        : 'bg-[#8B2D6C1A] text-[#8B2D6C]'
+                    }`}
+                  >
+                    {getAvailableSlots(activeTab).every((s) => selectedSlots.includes(s)) ? 'Deselect All' : 'Select All'}
+                  </button>
+                </div>
+              )}
               <button
-                className="w-full py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-lg shadow hover:opacity-90 transition"
+                className="w-full py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#704180] text-white font-semibold text-lg shadow hover:opacity-90 transition"
                 onClick={handleSubmit}
                 disabled={loading}
               >
