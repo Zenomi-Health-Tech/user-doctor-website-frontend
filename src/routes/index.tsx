@@ -1,6 +1,18 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Navigate, Outlet, useRoutes } from "react-router-dom";
 import HomeLayout from "@/components/layout/HomeLayout";
+
+function SuspenseLoader() {
+  const [animData, setAnimData] = useState<any>(null);
+  useEffect(() => { import('lottie-react').catch(() => {}); fetch('/meditation.json').then(r => r.json()).then(setAnimData).catch(() => {}); }, []);
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[50vh]">
+      {animData ? (() => { try { const Lottie = require('lottie-react').default; return <Lottie animationData={animData} loop style={{ height: 180 }} />; } catch { return null; } })() : (
+        <div className="relative w-10 h-10"><div className="absolute inset-0 rounded-full border-4 border-[#F0EBF4]" /><div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#8B2D6C] animate-spin" /></div>
+      )}
+    </div>
+  );
+}
 import { ProtectedRoute } from "./ProtectedRoute";
 
 
@@ -36,7 +48,7 @@ export default function AppRouter() {
         <ProtectedRoute
           element={
             <HomeLayout>
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<SuspenseLoader />}>
                 <Outlet />
               </Suspense>
             </HomeLayout>
@@ -82,6 +94,10 @@ export default function AppRouter() {
           element: <SetAvailabilityUser />,
         },
         {
+          path: "/appointments/doctor/:doctorId",
+          element: <SetAvailabilityUser />,
+        },
+        {
           path: "/appointments/available-slots",
           element: <AvailableSlotsPage />,
         },
@@ -117,14 +133,14 @@ export default function AppRouter() {
   const publicRoutes = [
     {
       path: "/404",
-      element: <Suspense fallback={<div>Loading...</div>}>
+      element: <Suspense fallback={<SuspenseLoader />}>
         <NotFound />
       </Suspense>,
     },
     {
       path: "/doctor/register",
       element: (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<SuspenseLoader />}>
           <RegisterScreen />
         </Suspense>
       ),
@@ -132,7 +148,7 @@ export default function AppRouter() {
     {
       path: "/user/register",
       element: (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<SuspenseLoader />}>
           <UseregisterScreen />
         </Suspense>
       ),
@@ -142,7 +158,7 @@ export default function AppRouter() {
       element: (
         <ProtectedRoute
           element={
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<SuspenseLoader />}>
               <LoginScreen />
             </Suspense>
           }
@@ -157,7 +173,7 @@ export default function AppRouter() {
       element: (
         <ProtectedRoute
           element={
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<SuspenseLoader />}>
               <UserLoginScreen />
             </Suspense>
           }
@@ -169,7 +185,7 @@ export default function AppRouter() {
     {
       path: "/chooserole",
       element: (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<SuspenseLoader />}>
           <ChooseRole />
         </Suspense>
       ),
@@ -179,7 +195,7 @@ export default function AppRouter() {
       element: (
         // <ProtectedRoute
           // element={
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<SuspenseLoader />}>
               <PaymentOnboard />
             </Suspense>
           // }

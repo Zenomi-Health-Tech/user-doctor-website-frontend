@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
+import LottieLoader from "@/components/shared/LottieLoader";
+import NutritionQuiz from "./NutritionQuiz";
 import userTick from "@/assets/user-tick.png";
 import yellowcal from "@/assets/yellowcal.png";
 import purplecal from "@/assets/purplecal.png";
@@ -96,7 +98,9 @@ export default function Dashboard() {
   // Add a state to track the last completed test name
   const [lastCompletedTestName, setLastCompletedTestName] = useState<string | null>(null);
   const SLEEP_TEST_ID = 'cmb7mnl5e0000qelpn6yjmyt0';
+  const NUTRITION_TEST_ID = 'cmb7mnl8x0001qelpyyqkwk31';
   const isSleepQuiz = currentTestId === SLEEP_TEST_ID;
+  const isNutritionQuiz = currentTestId === NUTRITION_TEST_ID;
   const [sleepPart, setSleepPart] = useState(0);
   const [sleepExitOpen, setSleepExitOpen] = useState(false);
   const [sleepResults, setSleepResults] = useState<{score: number, max: number, assessment: string, sentiment: string} | null>(null);
@@ -479,17 +483,7 @@ export default function Dashboard() {
   //   }
   // }, []);
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-screen bg-white">
-      <div className="flex flex-col items-center gap-4">
-        <div className="relative w-16 h-16">
-          <div className="absolute inset-0 rounded-full border-4 border-[#F0EBF4]" />
-          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#8B2D6C] animate-spin" />
-        </div>
-        <p className="text-sm text-gray-400 font-['Poppins']">Loading your dashboard...</p>
-      </div>
-    </div>
-  );
+  if (loading) return <LottieLoader text="Loading your dashboard..." />;
 
   // Ensure tests is an array before proceeding
   if (!Array.isArray(tests) && !isDoctor) {
@@ -651,9 +645,9 @@ export default function Dashboard() {
             <div className="flex flex-col lg:flex-row gap-8 w-full max-w-6xl mx-auto mt-6">
               {/* Left Column: Tests and Courses */}
               <div className="flex-1 w-full max-w-[650px] font-['Poppins'] mx-auto">
-                <h2 className="text-xl sm:text-2xl font-semibold mb-2 font-['Urbanist']">
+                <h2 className="text-lg sm:text-2xl font-semibold mb-2 font-['Urbanist'] truncate">
                   <span role="img" aria-label="wave">👋</span>{" "}
-                  Hey <span className="text-[#8B2D6C] font-bold font-['Urbanist']">{userName || "there"}</span>, ready to check in with yourself today?
+                  Hey <span className="text-[#8B2D6C] font-bold font-['Urbanist']">{userName || "there"}</span>, ready to check in?
                 </h2>
                 {showProcessing && (
                   <div className="my-4 w-full max-w-xl mx-auto">
@@ -858,7 +852,21 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-      {selectedTest && selectedTest.id !== SLEEP_TEST_ID && (
+      {selectedTest && selectedTest.id === NUTRITION_TEST_ID && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-white">
+          <div className="text-center px-8 max-w-sm">
+            <button onClick={() => setSelectedTest(null)} className="absolute top-4 right-4 text-2xl text-gray-400">&times;</button>
+            <div className="text-7xl mb-6 animate-bounce" style={{ animationDuration: '2s' }}>🥑</div>
+            <h2 className="text-3xl font-bold mb-1">Teen Nutrition</h2>
+            <h2 className="text-3xl font-bold text-[#2D9F83] mb-4">Check-Up</h2>
+            <p className="text-gray-500 text-sm mb-8">Discover how your daily eating habits stack up. Takes about 2 minutes — let's see your score!</p>
+            <button onClick={handleStartTest} className="px-8 py-3 rounded-xl text-white font-semibold text-base" style={{ background: '#2D9F83' }}>
+              {loadingQuestions ? 'Loading...' : '🔬 Start Assessment'}
+            </button>
+          </div>
+        </div>
+      )}
+      {selectedTest && selectedTest.id !== SLEEP_TEST_ID && selectedTest.id !== NUTRITION_TEST_ID && (
         <div 
         style={{
           backgroundImage: `url(${selectedTest.splash_image_s3_key})`,
@@ -1021,7 +1029,31 @@ export default function Dashboard() {
           )}
         </div>
       )}
-      {showQuiz && !isSleepQuiz && (
+      {showQuiz && isNutritionQuiz && (
+        <NutritionQuiz
+          questions={questions}
+          onClose={() => { setShowQuiz(false); setCurrentTestId(null); }}
+          onSubmit={async (formatted) => {
+            setShowQuiz(false);
+            setShowProcessing(true);
+            try {
+              const authCookie = Cookies.get("auth");
+              let token = "";
+              if (authCookie) { try { token = JSON.parse(authCookie).token; } catch { token = ""; } }
+              await axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formatted }, { headers: { Authorization: `Bearer ${token}` } });
+              const completedTest = tests.find(t => t.id === currentTestId);
+              setLastCompletedTestName(completedTest?.name || null);
+              setShowCompletionDialog(true);
+              setTimeout(() => { setShowCompletionDialog(false); window.location.reload(); }, 2000);
+              const res = await axios.get("https://zenomiai.elitceler.com/api/testnames", { headers: { Authorization: `Bearer ${token}` } });
+              setTests(res.data);
+            } catch { alert("Failed to submit. Please try again."); }
+            setShowProcessing(false);
+            setCurrentTestId(null);
+          }}
+        />
+      )}
+      {showQuiz && !isSleepQuiz && !isNutritionQuiz && (
         <div className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#fff7fa] to-[#f8f3fa] p-0 m-0 fixed top-0 left-0 z-50">
           <div
             className="w-full max-w-2xl mx-auto flex flex-col items-center justify-center min-h-screen"

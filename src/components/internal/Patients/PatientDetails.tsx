@@ -1,3 +1,4 @@
+import LottieLoader from "@/components/shared/LottieLoader";
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '@/utils/api';
@@ -136,7 +137,7 @@ const PatientDetails: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen text-xl">Loading patient details...</div>;
+    return <LottieLoader text="Loading patient details..." />;
   }
 
   if (!patient) {

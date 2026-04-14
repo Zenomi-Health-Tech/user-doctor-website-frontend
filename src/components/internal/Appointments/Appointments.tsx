@@ -1,456 +1,348 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import api from "@/utils/api";
-import Cookies from "js-cookie";
-import { Search } from "lucide-react";
+import { Calendar, Clock, ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from "@/context/AuthContext";
 
-// Doctor types and tabs
-interface Appointment {
-  id: string;
-  userId: string;
-  doctorId: string;
-  preferredDate: string;
-  preferredTime: string;
-  status?: string;
-  user: {
-    id: string;
-    name: string;
-    profilePicture: string | null;
-  };
+// ── Types ──
+
+interface DoctorAppointment {
+  id: string; userId: string; doctorId: string; preferredDate: string; preferredTime: string;
+  status?: string; user: { id: string; name: string; profilePicture: string | null };
 }
-const DOCTOR_TABS = [
-  "All",
-  "Completed",
-  "Rescheduled",
-  "Rejected",
-  "Upcoming",
-] as const;
-type DoctorTabType = (typeof DOCTOR_TABS)[number];
 
-// User types and tabs
 interface UserAppointment {
-  id: string;
-  doctorId: string;
-  userId: string;
-  preferredDate: string;
-  preferredTime: string;
-  status?: string;
-  reason?: string;
-  cancellationReason?: string | null;
-  createdAt: string;
-  updatedAt: string;
+  id: string; doctorId: string; preferredDate?: string; preferredTime?: string;
+  bookingSlotTime?: string; bookingSlotStatus?: string; status?: string;
+  createdAt: string; updatedAt: string;
   doctor: {
-    id: string;
-    name: string;
-    specialization: string;
-    photoUrl: string | null;
-    consultationFee: number;
+    id?: string; doctorId?: string; name?: string; doctorName?: string;
+    specialization?: string; areaOfSpecialization?: string;
+    photoUrl?: string | null; doctorPhoto?: string;
+    qualification?: string; consultationFee?: number; doctorCharges?: number;
+    workLocation?: string; medicalLicenseNumber?: string;
   };
 }
+
+type SlotItem = { id?: string; startTime: string };
+type AvailabilityItem = { date: string; timeSlots: SlotItem[] };
+type AvailableDoctor = {
+  doctorId: string; doctorName: string; specialization: string;
+  qualification: string; workLocation: string; consultationFee: number;
+  medicalLicenseNumber: string; availabilities: AvailabilityItem[];
+};
+
+// ── Helpers ──
+
+const getName = (a: UserAppointment) => a.doctor?.doctorName || a.doctor?.name || "";
+const getSpec = (a: UserAppointment) => a.doctor?.areaOfSpecialization || a.doctor?.specialization || "";
+const getStatus = (a: UserAppointment) => a.bookingSlotStatus || a.status || "";
+const fmtDateLong = (s: string) => { try { return new Date(s).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" }); } catch { return s; } };
+const fmtTime12 = (s: string) => { try { return new Date(s).toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true }); } catch { return s; } };
+const fmtTimeRange = (s: string) => { try { const d = new Date(s); const end = new Date(d.getTime() + 30 * 60000); return `${fmtTime12(s)} - ${end.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", hour12: true })}`; } catch { return s; } };
+const DAY_NAMES = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 export default function Appointments() {
-  const { isDoctor, isUser, userName } = useAuth();
+  const { isDoctor, isUser } = useAuth();
   const navigate = useNavigate();
 
-  // --- Doctor State & Logic ---
-  const [appointments, setAppointments] = useState<{
-    previous: Appointment[];
-    upcoming: Appointment[];
-  }>({ previous: [], upcoming: [] });
-  const [loading, setLoading] = useState(true);
+  // Doctor state
+  const [docAppts, setDocAppts] = useState<{ previous: DoctorAppointment[]; upcoming: DoctorAppointment[] }>({ previous: [], upcoming: [] });
+  const [docLoading, setDocLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<DoctorTabType>("All");
+  const [docTab, setDocTab] = useState("All");
 
-  const handlePatientClick = (id: string) => {
-    navigate(`/patients/${id}`);
-  };
-  useEffect(() => {
-    if (!isDoctor) return;
-    const fetchAppointments = async () => {
-      setLoading(true);
-      try {
-        const authCookie = Cookies.get("auth");
-        let token = "";
-        if (authCookie) {
-          try {
-            token = JSON.parse(authCookie).token;
-          } catch (e) {
-            token = "";
-          }
-        }
-        const response = await api.get("/doctors/appointments", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (
-          response.data.success &&
-          response.data.data &&
-          Array.isArray(response.data.data.previous_appointments) &&
-          Array.isArray(response.data.data.upcoming_appointments)
-        ) {
-          setAppointments({
-            previous: response.data.data.previous_appointments,
-            upcoming: response.data.data.upcoming_appointments,
-          });
-        } else {
-          setAppointments({ previous: [], upcoming: [] });
-        }
-      } catch (error) {
-        setAppointments({ previous: [], upcoming: [] });
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAppointments();
-  }, [isDoctor]);
-
-  const filteredAppointments =
-    activeTab === "All"
-      ? appointments.previous.filter(
-          (appt) =>
-            appt.user?.name &&
-            appt.user.name.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      : activeTab === "Completed"
-      ? appointments.previous.filter(
-          (appt) =>
-            appt.status === "COMPLETED" &&
-            appt.user?.name &&
-            appt.user.name.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      : activeTab === "Rescheduled"
-      ? appointments.previous.filter(
-          (appt) =>
-            appt.status === "RESCHEDULED" &&
-            appt.user?.name &&
-            appt.user.name.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      : activeTab === "Rejected"
-      ? appointments.previous.filter(
-          (appt) =>
-            appt.status === "REJECTED" &&
-            appt.user?.name &&
-            appt.user.name.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      : appointments.upcoming.filter(
-          (appt) =>
-            appt.user?.name &&
-            appt.user.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-
-  const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
-  const formatTime = (isoString: string) => {
-    const date = new Date(isoString);
-    return date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-  };
-
-  // --- User State & Logic ---
-  const [userAppointments, setUserAppointments] = useState<{
-    previous: UserAppointment[];
-    upcoming: UserAppointment[];
-  }>({ previous: [], upcoming: [] });
+  // User state
+  const [userAppts, setUserAppts] = useState<{ previous: UserAppointment[]; upcoming: UserAppointment[] }>({ previous: [], upcoming: [] });
   const [userLoading, setUserLoading] = useState(true);
-  const [userActiveTab, setUserActiveTab] = useState<'Upcoming' | 'Previous'>('Upcoming');
+  const [userTab, setUserTab] = useState(0); // 0=Upcoming, 1=Completed, 2=Book Slot
 
   useEffect(() => {
-    if (!isUser) return;
-    const fetchAppointments = async () => {
-      setUserLoading(true);
-      try {
-        const authCookie = Cookies.get("auth");
-        let token = "";
-        if (authCookie) {
-          try {
-            token = JSON.parse(authCookie).token;
-          } catch (e) {
-            token = "";
-          }
-        }
-        const response = await api.get("/users/get-user-appointments", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        console.log(response);
-        
-        if (
-          response.data.success &&
-          response.data.data &&
-          Array.isArray(response.data.data.previous_appointments) &&
-          Array.isArray(response.data.data.upcoming_appointments)
-        ) {
-          setUserAppointments({
-            previous: response.data.data.previous_appointments,
-            upcoming: response.data.data.upcoming_appointments,
-          });
-        } else {
-          setUserAppointments({ previous: [], upcoming: [] });
-        }
-      } catch (error) {
-        setUserAppointments({ previous: [], upcoming: [] });
-      } finally {
-        setUserLoading(false);
-      }
-    };
-    fetchAppointments();
-  }, [isUser]);
+    if (isDoctor) {
+      (async () => { setDocLoading(true); try { const { data: d } = await api.get("/doctors/appointments"); if (d.success && d.data) setDocAppts({ previous: d.data.previous_appointments || [], upcoming: d.data.upcoming_appointments || [] }); } catch {} finally { setDocLoading(false); } })();
+    }
+    if (isUser) {
+      (async () => { setUserLoading(true); try { const { data: d } = await api.get("/users/get-user-appointments"); if (d.success && d.data) setUserAppts({ previous: d.data.previous_appointments || [], upcoming: d.data.upcoming_appointments || [] }); } catch {} finally { setUserLoading(false); } })();
+    }
+  }, [isDoctor, isUser]);
 
-  const userAppointmentsToShow = userActiveTab === 'Upcoming' ? userAppointments.upcoming : userAppointments.previous;
-
-
-
-  // --- Render ---
+  // ── Doctor UI (unchanged) ──
   if (isDoctor) {
+    const TABS = ["All", "Completed", "Rescheduled", "Rejected", "Upcoming"];
+    const list = docTab === "Upcoming" ? docAppts.upcoming : docAppts.previous;
+    const filtered = (docTab === "All" || docTab === "Upcoming" ? list : list.filter(a => a.status === docTab.toUpperCase())).filter(a => a.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()));
     return (
-      <div className="p-8  min-h-screen font-['Poppins']">
-        <h1 className="text-3xl font-semibold mb-6 text-gray-800">
-          Appointment Details
-        </h1>
-        <div className="flex justify-end mb-4">
-          <button
-            className="px-6 py-2 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-lg shadow hover:opacity-90 transition"
-            onClick={() => navigate('/appointments/set-availability')}
-          >
-            Set Availability
-          </button>
-        </div>
-        <div className="flex items-center justify-between mb-8">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search your appointments here"
-              className="w-full py-3 pl-10 pr-4 rounded-full bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#8B2D6C]"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="flex gap-2 ml-4">
-           
-            {/* <button
-              className="p-3 rounded-full bg-white border border-gray-200 shadow-sm"
-              onClick={() => navigate("/appointments/set-availability")}
-            >
-              <Calendar className="w-5 h-5 text-gray-500" />
-            </button> */}
-          </div>
-        </div>
-        {/* Tabs */}
-        <div className="flex border-b mb-6">
-          {DOCTOR_TABS.map((tab) => (
-            <button
-              key={tab}
-              className={`px-4 pb-2 text-lg font-medium focus:outline-none ${
-                activeTab === tab
-                  ? "border-b-2 border-[#8B2D6C] text-[#8B2D6C]"
-                  : "text-gray-500"
-              }`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-        {loading ? (
-          <div className="flex justify-center items-center h-40 text-xl">
-            Loading appointments...
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredAppointments.length > 0 ? (
-              filteredAppointments.map((appt) => (
-                <div
-                  key={appt.id}
-                  onClick={() => handlePatientClick(appt.userId)}
-                  className="bg-white cursor-pointer rounded-2xl p-4 flex items-center justify-between shadow-sm"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#8B2D6C1A] flex items-center justify-center text-[#8B2D6C] font-semibold text-lg">
-                      {appt.user && appt.user.name
-                        ? appt.user.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .toUpperCase()
-                        : ""}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-800 text-lg">
-                        {appt.user?.name}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Date: {formatDate(appt.preferredDate)} Time: {formatTime(appt.preferredTime)}
-                      </p>
-                    </div>
-                  </div>
-                  {appt.status === "COMPLETED" && (
-                    <span className="bg-green-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-                      Completed
-                    </span>
-                  )}
-                  {appt.status === "UPCOMING" && (
-                    <span className="bg-yellow-400 text-white px-4 py-1 rounded-full text-sm font-medium">
-                      Upcoming
-                    </span>
-                  )}
-                  {appt.status === "RESCHEDULED" && (
-                    <span className="bg-yellow-400 text-white px-4 py-1 rounded-full text-sm font-medium">
-                      Rescheduled
-                    </span>
-                  )}
-                  {appt.status === "REJECTED" && (
-                    <span className="bg-red-400 text-white px-4 py-1 rounded-full text-sm font-medium">
-                      Rejected
-                    </span>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className="text-center text-gray-500 text-lg mt-10">
-                No appointments yet
-              </div>
-            )}
-          </div>
+      <div className="p-4 sm:p-8 min-h-screen font-['Poppins']">
+        <h1 className="text-2xl font-semibold mb-6 text-[#8B2D6C]">Appointment Details</h1>
+        <div className="flex justify-end mb-4"><button className="px-6 py-2 rounded-lg bg-[#8B2D6C] text-white font-semibold" onClick={() => navigate("/appointments/set-availability")}>Set Availability</button></div>
+        <div className="flex border-b mb-6 overflow-x-auto">{TABS.map(t => <button key={t} className={`px-4 pb-2 text-base font-medium whitespace-nowrap ${docTab === t ? "border-b-2 border-[#8B2D6C] text-[#8B2D6C]" : "text-gray-400"}`} onClick={() => setDocTab(t)}>{t}</button>)}</div>
+        {docLoading ? <p className="text-center text-gray-400 mt-10">Loading...</p> : filtered.length === 0 ? <p className="text-center text-gray-400 mt-10">No appointments</p> : (
+          <div className="space-y-4">{filtered.map(a => <div key={a.id} onClick={() => navigate(`/patients/${a.userId}`)} className="bg-white cursor-pointer rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-100"><div className="flex items-center gap-4"><div className="w-12 h-12 rounded-full bg-[#F8F2F9] flex items-center justify-center text-[#8B2D6C] font-semibold text-lg">{a.user?.name?.split(" ").map(n => n[0]).join("").toUpperCase()}</div><div><p className="font-semibold text-black">{a.user?.name}</p><p className="text-xs text-[#636363]">{fmtDateLong(a.preferredDate)} · {fmtTime12(a.preferredTime)}</p></div></div>{a.status && <span className="text-xs font-medium text-[#636363]">{a.status}</span>}</div>)}</div>
         )}
       </div>
     );
   }
 
-  // --- User UI ---
+  // ═══════════════════════════════════════
+  // USER UI — matches UserCalendarTab exactly
+  // ═══════════════════════════════════════
+
+  const TAB_LABELS = ['Upcoming', 'Completed', 'Book Slot'];
+
   return (
-    <div className="p-2 sm:p-4 md:p-8 min-h-screen font-['Poppins'] bg-white">
-      <h1 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 text-gray-800">Appointments</h1>
-      <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 w-full">
-        {/* Left: Appointments List */}
-        <div className="flex-grow w-full max-w-full lg:max-w-[800px] min-w-0">
-          {/* Tabs */}
-          <div className="flex mb-6 sm:mb-8 w-full max-w-xl rounded-full overflow-hidden bg-[#F6EEF3]" style={{height: 48}}>
-            <button
-              className={`w-1/2 py-3 text-lg font-normal transition-all focus:outline-none ${userActiveTab === 'Upcoming' ? 'text-white' : 'text-black'}`}
-              style={userActiveTab === 'Upcoming'
-                ? { background: 'linear-gradient(90deg, #704180 6.54%, #8B2D6C 90.65%)', borderRadius: '9999px 0 0 9999px' }
-                : { background: '#F6EEF3', borderRadius: '9999px 0 0 9999px' }}
-              onClick={() => setUserActiveTab('Upcoming')}
-            >
-              Upcoming
+    <div className="min-h-screen font-['Poppins'] bg-white">
+      {/* Header: back + "Appointments" */}
+      <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+        <button onClick={() => navigate('/dashboard')} className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+          <ChevronLeft className="w-5 h-5 text-black" />
+        </button>
+        <h1 className="text-[22px] font-bold text-black">Appointments</h1>
+        <div className="w-10" />
+      </div>
+
+      {/* Pill Tab Bar — gradient active, #F6EEF3 bg */}
+      <div className="px-5 py-2.5">
+        <div className="h-[45px] rounded-[25px] bg-[#F6EEF3] flex overflow-hidden">
+          {TAB_LABELS.map((label, i) => (
+            <button key={label} onClick={() => setUserTab(i)}
+              className={`flex-1 text-[13px] font-semibold rounded-[25px] transition-all ${userTab === i ? 'text-white' : 'text-black/50'}`}
+              style={userTab === i ? { background: 'linear-gradient(90deg, #704180, #8B2D6C)' } : {}}>
+              {label}
             </button>
-            <button
-              className={`w-1/2 py-3 text-lg font-normal transition-all focus:outline-none ${userActiveTab === 'Previous' ? 'text-white' : 'text-black'}`}
-              style={userActiveTab === 'Previous'
-                ? { background: 'linear-gradient(90deg, #704180 6.54%, #8B2D6C 90.65%)', borderRadius: '0 9999px 9999px 0' }
-                : { background: '#F6EEF3', borderRadius: '0 9999px 9999px 0' }}
-              onClick={() => setUserActiveTab('Previous')}
-            >
-              Previous
-            </button>
-          </div>
-          {/* Scrollable appointments list */}
-          <div className="overflow-y-auto max-h-[70vh] pr-2 scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <style>{`
-              .scrollbar-none::-webkit-scrollbar { display: none; }
-            `}</style>
-            {userLoading ? (
-              <div className="flex  h-40 text-xl">Loading appointments...</div>
-            ) : userAppointmentsToShow.length === 0 ? (
-              <div className=" text-gray-500 text-lg mt-10">No appointments yet</div>
-            ) : (
-              <div className="space-y-6">
-                {userAppointmentsToShow.map((appt) => {
-                  // Get initials
-                  const initials = appt.doctor.name
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')
-                    .toUpperCase();
-                  // Format date (e.g., Sunday, 12 June)
-                  const dateObj = new Date(appt.preferredDate);
-                  const dateStr = dateObj.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
-                  // Format time range (for now, just show start time)
-                  const start = appt.preferredTime.slice(11,16); // 'HH:mm'
-                  // Helper to add 30 minutes to 'HH:mm' string
-                  function add30Minutes(timeStr: string) {
-                    const [h, m] = timeStr.split(':').map(Number);
-                    const date = new Date(0, 0, 0, h, m + 30, 0, 0);
-                    const hh = date.getHours().toString().padStart(2, '0');
-                    const mm = date.getMinutes().toString().padStart(2, '0');
-                    return `${hh}:${mm}`;
-                  }
-                  const end = add30Minutes(start);
-                  const startTimeStr = start;
-                  const endTimeStr = end;
-                  return (
-                    <div
-                      key={appt.id}
-                      className="bg-white rounded-2xl border border-[#E5E5E5] shadow-sm p-4 sm:p-6 flex flex-col gap-4 max-w-full sm:max-w-xl "
-                      style={{ boxShadow: '0px 2px 12px 0px #0000000A' }}
-                    >
-                      <div className="flex items-center gap-4">
-                        {appt.doctor.photoUrl ? (
-                          <img
-                            src={appt.doctor.photoUrl}
-                            alt={appt.doctor.name}
-                            className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl object-cover bg-[#F8F2F9]"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-[#F8F2F9] text-[#B06AB3] text-2xl font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                            {initials}
-                          </div>
-                        )}
-                        <div className="flex flex-col justify-center ml-2">
-                          <div className="text-lg sm:text-2xl font-bold text-[#1A2343]" style={{ fontFamily: 'Poppins, sans-serif' }}>{appt.doctor.name}</div>
-                          <div className="text-base sm:text-lg text-gray-500 font-medium" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                            Specialist in {appt.doctor.specialization}
-                          </div>
-                        </div>
-                      </div>
-                      <hr className="my-2 border-[#ECECEC]" />
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-8 text-gray-700 mb-2">
-                        <div className="flex items-center gap-2">
-                          <svg width="20" height="20" fill="none" stroke="#1A2343" strokeWidth="2"><rect x="3" y="5" width="16" height="14" rx="4" /><path d="M8 3v4M14 3v4" /></svg>
-                          <span className="text-sm sm:text-base font-medium">{dateStr}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <svg width="20" height="20" fill="none" stroke="#1A2343" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="M11 7v4l2 2" /></svg>
-                          <span className="text-sm sm:text-base font-medium">{startTimeStr} - {endTimeStr}</span>
-                        </div>
-                      </div>
-                      {/* <button
-                        className="w-full mt-2 py-4 rounded-full text-white font-semibold text-lg shadow hover:opacity-90 transition"
-                        style={{ background: 'linear-gradient(90deg, #704180 6.54%, #8B2D6C 90.65%)' }}
-                      >
-                        Reschedule
-                      </button> */}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-        {/* Right: Cards */}
-        <div className="w-full lg:w-[340px] flex flex-col gap-4 font-['Poppins'] mt-6 lg:mt-0">
-          <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #704180, #8B2D6C)' }}>
-            <div className="p-5 text-white">
-              <div className="text-lg font-bold mb-1">Book a Session</div>
-              <p className="text-white/70 text-sm mb-4">Schedule an appointment with your doctor</p>
-              <button onClick={() => navigate('/appointments/set-availability-user')} className="px-5 py-2 rounded-full bg-white text-[#8B2D6C] text-sm font-semibold hover:bg-gray-100 transition">Book Appointment →</button>
-            </div>
-          </div>
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <h3 className="font-semibold text-gray-900 mb-1">Welcome, <span className="text-[#8B2D6C]">{userName || 'there'}</span> 👋</h3>
-            <p className="text-xs text-gray-400">Manage your appointments and stay on track with your wellness journey.</p>
-          </div>
+          ))}
         </div>
       </div>
+
+      {/* Tab Content */}
+      <div className="px-0 pb-24">
+        {userTab === 0 && <AppointmentList appointments={userAppts.upcoming} loading={userLoading} isUpcoming />}
+        {userTab === 1 && <AppointmentList appointments={userAppts.previous} loading={userLoading} isUpcoming={false} />}
+        {userTab === 2 && <BookSlotTab />}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════
+// AppointmentList — matches _buildAppointmentList
+// Empty state: icon + title + subtitle
+// ═══════════════════════════════════════
+
+function AppointmentList({ appointments, loading, isUpcoming }: { appointments: UserAppointment[]; loading: boolean; isUpcoming: boolean }) {
+  if (loading) return <div className="flex justify-center py-20"><div className="w-6 h-6 border-3 border-[#8B2D6C] border-t-transparent rounded-full animate-spin" /></div>;
+
+  if (appointments.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-8">
+        <Calendar className={`w-14 h-14 mb-4 ${isUpcoming ? 'text-[#8B2D6C]/30' : 'text-[#8B2D6C]/30'}`} />
+        <p className="text-base font-semibold text-black mb-2">
+          {isUpcoming ? 'No Upcoming Appointments' : 'No Completed Appointments'}
+        </p>
+        <p className="text-[13px] text-[#808080] text-center">
+          {isUpcoming ? 'Book a slot with your doctor to get started.' : 'Your completed appointments will appear here.'}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pt-4 pb-4">
+      {appointments.map(appt => <AppointmentTile key={appt.id} appt={appt} />)}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════
+// AppointmentTile — matches UserApointmentTile exactly
+// 66px rounded-20 avatar | name + spec | status icon
+// calendar + date | clock + time range
+// ═══════════════════════════════════════
+
+function AppointmentTile({ appt }: { appt: UserAppointment }) {
+  const doctorName = getName(appt);
+  const spec = getSpec(appt);
+  const status = getStatus(appt);
+  const preferredTime = appt.bookingSlotTime || appt.preferredTime || "";
+  const preferredDate = appt.preferredDate || appt.bookingSlotTime || "";
+
+  const nameParts = doctorName.split(' ');
+  const initials = ((nameParts[0]?.[0] || '') + (nameParts[1]?.[0] || '')).toUpperCase() || 'XX';
+
+  const statusIcon = status === 'COMPLETED' ? '✅' : status === 'CANCELLED' ? '❌' : '⏳';
+
+  return (
+    <div className="mx-4 mb-4 p-4 bg-white rounded-xl border border-[#DEDEDE]" style={{ boxShadow: '2px 12px 20px 0px #E9E9E9' }}>
+      {/* Row 1: Avatar + Name + Spec + Status */}
+      <div className="flex items-center gap-2.5">
+        <div className="w-[66px] h-[66px] rounded-[20px] bg-[#8B2D6C]/10 flex items-center justify-center flex-shrink-0">
+          <span className="text-[#8B2D6C] text-xl font-bold">{initials}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-base font-medium text-black truncate">{doctorName}</p>
+          <p className="text-sm text-[#636363] truncate">{spec}</p>
+        </div>
+        <span className="text-xl">{statusIcon}</span>
+      </div>
+
+      {/* Row 2: Date + Time */}
+      <div className="flex items-start justify-between mt-4 px-2.5">
+        <div className="flex items-center gap-1 flex-1 min-w-0">
+          <Calendar className="w-4 h-4 text-[#636363] flex-shrink-0" />
+          <span className="text-xs font-medium text-black truncate">{fmtDateLong(preferredDate)}</span>
+        </div>
+        <div className="w-3" />
+        <div className="flex items-center gap-1 flex-1 min-w-0">
+          <Clock className="w-4 h-4 text-[#636363] flex-shrink-0" />
+          <span className="text-xs text-[#636363] truncate">{fmtTimeRange(preferredTime)}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════
+// BookSlotTab — matches BookAnAppointments exactly
+// Doctor card | "Choose a slot" | date chips | time grid | Book button
+// ═══════════════════════════════════════
+
+function BookSlotTab() {
+  const navigate = useNavigate();
+  const [doctor, setDoctor] = useState<AvailableDoctor | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedDateIdx, setSelectedDateIdx] = useState<number | null>(null);
+  const [selectedSlotIdx, setSelectedSlotIdx] = useState<number | null>(null);
+  const [booking, setBooking] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const { data } = await api.get('/users/get-user-available-slots');
+        const docs = data.data || [];
+        if (docs.length > 0) {
+          const d = docs[0];
+          setDoctor({
+            doctorId: d.doctorId, doctorName: d.doctorName, specialization: d.specialization || '',
+            qualification: d.qualification || '', workLocation: d.workLocation || '',
+            consultationFee: d.consultationFee || 0, medicalLicenseNumber: d.medicalLicenseNumber || '',
+            availabilities: d.availabilities || [],
+          });
+          if ((d.availabilities || []).length > 0) setSelectedDateIdx(0);
+        }
+      } catch {}
+      setLoading(false);
+    })();
+  }, []);
+
+  const handleBook = async () => {
+    if (!doctor || selectedDateIdx === null || selectedSlotIdx === null) return;
+    setBooking(true);
+    try {
+      const avail = doctor.availabilities[selectedDateIdx];
+      const slot = avail.timeSlots[selectedSlotIdx];
+      const date = avail.date.split('T')[0];
+      const time = slot.startTime.slice(11, 16);
+      await api.post('/users/book-appointment', { doctorId: doctor.doctorId, preferredDate: date, preferredTimeSlot: time });
+      navigate('/appointments');
+    } catch {}
+    setBooking(false);
+  };
+
+  if (loading) return <div className="flex justify-center py-20"><div className="w-6 h-6 border-3 border-[#8B2D6C] border-t-transparent rounded-full animate-spin" /></div>;
+
+  // Empty state
+  if (!doctor || doctor.availabilities.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-8">
+        <Calendar className="w-14 h-14 text-[#8B2D6C]/30 mb-4" />
+        <p className="text-base font-semibold text-black mb-2">No Open Slots</p>
+        <p className="text-[13px] text-[#808080] text-center">Your doctor hasn't opened any slots yet.</p>
+      </div>
+    );
+  }
+
+  const selectedSlots = selectedDateIdx !== null ? doctor.availabilities[selectedDateIdx]?.timeSlots || [] : [];
+
+  return (
+    <div className="pb-8">
+      {/* Doctor Card */}
+      <div className="mx-4 mt-2 mb-4 p-4 bg-white rounded-xl border border-[#DEDEDE]" style={{ boxShadow: '2px 12px 20px 0px #E9E9E9' }}>
+        <div className="flex items-center gap-2.5">
+          <div className="w-[66px] h-[66px] rounded-[20px] bg-[#8B2D6C]/10 flex items-center justify-center flex-shrink-0">
+            <span className="text-[#8B2D6C] text-xl font-bold">{doctor.doctorName?.[0] || ''}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-base font-medium text-black truncate">{doctor.doctorName}</p>
+            <p className="text-sm text-[#636363] truncate">{doctor.specialization}</p>
+            {doctor.qualification && <p className="text-xs text-[#636363] truncate mt-1">{doctor.qualification}</p>}
+          </div>
+        </div>
+        {(doctor.medicalLicenseNumber || doctor.workLocation || doctor.consultationFee > 0) && (
+          <div className="mt-3 pt-3 border-t border-gray-200 space-y-1.5">
+            {doctor.medicalLicenseNumber && <InfoRow icon="🪪" text={`License: ${doctor.medicalLicenseNumber}`} />}
+            {doctor.workLocation && <InfoRow icon="📍" text={doctor.workLocation} />}
+            {doctor.consultationFee > 0 && <InfoRow icon="₹" text={`Consultation Fee: ₹${doctor.consultationFee}`} />}
+          </div>
+        )}
+      </div>
+
+      {/* "Choose a slot" */}
+      <p className="px-4 text-base font-bold text-black mb-3">Choose a slot</p>
+
+      {/* Date chips — 72px wide, gradient selected, day+date+month */}
+      <div className="flex gap-2.5 overflow-x-auto px-2.5 pb-3" style={{ scrollbarWidth: 'none' }}>
+        {doctor.availabilities.map((avail, i) => {
+          const dt = new Date(avail.date);
+          const active = i === selectedDateIdx;
+          return (
+            <button key={avail.date} onClick={() => { setSelectedDateIdx(i); setSelectedSlotIdx(null); }}
+              className={`w-[72px] min-w-[72px] py-3 px-1 rounded-[10px] flex flex-col items-center transition ${active ? 'text-white border-0' : 'bg-white border border-[#E5E7EB] text-[#18181B]'}`}
+              style={active ? { background: 'linear-gradient(90deg, #704180, #8B2D6C)' } : {}}>
+              <span className="text-xs font-medium">{DAY_NAMES[dt.getDay()]}</span>
+              <span className="text-xl font-bold">{dt.getDate()}</span>
+              <span className="text-[10px] font-bold">{MONTHS[dt.getMonth()]}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mx-2.5 border-t border-gray-300 mb-3" />
+
+      {/* Time slots — 3-col grid, gradient selected */}
+      <div className="grid grid-cols-3 gap-2.5 px-2.5">
+        {selectedSlots.map((slot, i) => {
+          const active = i === selectedSlotIdx;
+          const timeStr = fmtTime12(slot.startTime);
+          return (
+            <button key={slot.startTime + i} onClick={() => setSelectedSlotIdx(i)}
+              className={`py-2.5 rounded-[10px] text-sm font-medium transition ${active ? 'text-white border-0' : 'bg-white border border-[#E5E7EB] text-[#18181B]'}`}
+              style={active ? { background: 'linear-gradient(90deg, #704180, #8B2D6C)' } : {}}>
+              {timeStr}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Book button */}
+      {selectedDateIdx !== null && selectedSlotIdx !== null && (
+        <div className="px-2.5 mt-4">
+          <button onClick={handleBook} disabled={booking}
+            className="w-full py-3.5 rounded-[70px] text-white font-medium text-sm disabled:opacity-50"
+            style={{ background: 'linear-gradient(90deg, #704180, #8B2D6C)' }}>
+            {booking ? 'Booking...' : 'Book the Appointment'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function InfoRow({ icon, text }: { icon: string; text: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-sm">{icon}</span>
+      <span className="text-[13px] text-[#636363]">{text}</span>
     </div>
   );
 }

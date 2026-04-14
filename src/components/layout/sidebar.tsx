@@ -146,40 +146,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     if (isDoctor) fetchDoctor();
   }, [isDoctor]);
 
-  // Hamburger toggle for mobile
+  // No hamburger or mobile drawer — bottom nav handles mobile navigation
   return (
     <>
-      {isMobile && (
-        <button
-          className="fixed top-4 left-4 z-50 bg-white rounded-full p-2 shadow-md border border-gray-200 lg:hidden"
-          aria-label="Open sidebar menu"
-          onClick={() => setOpenMobile(true)}
-        >
-          <Menu className="w-6 h-6 text-[#8B2D6C]" />
-        </button>
-      )}
-      {/* Sidebar Drawer for mobile, static for desktop */}
-      {(isMobile && openMobile) && (
-        <div className="fixed inset-0 z-40 bg-black bg-opacity-40 flex lg:hidden">
-          <div className="relative w-64 max-w-full h-full bg-white shadow-lg flex flex-col">
-            <button
-              className="absolute top-4 right-4 z-50 bg-white rounded-full p-2 shadow-md border border-gray-200"
-              aria-label="Close sidebar"
-              onClick={() => setOpenMobile(false)}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <SidebarHeader items={data.navMain2} />
-            <SidebarContent className="flex flex-col h-full">
-              <NavMain items={data.navMain} />
-              <UserAvatar profileUrl="/profile" />
-            </SidebarContent>
-          </div>
-        </div>
-      )}
-      {/* Desktop sidebar */}
+      {/* Desktop sidebar only */}
       <div className="hidden lg:block h-full">
         <Sidebar className="border-r font-['Poppins'] h-full" {...props}>
           <SidebarHeader items={data.navMain2} />
