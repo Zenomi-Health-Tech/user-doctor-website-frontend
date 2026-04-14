@@ -3,12 +3,11 @@ import {
   Sidebar,
   SidebarContent,
   SidebarRail,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import { NavMain } from "./NavMain";
 import Logo from "@/assets/zenomiLogo.png";
 import { SidebarHeader } from "./SidebarHeader";
-import {  User, CalendarDays, ChartPie, House, Users, Menu, Moon } from 'lucide-react';
+import {  User, CalendarDays, ChartPie, House, Users, Moon } from 'lucide-react';
 import UserAvatar from "./UserAvatar";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect } from 'react';
@@ -119,8 +118,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isDoctor } = useAuth();
   const data = getNavItems(isDoctor);
 
-  // Get sidebar context for mobile state
-  const { isMobile, openMobile, setOpenMobile } = useSidebar();
+  // Sidebar context available via useSidebar() if needed
 
   useEffect(() => {
     const fetchDoctor = async () => {

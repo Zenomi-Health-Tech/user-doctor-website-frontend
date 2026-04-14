@@ -25,7 +25,6 @@ const EATING_OUT_EMOJIS = ['🍔', '📦', '🍱', '🏠', '👨‍🍳'];
 const SNACK_EMOJIS = ['🍎', '🔄', '🍕', '🚫'];
 const ENERGY_EMOJIS = ['🥱', '😣', '😐', '😊', '⚡'];
 const SLEEP_EMOJIS = ['😴', '🛌', '😪', '😫'];
-const BREAKFAST_OPTIONS = [{ emoji: '🥣', label: 'Cereal' }, { emoji: '🍞', label: 'Toast/Bread' }, { emoji: '🍳', label: 'Eggs' }, { emoji: '🍌', label: 'Fruit' }, { emoji: '🥤', label: 'Smoothie' }, { emoji: '⏭️', label: 'Skip it' }];
 
 interface Props {
   questions: Question[];
@@ -59,7 +58,7 @@ export default function NutritionQuiz({ questions, onSubmit, onClose }: Props) {
   const canNext = current.questions.every(q => answers[q.id]);
 
   const handleSubmit = () => {
-    const formatted = questions.filter(q => q.questionStatus === 'ACTIVE').map(q => ({
+    const formatted = questions.filter(q => q.questionType !== 'INACTIVE').map(q => ({
       question: q.question,
       answer: answers[q.id] || '',
     }));

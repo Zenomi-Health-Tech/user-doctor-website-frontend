@@ -31,9 +31,7 @@ export default function SleepTracker() {
   const [caffeine, setCaffeine] = useState(false);
   const [screens, setScreens] = useState(false);
   const [wakeUps, setWakeUps] = useState(0);
-  const [logDate, setLogDate] = useState(() => new Date().toISOString().split('T')[0]);
-  const [bedTime, setBedTime] = useState("23:00");
-  const [wakeTime, setWakeTime] = useState("07:00");
+  const logDate = new Date().toISOString().split('T')[0];
 
   // Reminder
   const [reminder, setReminder] = useState<Reminder | null>(null);

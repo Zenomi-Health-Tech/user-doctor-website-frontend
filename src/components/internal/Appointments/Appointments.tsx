@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import api from "@/utils/api";
 import { Calendar, Clock, ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -50,7 +50,7 @@ export default function Appointments() {
   // Doctor state
   const [docAppts, setDocAppts] = useState<{ previous: DoctorAppointment[]; upcoming: DoctorAppointment[] }>({ previous: [], upcoming: [] });
   const [docLoading, setDocLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, _setSearchTerm] = useState("");
   const [docTab, setDocTab] = useState("All");
 
   // User state

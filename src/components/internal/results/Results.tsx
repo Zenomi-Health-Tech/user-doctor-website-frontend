@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import api from '@/utils/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -18,7 +18,7 @@ export default function Results() {
   const [loading, setLoading] = useState(true);
   const [animated, setAnimated] = useState(false);
   const navigate = useNavigate();
-  const { userName } = useAuth();
+  useAuth();
 
   useEffect(() => {
     (async () => {
@@ -135,8 +135,6 @@ export default function Results() {
 // ── Animated Bar Chart — gradient bars that grow from 0 ──
 
 function AnimatedBarChart({ data, animated }: { data: { title: string; value: number }[]; animated: boolean }) {
-  const maxVal = Math.max(...data.map(d => d.value), 1);
-  const chartHeight = 200;
 
   return (
     <div>
