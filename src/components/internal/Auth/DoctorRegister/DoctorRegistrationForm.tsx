@@ -172,9 +172,11 @@ const DoctorRegistrationForm = () => {
     const handleNext = async () => {
         let valid = false;
         if (step === 0) {
-            valid = await trigger(['name', 'email', 'gender', 'phoneNumber', 'doctorPhoto']);
+            valid = await trigger(['name', 'email', 'phoneNumber', 'gender']);
         } else if (step === 1) {
-            valid = await trigger(['qualification', 'specialization', 'medicalLicenseNumber', 'experience', 'medicalLicense']);
+            valid = await trigger(['qualification', 'specialization', 'experience', 'medicalLicenseNumber']);
+        } else if (step === 2) {
+            valid = await trigger(['workLocation', 'consultationFee']);
         }
         if (valid) setStep((s) => s + 1);
     };
@@ -210,7 +212,31 @@ const DoctorRegistrationForm = () => {
                             {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
                         </div>
                         <div>
-                            <select {...register('gender')} className={selectClass} style={{ '--tw-ring-color': '#704180' } as React.CSSProperties}>
+                            <PhoneInput
+                                country="in"
+                                onlyCountries={['in']}
+                                onChange={handlePhoneChange}
+                                inputStyle={{
+                                    width: "100%",
+                                    height: "48px",
+                                    fontSize: "16px",
+                                    borderRadius: "12px",
+                                    border: "1px solid #e2e8f0",
+                                    backgroundColor: "#f9fafb",
+                                }}
+                                containerStyle={{ width: "100%" }}
+                                buttonStyle={{ borderRadius: "12px 0 0 12px", border: "1px solid #e2e8f0" }}
+                            />
+                            {errors.phoneNumber && (
+                                <p className="text-red-500 text-sm mt-1">{errors.phoneNumber.message}</p>
+                            )}
+                        </div>
+                        <div>
+                            <select
+                                {...register('gender')}
+                                className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 bg-gray-50"
+                                style={{ '--tw-ring-color': '#704180' } as React.CSSProperties}
+                            >
                                 <option value="">Gender*</option>
                                 <option value="MALE">Male</option>
                                 <option value="FEMALE">Female</option>
@@ -307,14 +333,16 @@ const DoctorRegistrationForm = () => {
                             <input {...register('workLocation')} type="text" placeholder="Work Location (Optional)" className={inputClass} style={{ '--tw-ring-color': '#704180' } as React.CSSProperties} />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
-                            <select value={currency} onChange={e => setCurrency(e.target.value)} className={selectClass} style={{ '--tw-ring-color': '#704180' } as React.CSSProperties}>
-                                {currencyOptions.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                            </select>
-                        </div>
-                        <div>
-                            <input {...register('consultationFee')} type="number" min="0" placeholder="Consultation Fee*" className={inputClass} style={{ '--tw-ring-color': '#704180' } as React.CSSProperties} />
-                            {errors.consultationFee && <p className="text-red-500 text-sm mt-1">{errors.consultationFee.message}</p>}
+                            <input
+                                {...register('consultationFee')}
+                                type="number"
+                                placeholder="Consultation Fee (₹)*"
+                                className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 bg-gray-50"
+                                style={{ '--tw-ring-color': '#704180' } as React.CSSProperties}
+                            />
+                            {errors.consultationFee && (
+                                <p className="text-red-500 text-sm mt-1">{errors.consultationFee.message}</p>
+                            )}
                         </div>
                     </div>
                 )}

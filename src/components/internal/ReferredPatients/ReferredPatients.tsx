@@ -1,3 +1,4 @@
+import LottieLoader from "@/components/shared/LottieLoader";
 import React, { useEffect, useState } from 'react';
 import api from '@/utils/api';
 import Cookies from 'js-cookie';
@@ -61,6 +62,23 @@ const ReferredPatientsList: React.FC = () => {
   const navigate = useNavigate();
   const [showPlans, setShowPlans] = useState(false);
   const [referralCodes, setReferralCodes] = useState<ReferralCode[]>([]);
+  const [generatingCode, setGeneratingCode] = useState(false);
+
+  const generateReferralCode = async (stripePaymentId?: string) => {
+    setGeneratingCode(true);
+    try {
+      await api.post('/doctors/referral-code', {
+        ...(stripePaymentId ? { stripePaymentId } : {}),
+      });
+      // Refresh referral codes list
+      const codesRes = await api.get('/doctors/referral-code');
+      if (codesRes.data?.data) setReferralCodes(codesRes.data.data);
+      alert('Referral code generated successfully!');
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to generate referral code.');
+    }
+    setGeneratingCode(false);
+  };
 
   useEffect(() => {
     const fetchPatients = async () => {
@@ -165,6 +183,10 @@ const ReferredPatientsList: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.data && response.data.url) {
+        // After payment, generate referral code with the payment ID
+        if (response.data.paymentId) {
+          await generateReferralCode(response.data.paymentId);
+        }
         window.location.href = response.data.url;
       }
     } catch (error) {
@@ -185,7 +207,7 @@ const ReferredPatientsList: React.FC = () => {
 
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen text-xl">Loading referred patients...</div>;
+    return <LottieLoader text="Loading referred patients..." />;
   }
 
   if (showPlans) {
@@ -307,6 +329,9 @@ const ReferredPatientsList: React.FC = () => {
           </div>
           <div className="text-white text-base mb-4">{freeReferralsGenerated} out of {maxFreeReferrals} people referred</div>
           <button onClick={handleUpgradeNow} className="px-6 py-2 cursor-pointer rounded-full bg-[#FCB35B] text-[#8B2D6C] font-semibold shadow hover:opacity-90 transition text-base flex items-center gap-2">Upgrade now <ArrowRight className="w-5 h-5" /></button>
+          <button onClick={() => generateReferralCode()} disabled={generatingCode} className="px-6 py-2 cursor-pointer rounded-full bg-white text-[#8B2D6C] font-semibold shadow hover:opacity-90 transition text-base mt-3 disabled:opacity-50">
+            {generatingCode ? 'Generating...' : 'Generate Referral Code'}
+          </button>
         </div>
         {/* Illustration */}
         <div className="hidden md:block flex-shrink-0 ml-8 relative" style={{ width: 180, height: 120 }}>

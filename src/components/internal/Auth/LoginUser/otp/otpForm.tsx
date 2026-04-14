@@ -23,7 +23,7 @@ interface OTPFormProps {
   onSuccess: () => void; // Callback for successful verification
 }
 
-const OTPForm: React.FC<OTPFormProps> = ({ onSuccess }) => {
+const OTPForm: React.FC<OTPFormProps> = ({ }) => {
   // Initialize form handling
   const {
     handleSubmit,
@@ -62,8 +62,8 @@ const OTPForm: React.FC<OTPFormProps> = ({ onSuccess }) => {
           variant: "default",
           className: "bg-green-500 text-white",
         });
-        onSuccess();
-        window.location.reload();
+        // Reload to let AuthContext pick up the new token from cookies
+        window.location.href = "/dashboard";
       } else {
         const errorMessage = error || "Invalid OTP. Please try again.";
         toast({

@@ -1,29 +1,13 @@
 import api from '@/utils/api';
 import { useState } from 'react';
-import Cookies from 'js-cookie';
 
 export default function AvailableSlots() {
-  // ...existing state
   const [allSlots, setAllSlots] = useState<{ date: string; timeSlots: { startTime: string; endTime: string }[] }[]>([]);
   const [showAllSlots, setShowAllSlots] = useState(false);
 
-  // ...existing code
-
   const handleShowAllSlots = async () => {
     setShowAllSlots(true);
-    const authCookie = Cookies.get('auth');
-    let token = '';
-    if (authCookie) {
-      try {
-        token = JSON.parse(authCookie).token;
-      } catch (e) {
-        token = '';
-      }
-    }
-    const response = await api.get('/doctors/availability/all-slots', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    // Map API response to expected structure
+    const response = await api.get('/doctors/availability/all-slots');
     const mappedSlots = (response.data.data || []).map((item: any) => ({
       date: item.availability,
       timeSlots: item.doctorAvailabilityTimeSlot || [],
@@ -32,33 +16,29 @@ export default function AvailableSlots() {
   };
 
   return (
-    <div className="p-8 bg-[#FAF8FB] min-h-screen font-['Poppins']">
-      {/* ...existing UI */}
+    <div className="p-4 sm:p-8 bg-white min-h-screen font-['Poppins']">
       <button
-        className="mb-4 px-4 py-2 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#704180] text-white font-semibold"
+        className="mb-4 px-5 py-2 rounded-full bg-[#8B2D6C] text-white font-semibold hover:opacity-90 transition"
         onClick={handleShowAllSlots}
         type="button"
       >
         Show All Slots
       </button>
       {showAllSlots && (
-        <div className="bg-white rounded-xl p-4 shadow mb-6">
-          <h3 className="text-lg font-bold mb-2">All Available Slots</h3>
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6">
+          <h3 className="text-base font-bold text-[#8B2D6C] mb-3">All Available Slots</h3>
           {allSlots.length === 0 ? (
-            <p>No slots found.</p>
+            <p className="text-[#888] text-sm">No slots found.</p>
           ) : (
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {allSlots.map((slotDay) => (
                 <li key={slotDay.date}>
-                  <div className="font-semibold">
+                  <div className="font-semibold text-[#8B2D6C] text-sm">
                     {new Date(slotDay.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
                   </div>
                   <div className="flex flex-wrap gap-2 mt-1">
                     {(slotDay.timeSlots || []).map((slot, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-block px-3 py-1 rounded-full bg-[#8B2D6C1A] text-[#8B2D6C] text-sm"
-                      >
+                      <span key={idx} className="inline-block px-3 py-1 rounded-full bg-[#F8F2F9] text-[#8B2D6C] text-xs font-medium">
                         {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(slot.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     ))}
@@ -69,7 +49,6 @@ export default function AvailableSlots() {
           )}
         </div>
       )}
-      {/* ...rest of your UI */}
     </div>
   );
 }

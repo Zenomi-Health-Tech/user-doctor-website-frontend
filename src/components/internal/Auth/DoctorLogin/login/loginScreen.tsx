@@ -1,47 +1,58 @@
-import { Card, CardFooter } from "@/components/ui/card";
-import { Link } from "react-router-dom";
-import LoginForm from "./loginForm";
+import { GoogleLogin } from "@react-oauth/google";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import axios from "axios";
+import { setAuthCookies } from "@/utils/cookies";
+import Cookies from "js-cookie";
+import zenomiLogo from "@/assets/zenomiLogo.png";
 
 const Component = () => {
+  const { toast } = useToast();
+  const { login } = useAuth();
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    const idToken = credentialResponse.credential;
+    if (!idToken) {
+      toast({ title: "Error", description: "Google sign-in failed", variant: "destructive" });
+      return;
+    }
+    try {
+      const res = await axios.post("https://zenomi.elitceler.com/api/v1/doctors/google-signin", { idToken });
+      const token = res.data?.data?.token || res.data?.token;
+      const doctorId = res.data?.data?.doctor?.id || res.data?.data?.id;
+      if (token) {
+        setAuthCookies({ token });
+        if (doctorId) Cookies.set("userId", doctorId, { expires: 7 });
+        login(token);
+        window.location.href = "/dashboard";
+      }
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        window.location.href = "/doctor/register";
+      } else {
+        toast({ title: "Error", description: error.response?.data?.message || "Sign-in failed", variant: "destructive" });
+      }
+    }
+  };
+
   return (
-    <div
-      className="flex items-center justify-center min-h-screen relative px-4"
-      style={{
-        background: 'linear-gradient(135deg, #704180 0%, #8B2D6C 100%)',
-      }}
-    >
-      {/* Decorative circles */}
-      <div className="absolute top-10 left-10 w-32 h-32 rounded-full bg-white/5 blur-xl" />
-      <div className="absolute bottom-20 right-10 w-48 h-48 rounded-full bg-white/5 blur-xl" />
-
-      <div className="w-full max-w-[420px] z-10">
-        {/* Lottie-style header area */}
-        <div className="text-center mb-8">
-          <div className="text-6xl mb-4">🩺</div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white font-['Urbanist']">
-            Doctor Sign In
-          </h1>
-          <p className="text-white/70 text-sm mt-2 font-['Urbanist']">
-            Sign in with your Google account
-          </p>
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#f8f6fa] to-[#ede7f3] px-4">
+      <div className="w-full max-w-sm bg-white rounded-3xl shadow-xl p-8 sm:p-10 flex flex-col items-center">
+        <img src={zenomiLogo} alt="Zenomi" className="h-10 mb-8" />
+        <h1 className="text-2xl font-bold text-gray-900 mb-1 font-['Poppins']">Welcome back</h1>
+        <p className="text-sm text-gray-500 mb-8 font-['Poppins']">Sign in as Doctor to continue</p>
+        <div className="w-full flex justify-center">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => toast({ title: "Error", description: "Google sign-in failed", variant: "destructive" })}
+            size="large"
+            width="300"
+            text="continue_with"
+            shape="pill"
+          />
         </div>
-
-        <Card className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl p-6 sm:p-8 border-0">
-          <div className="w-full flex flex-col items-center">
-            <LoginForm />
-            <CardFooter className="mt-4 font-light text-gray-700 text-sm">
-              Don't have an account?
-              <Link to="/doctor/register">
-                <span className="text-[#8B2D6C] ml-1 hover:text-[#704180] transition-colors font-medium">
-                  Create one
-                </span>
-              </Link>
-            </CardFooter>
-          </div>
-        </Card>
-
-        <p className="text-center text-white/50 text-xs mt-6 font-['Urbanist']">
-          By continuing, you agree to our Terms & Privacy Policy
+        <p className="text-xs text-gray-400 mt-8 text-center font-['Poppins']">
+          By continuing, you agree to Zenomi's Terms of Service and Privacy Policy
         </p>
       </div>
     </div>

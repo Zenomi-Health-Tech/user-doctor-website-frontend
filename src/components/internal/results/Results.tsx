@@ -1,356 +1,195 @@
-import topresultimage from '@/assets/topResultImage.png'
 import { useEffect, useState } from 'react';
 import api from '@/utils/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import tickmark from "@/assets/tickmark.svg"
+import { CheckCircle, ChevronLeft, Lightbulb } from 'lucide-react';
+import Lottie from 'lottie-react';
+import LottieLoader from '@/components/shared/LottieLoader';
 
 interface Analytics {
-  id: string;
-  cycle: string;
-  updatedAt: string;
-  createdAt: string;
-  testsCompleted: number;
-  rawScores: Record<string, number>;
-  normalizedScores: Record<string, number>;
-  reportView: string;
-  reportDownload: string;
-  courseRecommendations: {
-    courseName: string;
-    courseLink: string;
-  }[];
+  id: string; cycle: string; updatedAt: string; testsCompleted: number;
+  rawScores: Record<string, number>; normalizedScores: Record<string, number>;
+  reportView: string; reportDownload: string;
 }
 
 export default function Results() {
   const [analytics, setAnalytics] = useState<Analytics[]>([]);
-  const [openCycle, setOpenCycle] = useState<string | null>(null);
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [animated, setAnimated] = useState(false);
   const navigate = useNavigate();
-  const { userName } = useAuth();
+  useAuth();
 
   useEffect(() => {
-    async function fetchAnalytics() {
-      const res = await api.get('/users/analytics');
-      setAnalytics(res.data.data);
-    }
-    fetchAnalytics();
+    (async () => {
+      try {
+        const res = await api.get('/users/analytics');
+        setAnalytics(res.data.data || []);
+      } catch { }
+      setLoading(false);
+      setTimeout(() => setAnimated(true), 100);
+    })();
   }, []);
 
-  console.log(analytics);
-  
+  if (loading) return <LottieLoader text="Loading your reports..." />;
 
-  const checklist = [
-    "Start Your Daily Mental Health Check-In",
-    "Review Your Recent Test Results",
-    "Talk to a Mental Health Expert",
-  ];
+  const selected = analytics[selectedIdx];
+  const scores = selected?.normalizedScores || {};
+  const barData = Object.entries(scores).map(([key, value]) => ({ title: key, value: value as number }));
 
-  return (
-    <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 p-2 sm:p-4 md:p-8 bg-gray-50 min-h-screen ">
-      {/* Left Column */}
-      <div className="flex-1 w-full max-w-full lg:max-w-[700px] font-['Urbanist'] flex flex-col">
-        {analytics.length === 0 ? (
-          <div>No results found.</div>
-        ) : (
-          analytics.map((result) => {
-            let barData = [
-              { label: "Sleep", value: result.normalizedScores?.Sleep },
-              { label: "Nutrition", value: result.normalizedScores?.Nutrition },
-              { label: "PHQ-9", value: result.normalizedScores?.["PHQ-9"] },
-              { label: "Emotional-H", value: result.normalizedScores?.["Emotional Fitness"] },
-              { label: "GAD-7", value: result.normalizedScores?.["GAD-7"] },
-            ];
-            // Ensure values are 0-100
-            barData = barData.map(bar => ({
-              ...bar,
-              value: typeof bar.value === 'number' ? bar.value : 0
-            }));
-            const lastUpdated = new Date(result.updatedAt).toLocaleDateString();
-            const testsCompleted = result.testsCompleted;
-            const isOpen = openCycle === result.id;
-            return (
-              <div key={result.id} className="mb-4 sm:mb-6 border rounded-2xl bg-white shadow-sm">
-                {/* Accordion Header */}
-                <button
-                  className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 sm:px-6 py-3 sm:py-4 text-left focus:outline-none"
-                  onClick={() => setOpenCycle(isOpen ? null : result.id)}
-                >
-                  <span className="font-semibold text-base sm:text-lg min-w-0 truncate">Cycle {result.cycle}</span>
-                  <span className="text-gray-500 text-xs sm:text-sm mt-1 sm:mt-0 min-w-0 truncate">Last Updated: {lastUpdated}</span>
-                  <span className="ml-0 sm:ml-4 text-lg sm:text-2xl shrink-0">{isOpen ? '▲' : '▼'}</span>
-                </button>
-                {/* Accordion Content */}
-                {isOpen && (
-                  <div className="px-2 sm:px-6 pb-4 sm:pb-6 pt-2">
-                    <div className="flex items-center gap-2 mb-4 flex-wrap">
-                      <span className="text-sm sm:text-base font-medium">{testsCompleted} of 5 tests completed</span>
-                      {Array.from({ length: 5 }).map((_, idx) => (
-                        <span
-                          key={idx}
-                          className={`w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full text-base sm:text-lg ${idx < testsCompleted ? 'bg-[#4E8041] text-white' : 'bg-gray-200 text-gray-400'}`}
-                        >
-                          <img src={tickmark} alt="tickmark" />
-                        </span>
-                      ))}
-                    </div>
-                    {/* Bar Chart */}
-                    <div className="rounded-2xl p-2 sm:p-6 mb-4 sm:mb-6 min-h-[220px] sm:min-h-[400px] flex items-center justify-center overflow-x-auto">
-                      <div className="min-w-[420px] w-full sm:min-w-[700px]">
-                        <svg width="100%" height="220" viewBox="0 0 700 220" className="hidden sm:block">
-                          {/* Y axis grid lines */}
-                          {[0, 20, 40, 60, 80, 100].map((y) => (
-                            <line
-                              key={y}
-                              x1={60}
-                              x2={660}
-                              y1={200 - y * 2}
-                              y2={200 - y * 2}
-                              stroke="#E5E0EA"
-                              strokeWidth={1}
-                            />
-                          ))}
-                          {/* Bars */}
-                          {barData.map((bar, i) => {
-                            let barColor = '#4E8041'; // green
-                            if (bar.value > 60) barColor = '#E74C3C'; // red
-                            else if (bar.value > 40) barColor = '#F6C851'; // yellow
-                            return (
-                              <g key={bar.label}>
-                               {bar.value > 0 && (
-                                  <path
-                                    d={`
-                                      M${90 + i * 110},${200}
-                                      L${90 + i * 110},${200 - bar.value * 2 + 12}
-                                      Q${90 + i * 110},${200 - bar.value * 2} ${90 + i * 110 + 12},${200 - bar.value * 2}
-                                      L${90 + i * 110 + 28},${200 - bar.value * 2}
-                                      Q${90 + i * 110 + 40},${200 - bar.value * 2} ${90 + i * 110 + 40},${200 - bar.value * 2 + 12}
-                                      L${90 + i * 110 + 40},${200}
-                                      Z
-                                    `}
-                                    fill={barColor}
-                                  />
-                                )}
-                                <text
-                                  x={120 + i * 110}
-                                  y={200 - bar.value * 2 - 10}
-                                  textAnchor="middle"
-                                  fontSize="16"
-                                  fill="#704180"
-                                  fontWeight="bold"
-                                >
-                                  {/* {bar.value > 0 ? Math.round(bar.value) : ''} */}
-                                </text>
-                                <text
-                                  x={110 + i * 110}
-                                  y={220}
-                                  textAnchor="middle"
-                                  fontSize="14"
-                                  fill="#231942"
-                                  fontWeight="400"
-                                >
-                                  {bar.label}
-                                </text>
-                              </g>
-                            );
-                          })}
-                          {/* Y axis labels */}
-                          {[0, 20, 40, 60, 80, 100].map((y) => (
-                            <text
-                              key={y}
-                              x={50}
-                              y={200 - y * 2 + 8}
-                              fontSize="12"
-                              fill="#231942"
-                              textAnchor="end"
-                              fontWeight="600"
-                            >
-                              {y < 10 ? `0${y}` : y}
-                            </text>
-                          ))}
-                        </svg>
-                        {/* Mobile SVG */}
-                        <svg width="100%" height="160" viewBox="0 0 420 160" className="block sm:hidden">
-                          {[0, 20, 40, 60, 80, 100].map((y) => (
-                            <line
-                              key={y}
-                              x1={40}
-                              x2={400}
-                              y1={140 - y * 1.2}
-                              y2={140 - y * 1.2}
-                              stroke="#E5E0EA"
-                              strokeWidth={1}
-                            />
-                          ))}
-                          {barData.map((bar, i) => {
-                            let barColor = '#4E8041'; // green
-                            if (bar.value > 60) barColor = '#E74C3C'; // red
-                            else if (bar.value > 40) barColor = '#F6C851'; // yellow
-                            return (
-                              <g key={bar.label}>
-                                <rect
-                                  x={60 + i * 70}
-                                  y={140 - bar.value * 1.2}
-                                  width={36}
-                                  height={bar.value * 1.2}
-                                  rx={8} // Slightly rounded ends
-                                  fill={barColor}
-                                />
-                                <text
-                                  x={78 + i * 70}
-                                  y={140 - bar.value * 1.2 - 6}
-                                  textAnchor="middle"
-                                  fontSize="10"
-                                  fill="#704180"
-                                  fontWeight="bold"
-                                >
-                                  {bar.value > 0 ? Math.round(bar.value) : ''}
-                                </text>
-                                <text
-                                  x={78 + i * 70}
-                                  y={158}
-                                  textAnchor="middle"
-                                  fontSize="10"
-                                  fill="#231942"
-                                  fontWeight="400"
-                                >
-                                  {bar.label}
-                                </text>
-                              </g>
-                            );
-                          })}
-                          {[0, 20, 40, 60, 80, 100].map((y) => (
-                            <text
-                              key={y}
-                              x={32}
-                              y={140 - y * 1.2 + 5}
-                              fontSize="9"
-                              fill="#231942"
-                              textAnchor="end"
-                              fontWeight="600"
-                            >
-                              {y < 10 ? `0${y}` : y}
-                            </text>
-                          ))}
-                        </svg>
-                      </div>
-                    </div>
-                    {/* Report Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-3 mb-4">
-                      <a
-                        href={result.reportView}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-6 py-2 rounded-full bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white font-semibold text-base shadow hover:opacity-90 transition text-center"
-                      >
-                        Download Summary Report
-                      </a>
-                      {/* <a
-                        href={result.reportDownload}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-6 py-2 rounded-full bg-gradient-to-r from-[#F6C851] to-[#F9D423] text-[#704180] font-semibold text-base shadow hover:opacity-90 transition text-center"
-                      >
-                        Download Report
-                      </a> */}
-                    </div>
-                    
-                    
-                  </div>
-                )}
-              </div>
-            );
-          })
-        )}
-      </div>
-      {/* Right Column */}
-      <div className="w-full lg:w-[350px] lg:shrink-0 flex flex-col gap-4 sm:gap-6 font-['Poppins'] mt-4 lg:mt-0 overflow-hidden">
-        {/* Doctor Card */}
-        <div className="bg-white rounded-3xl shadow p-4 sm:p-6 flex flex-col items-center border border-[#BCBCBC]">
-          <img src={topresultimage} alt="Doctor" className="w-36 h-20 sm:w-52 sm:h-32 object-cover rounded-xl mb-3 sm:mb-4" />
-          <div className="font-semibold text-base sm:text-lg mb-1 text-center">Talk to a Doctor?</div>
-          <div className="text-gray-500 text-center mb-3 sm:mb-4">Book your session now</div>
-          <button onClick={() => navigate('/appointments')} className="px-4 sm:px-6 py-2 rounded-full font-medium text-sm sm:text-base text-white" style={{background: 'linear-gradient(89.79deg, #704180 5.07%, #8B2D6C 95.83%)'}}>Book now</button>
-        </div>
-        {/* Checklist Card */}
-        <div className="bg-white rounded-3xl shadow p-6 sm:p-8 flex flex-col items-center border border-[#BCBCBC]">
-          {/* Circular Progress */}
-          <div className="mb-3 sm:mb-4">
-            <svg width="60" height="60" className="sm:hidden">
-              <circle
-                cx="30"
-                cy="30"
-                r="26"
-                stroke="#E5E0EA"
-                strokeWidth="6"
-                fill="none"
-              />
-              <circle
-                cx="30"
-                cy="30"
-                r="26"
-                stroke="#704180"
-                strokeWidth="6"
-                fill="none"
-                strokeDasharray={2 * Math.PI * 26}
-                strokeDashoffset={2 * Math.PI * 26 * (1 - 0 / 3)}
-                strokeLinecap="round"
-              />
-              <text
-                x="50%"
-                y="50%"
-                textAnchor="middle"
-                dy=".3em"
-                fontSize="0.9em"
-                fill="#704180"
-                fontWeight="bold"
-              >
-                0/3
-              </text>
-            </svg>
-            <svg width="80" height="80" className="hidden sm:block">
-              <circle
-                cx="40"
-                cy="40"
-                r="36"
-                stroke="#E5E0EA"
-                strokeWidth="8"
-                fill="none"
-              />
-              <circle
-                cx="40"
-                cy="40"
-                r="36"
-                stroke="#704180"
-                strokeWidth="8"
-                fill="none"
-                strokeDasharray={2 * Math.PI * 36}
-                strokeDashoffset={2 * Math.PI * 36 * (1 - 0 / 3)}
-                strokeLinecap="round"
-              />
-              <text
-                x="50%"
-                y="50%"
-                textAnchor="middle"
-                dy=".3em"
-                fontSize="1.2em"
-                fill="#704180"
-                fontWeight="bold"
-              >
-                0/3
-              </text>
-            </svg>
+  // ── Empty State — matches app's Lottie + "No Reports Yet" ──
+  if (analytics.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[80vh] font-['Poppins']">
+        <div className="text-center px-8 max-w-sm">
+          <MeditationLottie />
+          <h2 className="text-[22px] font-bold text-black mb-3">No Reports Yet</h2>
+          <p className="text-sm text-[#808080] leading-relaxed mb-6">
+            Complete your wellness assessments to see your personalized reports and insights here.
+          </p>
+          <div className="bg-[#8B2D6C]/10 rounded-2xl p-4 flex items-start gap-3 text-left">
+            <Lightbulb className="w-6 h-6 text-[#8B2D6C] flex-shrink-0 mt-0.5" />
+            <p className="text-[13px] text-[#8B2D6C] font-medium">
+              Start a test from the home screen to begin tracking your wellness journey.
+            </p>
           </div>
-          <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2 text-center">Welcome to Zenomi ,<span className="text-[#8B2D6C]">{userName || 'there'}</span></h3>
-          <p className="text-gray-500 text-center mb-4 sm:mb-6 text-xs sm:text-base">Experience your AHA! moment by completing this simple steps</p>
-          <ul className="w-full space-y-2 sm:space-y-3">
-            {checklist.map((item) => (
-              <li key={item} className="flex items-center justify-between gap-2 px-2 sm:px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-xs sm:text-base">
-                <span className="min-w-0 truncate">{item}</span>
-                <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-white border border-gray-300 text-gray-400 shrink-0">✔️</span>
-              </li>
-            ))}
-          </ul>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Stats UI — matches app's StatisticsScreen ──
+  return (
+    <div className="min-h-screen font-['Poppins'] bg-white">
+      {/* Header: back + "Reports" */}
+      <div className="px-4 sm:px-6 pt-5 pb-3 flex items-center justify-between">
+        <button onClick={() => navigate('/dashboard')} className="w-10 h-10 rounded-full bg-[#8B2D6C]/20 flex items-center justify-center">
+          <ChevronLeft className="w-5 h-5 text-[#8B2D6C]" />
+        </button>
+        <h1 className="text-xl font-bold text-black">Reports</h1>
+        <div className="w-10" />
+      </div>
+
+      <div className="px-4 sm:px-6 pb-8">
+        {/* Cycle dropdown */}
+        <select
+          className="w-full rounded-2xl px-4 py-3 bg-[#F6F2F7] text-base border-0 focus:outline-none focus:ring-2 focus:ring-[#8B2D6C] mb-5 appearance-none"
+          value={selectedIdx}
+          onChange={e => { setSelectedIdx(+e.target.value); setAnimated(false); setTimeout(() => setAnimated(true), 50); }}
+        >
+          {analytics.map((a, i) => (
+            <option key={a.id} value={i}>Assessment cycle {a.cycle || i + 1}</option>
+          ))}
+        </select>
+
+        {/* "Your Wellness Report" + date */}
+        <h2 className="text-lg font-bold text-black">Your Wellness Report</h2>
+        {selected?.updatedAt && (
+          <p className="text-xs text-[#808080] font-medium mt-1">
+            Last Updated: {new Date(selected.updatedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        )}
+
+        {/* Tests completed: "X of 5 tests completed" + check circles */}
+        <p className="text-sm text-[#6C7278] mt-6">{selected?.testsCompleted ?? 0} of 5 tests completed</p>
+        <div className="flex gap-2 mt-2.5 mb-8">
+          {[0, 1, 2, 3, 4].map(i => (
+            <CheckCircle key={i} className={`w-8 h-8 ${(selected?.testsCompleted ?? 0) > i ? 'text-green-500' : 'text-gray-300'}`} />
+          ))}
+        </div>
+
+        {/* Animated Bar Chart — matches app's CustomBarGraph with gradient animated bars */}
+        <div className="bg-white rounded-2xl p-4 mb-6">
+          <AnimatedBarChart data={barData} animated={animated} />
+        </div>
+
+        {/* Download Report button */}
+        {selected?.reportView && (
+          <a
+            href={selected.reportView}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full py-3.5 rounded-xl text-white font-semibold text-base text-center hover:opacity-90 transition"
+            style={{ background: 'linear-gradient(90deg, #704180, #8B2D6C)' }}
+          >
+            Download Report
+          </a>
+        )}
+
+        {/* Recommended Courses */}
+        <div className="mt-8">
+          <h3 className="text-base font-medium text-black mb-3">Recommended Courses</h3>
+          <div className="bg-gray-100 rounded-xl py-6 px-4 flex flex-col items-center text-center">
+            <svg className="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a2.25 2.25 0 01-1.591.659H9.061a2.25 2.25 0 01-1.591-.659L5 14.5m14 0V17a2.25 2.25 0 01-2.25 2.25H7.25A2.25 2.25 0 015 17v-2.5" />
+            </svg>
+            <p className="text-gray-600 font-medium">Your Doctor will suggest some courses soon</p>
+            <p className="text-gray-500 text-[10px] mt-2">Check back later for personalized recommendations</p>
+          </div>
         </div>
       </div>
     </div>
   );
+}
+
+// ── Animated Bar Chart — gradient bars that grow from 0 ──
+
+function AnimatedBarChart({ data, animated }: { data: { title: string; value: number }[]; animated: boolean }) {
+
+  return (
+    <div>
+      {/* Y-axis labels + bars */}
+      <div className="flex">
+        {/* Y axis */}
+        <div className="flex flex-col justify-between h-[200px] pr-2 text-[10px] text-black font-normal w-10 text-right">
+          {[100, 75, 50, 25, 0].map(v => <span key={v}>{v.toFixed(1)}</span>)}
+        </div>
+        {/* Bars area */}
+        <div className="flex-1 relative">
+          {/* Grid lines */}
+          <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+            {[0, 1, 2, 3, 4].map(i => <div key={i} className="border-b border-blue-200/30" />)}
+          </div>
+          {/* Bars */}
+          <div className="flex items-end justify-between h-[200px] gap-2 px-1 relative z-10">
+            {data.map((bar, i) => {
+              const pct = (bar.value / 100) * 100;
+              return (
+                <div key={bar.title} className="flex-1 flex flex-col items-center">
+                  <div className="w-full max-w-[22px] mx-auto rounded-t-full transition-all ease-out"
+                    style={{
+                      height: animated ? `${Math.max(pct, 1)}%` : '1%',
+                      background: 'linear-gradient(to bottom, #704180, #8B2D6C)',
+                      transitionDuration: `${500 + i * 100}ms`,
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+          {/* Bottom border */}
+          <div className="border-t border-[#A3A3A3]" />
+        </div>
+      </div>
+      {/* X-axis labels */}
+      <div className="flex ml-10 mt-2">
+        {data.map(bar => (
+          <div key={bar.title} className="flex-1 text-center text-[10px] text-black leading-tight px-0.5">
+            {bar.title.replace('Assessment', '').trim()}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Meditation Lottie — fetches from public folder ──
+
+function MeditationLottie() {
+  const [animData, setAnimData] = useState<any>(null);
+  useEffect(() => {
+    fetch('/meditation.json').then(r => r.json()).then(setAnimData).catch(() => {});
+  }, []);
+  if (!animData) return <div className="h-[200px]" />;
+  return <Lottie animationData={animData} loop style={{ height: 200 }} />;
 }

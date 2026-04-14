@@ -1,6 +1,18 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Navigate, Outlet, useRoutes } from "react-router-dom";
 import HomeLayout from "@/components/layout/HomeLayout";
+
+function SuspenseLoader() {
+  const [animData, setAnimData] = useState<any>(null);
+  useEffect(() => { import('lottie-react').catch(() => {}); fetch('/meditation.json').then(r => r.json()).then(setAnimData).catch(() => {}); }, []);
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[50vh]">
+      {animData ? (() => { try { const Lottie = require('lottie-react').default; return <Lottie animationData={animData} loop style={{ height: 180 }} />; } catch { return null; } })() : (
+        <div className="relative w-10 h-10"><div className="absolute inset-0 rounded-full border-4 border-[#F0EBF4]" /><div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[#8B2D6C] animate-spin" /></div>
+      )}
+    </div>
+  );
+}
 import { ProtectedRoute } from "./ProtectedRoute";
 
 
@@ -16,9 +28,6 @@ const Support = lazy(() => import("@/pages/Support"));
 const LoginScreen = lazy(() => import("@/components/internal/Auth/DoctorLogin/login/loginScreen"));
 const UserLoginScreen = lazy(() => import("@/components/internal/Auth/LoginUser/login/loginScreen"));
 const ChooseRole = lazy(() => import("@/components/internal/Auth/ChooseRole/page"));
-// OTP screens commented out — login is Google Sign-In only
-// const OTPComponent = lazy(() => import("@/components/internal/Auth/DoctorLogin/otp/otpScreen"));
-// const UserOTPComponent = lazy(() => import("@/components/internal/Auth/LoginUser/otp/otpScreen"));
 const RegisterScreen = lazy(() => import("@/components/internal/Auth/DoctorRegister/DoctorRegisterScreen"));
 const UseregisterScreen = lazy(() => import("@/components/internal/Auth/UserRegister/RegisterScreen"));
 const PatientDetails = lazy(() => import("@/components/internal/Patients/PatientDetails"));
@@ -36,57 +45,69 @@ export default function AppRouter() {
     {
       path: "/",
       element: (
-        <HomeLayout>
-          <Suspense fallback={<div>Loading...</div>}>
-            <Outlet />
-          </Suspense>
-        </HomeLayout>
+        <ProtectedRoute
+          element={
+            <HomeLayout>
+              <Suspense fallback={<SuspenseLoader />}>
+                <Outlet />
+              </Suspense>
+            </HomeLayout>
+          }
+        />
       ),
       children: [
         {
-          element: <ProtectedRoute element={<Dashboard />} />,
+          element: <Dashboard />,
           index: true,
         },
         {
           path: "/dashboard",
-          element: <ProtectedRoute element={<Dashboard />} />,
+          element: <Dashboard />,
         },
         {
           path: "/results",
-          element: <ProtectedRoute element={<Results />} />,
+          element: <Results />,
         },
         {
           path: "/patients",
           children: [
             {
               index: true,
-              element: <ProtectedRoute element={<Patients />} />,
+              element: <Patients />,
             },
             {
               path: ":id",
-              element: <ProtectedRoute element={<PatientDetails />} />,
+              element: <PatientDetails />,
             },
           ],
         },
         {
           path: "/appointments",
-          element: <ProtectedRoute element={<Appointments />} />,
+          element: <Appointments />,
         },
         {
           path: "/appointments/set-availability",
-          element: <ProtectedRoute element={<SetAvailability />} />,
+          element: <SetAvailability />,
         },
         {
           path: "/appointments/set-availability-user",
-          element: <ProtectedRoute element={<SetAvailabilityUser />} />,
+          element: <SetAvailabilityUser />,
+        },
+        {
+          path: "/appointments/doctor/:doctorId",
+          element: <SetAvailabilityUser />,
         },
         {
           path: "/appointments/available-slots",
-          element: <ProtectedRoute element={<AvailableSlotsPage />} />,
+          element: <AvailableSlotsPage />,
         },
         {
           path: "/referred-patients",
-          element: <ProtectedRoute element={<ReferredPatients />} />,
+          element: <ReferredPatients />,
+        },
+        {
+          path: "/sleep-tracker",
+          element: <SleepTracker />,
         },
         {
           path: "/sleep-tracker",
@@ -94,19 +115,19 @@ export default function AppRouter() {
         },
         {
           path: "/profile",
-          element: <ProtectedRoute element={<Profile />} />,
+          element: <Profile />,
         },
         {
           path: "/notifications",
-          element: <ProtectedRoute element={<Notifications />} />,
+          element: <Notifications />,
         },
         {
           path: "/settings",
-          element: <ProtectedRoute element={<Settings />} />,
+          element: <Settings />,
         },
         {
           path: "/support",
-          element: <ProtectedRoute element={<Support />} />,
+          element: <Support />,
         },
       ],
     },
@@ -116,36 +137,24 @@ export default function AppRouter() {
   const publicRoutes = [
     {
       path: "/404",
-      element: <Suspense fallback={<div>Loading...</div>}>
+      element: <Suspense fallback={<SuspenseLoader />}>
         <NotFound />
       </Suspense>,
     },
     {
       path: "/doctor/register",
       element: (
-        <ProtectedRoute
-          element={
-            <Suspense fallback={<div>Loading...</div>}>
-              <RegisterScreen />
-            </Suspense>
-          }
-          isPublic
-          alreadyLoggedInRedirect="/dashboard"
-        />
+        <Suspense fallback={<SuspenseLoader />}>
+          <RegisterScreen />
+        </Suspense>
       ),
     },
     {
       path: "/user/register",
       element: (
-        <ProtectedRoute
-          element={
-            <Suspense fallback={<div>Loading...</div>}>
-              <UseregisterScreen />
-            </Suspense>
-          }
-          isPublic
-          alreadyLoggedInRedirect="/dashboard"
-        />
+        <Suspense fallback={<SuspenseLoader />}>
+          <UseregisterScreen />
+        </Suspense>
       ),
     },
     {
@@ -153,12 +162,12 @@ export default function AppRouter() {
       element: (
         <ProtectedRoute
           element={
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<SuspenseLoader />}>
               <LoginScreen />
             </Suspense>
           }
           isPublic
-          // alreadyLoggedInRedirect="/dashboard"
+          alreadyLoggedInRedirect="/dashboard"
         />
       ),
     },
@@ -168,64 +177,29 @@ export default function AppRouter() {
       element: (
         <ProtectedRoute
           element={
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<SuspenseLoader />}>
               <UserLoginScreen />
             </Suspense>
           }
           isPublic
-          // alreadyLoggedInRedirect="/dashboard"
+          alreadyLoggedInRedirect="/dashboard"
         />
       ),
     },
     {
       path: "/chooserole",
       element: (
-        <ProtectedRoute
-          element={
-            <Suspense fallback={<div>Loading...</div>}>
-              <ChooseRole />
-            </Suspense>
-          }
-          isPublic
-          // alreadyLoggedInRedirect="/dashboard"
-        />
+        <Suspense fallback={<SuspenseLoader />}>
+          <ChooseRole />
+        </Suspense>
       ),
     },
-    // OTP routes commented out — login is Google Sign-In only
-    // {
-    //   path: "/login/otp",
-    //   element: (
-    //     <ProtectedRoute
-    //       element={
-    //         <Suspense fallback={<div>Loading...</div>}>
-    //           <OTPComponent />
-    //         </Suspense>
-    //       }
-    //       isPublic
-    //       alreadyLoggedInRedirect="/dashboard"
-    //     />
-    //   ),
-    // },
-    // {
-    //   path: "/user/login/otp",
-    //   element: (
-    //     <ProtectedRoute
-    //       element={
-    //         <Suspense fallback={<div>Loading...</div>}>
-    //           <UserOTPComponent />
-    //         </Suspense>
-    //       }
-    //       isPublic
-    //       alreadyLoggedInRedirect="/dashboard"
-    //     />
-    //   ),
-    // },
     {
       path: "/doctor/payment-onboard",
       element: (
         // <ProtectedRoute
           // element={
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<SuspenseLoader />}>
               <PaymentOnboard />
             </Suspense>
           // }
@@ -239,6 +213,6 @@ export default function AppRouter() {
     },
   ];
 
-  const routes = useRoutes([...privateRoutes, ...publicRoutes]);
+  const routes = useRoutes([...publicRoutes, ...privateRoutes]);
   return routes;
 }

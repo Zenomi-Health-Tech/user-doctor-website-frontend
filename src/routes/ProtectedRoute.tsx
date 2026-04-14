@@ -9,13 +9,16 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ element, isPublic, alreadyLoggedInRedirect }) => {
-  const { isAuthenticated } = useAuth();
+  const authUser = getAuthCookies();
+  console.log("[ProtectedRoute]", { isPublic, hasToken: !!authUser?.token, alreadyLoggedInRedirect, path: window.location.pathname });
 
-  if (isPublic && isAuthenticated) {
-    return <Navigate to={alreadyLoggedInRedirect || "/"} replace />;
+  // If logged in and on a public route, redirect to dashboard
+  if (isPublic && authUser && authUser.token) {
+    return <Navigate to={alreadyLoggedInRedirect || "/dashboard"} replace />;
   }
 
-  if (!isPublic && !isAuthenticated) {
+  // If not logged in and on a private route, redirect to chooserole
+  if (!isPublic && (!authUser || !authUser.token)) {
     return <Navigate to="/chooserole" replace />;
   }
 

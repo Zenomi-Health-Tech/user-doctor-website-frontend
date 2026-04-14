@@ -1,3 +1,4 @@
+import LottieLoader from "@/components/shared/LottieLoader";
 import React, { useEffect, useState } from 'react';
 import api from '@/utils/api';
 import Cookies from 'js-cookie';
@@ -68,7 +69,7 @@ const PatientsList: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen text-xl">Loading patients...</div>;
+    return <LottieLoader text="Loading patients..." />;
   }
 
   return (
