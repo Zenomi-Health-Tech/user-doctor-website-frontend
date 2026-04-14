@@ -250,9 +250,9 @@ export default function Profile() {
     const doctor = doctorForm as DoctorProfile;
     return (
       <div className="min-h-screen flex items-center justify-center font-['Poppins']">
-        <div className="w-full max-w-5xl min-h-[80vh] bg-white rounded-2xl shadow-lg flex overflow-hidden border border-[#F2EAF6]">
+        <div className="w-full max-w-5xl min-h-[80vh] bg-white rounded-2xl shadow-lg flex flex-col md:flex-row overflow-hidden border border-[#F2EAF6]">
           {/* Sidebar */}
-          <aside className="w-72 border-r border-[#F2EAF6] flex flex-col py-8 px-6">
+          <aside className="w-full md:w-72 border-b md:border-b-0 md:border-r border-[#F2EAF6] flex flex-col py-8 px-6">
             <div className="text-xl font-semibold mb-8">My profile</div>
             <nav className="flex-1 flex flex-col gap-2">
               <button className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#F8F2F9] text-[#8B2D6C] font-medium border-l-4 border-[#8B2D6C]">
@@ -362,11 +362,11 @@ export default function Profile() {
                   className="w-20 h-20 rounded-full object-cover bg-[#F8F2F9] mb-2"
           />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] flex items-center justify-center text-white text-3xl font-bold mb-2">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#704180] flex items-center justify-center text-white text-3xl font-bold mb-2">
                   {doctor.name.charAt(0)}
         </div>
               )}
-              <div className="text-2xl font-bold text-[#1A2343] mt-2">
+              <div className="text-2xl font-bold text-[#1A2343] mt-2 truncate max-w-full">
                 Dr.{doctor.name}
               </div>
               <div className="text-gray-500 text-base">
@@ -486,7 +486,7 @@ export default function Profile() {
                     <button
                       type="button"
                       onClick={handleDoctorSave}
-                      className="flex-1 py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-lg shadow hover:opacity-90 transition"
+                      className="flex-1 py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#704180] text-white font-semibold text-lg shadow hover:opacity-90 transition"
                     >
                       Edit Profile
                     </button>
@@ -727,11 +727,11 @@ Zenomi Health also partners with schools and healthcare institutions to offer sp
                   className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover bg-[#F8F2F9] mb-2"
               />
             ) : (
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] flex items-center justify-center text-white text-2xl sm:text-3xl font-bold mb-2">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#704180] flex items-center justify-center text-white text-2xl sm:text-3xl font-bold mb-2">
                 {user.name.charAt(0)}
               </div>
             )}
-              <div className="text-lg sm:text-2xl font-bold text-[#1A2343]">
+              <div className="text-lg sm:text-2xl font-bold text-[#1A2343] truncate max-w-full">
                 {user.name}
               </div>
               <div className="text-gray-500 text-sm sm:text-base">
@@ -780,7 +780,7 @@ Zenomi Health also partners with schools and healthcare institutions to offer sp
           <button
                   type="button"
                   onClick={handleEdit}
-                  className="w-full mt-4 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-base sm:text-lg shadow hover:opacity-90 transition"
+                  className="w-full mt-4 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#704180] text-white font-semibold text-base sm:text-lg shadow hover:opacity-90 transition"
           >
             Edit Profile
           </button>
@@ -789,7 +789,7 @@ Zenomi Health also partners with schools and healthcare institutions to offer sp
                   <button
                     type="button"
                     onClick={handleUserSave}
-                    className="flex-1 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-base sm:text-lg shadow hover:opacity-90 transition"
+                    className="flex-1 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#704180] text-white font-semibold text-base sm:text-lg shadow hover:opacity-90 transition"
                   >
                     Save
                   </button>

@@ -320,33 +320,33 @@ const ReferredPatientsList: React.FC = () => {
           filteredReferralCodes.map((ref) => (
             <div
               key={ref.id}
-              className="bg-white rounded-2xl px-6 py-4 flex items-center justify-between shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200"
+              className="bg-white rounded-2xl px-6 py-4 flex items-center justify-between shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 gap-4"
               style={{ cursor: ref.isUsed && ref.user ? 'pointer' : 'default' }}
               onClick={() => ref.isUsed && ref.user ? navigate(`/patients/${ref.user.id}`) : undefined}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 min-w-0">
                 {ref.isUsed && ref.user && ref.user.profilePicture ? (
                   <img
                     src={ref.user.profilePicture}
                     alt={ref.user.name}
-                    className="w-12 h-12 rounded-full object-cover"
+                    className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-[#8B2D6C1A] flex items-center justify-center text-[#8B2D6C] font-semibold text-lg">
+                  <div className="w-12 h-12 rounded-full bg-[#8B2D6C1A] flex items-center justify-center text-[#8B2D6C] font-semibold text-lg flex-shrink-0">
                     {ref.isUsed && ref.user && ref.user.name ? ref.user.name.charAt(0).toUpperCase() : ref.referralCode.slice(-2)}
                   </div>
                 )}
-                <div>
-                  <p className="font-medium text-gray-800 text-lg">
+                <div className="min-w-0">
+                  <p className="font-medium text-gray-800 text-lg truncate">
                     {ref.isUsed && ref.user && ref.user.name ? ref.user.name : 'Unclaimed'}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 truncate">
                     {ref.isUsed && ref.user && ref.user.claimedAt ? `Joined on ${new Date(ref.user.claimedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}` : 'Not yet claimed'}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-6">
-                <span className="text-[#8B2D6C] font-medium text-base">Referral code - {ref.referralCode}</span>
+              <div className="flex items-center gap-6 flex-shrink-0">
+                <span className="text-[#8B2D6C] font-medium text-base whitespace-nowrap">Referral code - {ref.referralCode}</span>
                 <button className="w-10 h-10 flex items-center justify-center rounded-full bg-[#8B2D6C1A] hover:bg-[#8B2D6C]/10 transition">
                   <ArrowRight className="w-6 h-6 text-[#8B2D6C]" />
                 </button>

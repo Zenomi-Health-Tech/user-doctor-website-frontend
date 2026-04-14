@@ -3,28 +3,42 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader } from "lucide-react";
 import { useGoogleLogin } from "@react-oauth/google";
-import axios from "axios";
-import { setAuthCookies } from "@/utils/cookies";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import api from "@/utils/api";
 
 const LoginForm: React.FC = () => {
     const { toast } = useToast();
     const navigate = useNavigate();
+    const { login } = useAuth();
     const [googleLoading, setGoogleLoading] = useState(false);
 
     const googleLogin = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
             setGoogleLoading(true);
             try {
-                const response = await axios.post('https://zenomi.elitceler.com/api/v1/users/google-signin', {
+                const response = await api.post('/users/google-signin', {
                     idToken: tokenResponse.access_token,
                 });
                 const token = response.data?.data?.token || response.data?.token;
                 if (token) {
                     Cookies.set('userId', response.data?.data?.user?.id || '', { expires: 7 });
-                    setAuthCookies({ token });
-                    window.location.href = '/';
+                    login(token);
+                    // Check if user profile is complete
+                    try {
+                        const profileRes = await api.get('/users/profile', {
+                            headers: { Authorization: `Bearer ${token}` },
+                        });
+                        const userData = profileRes.data?.data;
+                        if (userData && (!userData.phoneNumber || !userData.phoneNumber.trim())) {
+                            navigate('/user/register');
+                            return;
+                        }
+                    } catch {
+                        // Profile fetch failed — let them through
+                    }
+                    navigate('/');
                 }
             } catch (err: any) {
                 if (err.response?.status === 404) {

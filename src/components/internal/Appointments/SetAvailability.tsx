@@ -102,12 +102,6 @@ export default function SetAvailability() {
     return slotTime <= now;
   };
 
-  const isDatePast = (date: Date): boolean => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return date < today;
-  };
-
   const getAvailableSlots = (tab: TabType): string[] => {
     return TIME_SLOTS[tab].filter((slot) => !isSlotPast(slot));
   };
@@ -201,7 +195,7 @@ export default function SetAvailability() {
                 className="rounded-xl shadow-sm border"
                 styles={{
                   caption: { color: '#1A2343', fontWeight: 600 },
-                  day_selected: { background: 'linear-gradient(90deg, #8B2D6C 0%, #C6426E 100%)', color: 'white' },
+                  day_selected: { background: 'linear-gradient(90deg, #8B2D6C 0%, #704180 100%)', color: 'white' },
                   day: { borderRadius: '9999px', fontWeight: 500 },
                 }}
               />
@@ -230,7 +224,7 @@ export default function SetAvailability() {
                       key={slot}
                       className={`py-2 rounded-full border w-full ${
                         selectedSlots.includes(slot)
-                          ? 'bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white border-none'
+                          ? 'bg-gradient-to-r from-[#8B2D6C] to-[#704180] text-white border-none'
                           : 'bg-white text-gray-700 border-gray-300'
                       }`}
                       onClick={() => handleSlotClick(slot)}
@@ -257,7 +251,7 @@ export default function SetAvailability() {
                 </div>
               )}
               <button
-                className="w-full py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-lg shadow hover:opacity-90 transition"
+                className="w-full py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#704180] text-white font-semibold text-lg shadow hover:opacity-90 transition"
                 onClick={handleSubmit}
                 disabled={loading}
               >

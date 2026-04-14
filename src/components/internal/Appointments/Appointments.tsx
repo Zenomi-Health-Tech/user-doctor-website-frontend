@@ -224,7 +224,7 @@ export default function Appointments() {
         </h1>
         <div className="flex justify-end mb-4">
           <button
-            className="px-6 py-2 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-lg shadow hover:opacity-90 transition"
+            className="px-6 py-2 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#704180] text-white font-semibold text-lg shadow hover:opacity-90 transition"
             onClick={() => navigate('/appointments/set-availability')}
           >
             Set Availability
@@ -252,7 +252,7 @@ export default function Appointments() {
           </div>
         </div>
         {/* Tabs */}
-        <div className="flex border-b mb-6">
+        <div className="flex border-b mb-6 overflow-x-auto">
           {DOCTOR_TABS.map((tab) => (
             <button
               key={tab}
@@ -278,10 +278,10 @@ export default function Appointments() {
                 <div
                   key={appt.id}
                   onClick={() => handlePatientClick(appt.userId)}
-                  className="bg-white cursor-pointer rounded-2xl p-4 flex items-center justify-between shadow-sm"
+                  className="bg-white cursor-pointer rounded-2xl p-4 flex items-center justify-between shadow-sm gap-3"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#8B2D6C1A] flex items-center justify-center text-[#8B2D6C] font-semibold text-lg">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="w-12 h-12 rounded-full bg-[#8B2D6C1A] flex items-center justify-center text-[#8B2D6C] font-semibold text-lg flex-shrink-0">
                       {appt.user && appt.user.name
                         ? appt.user.name
                             .split(" ")
@@ -290,8 +290,8 @@ export default function Appointments() {
                             .toUpperCase()
                         : ""}
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-800 text-lg">
+                    <div className="min-w-0">
+                      <p className="font-medium text-gray-800 text-lg truncate">
                         {appt.user?.name}
                       </p>
                       <p className="text-sm text-gray-500">
@@ -412,9 +412,9 @@ export default function Appointments() {
                             {initials}
                           </div>
                         )}
-                        <div className="flex flex-col justify-center ml-2">
-                          <div className="text-lg sm:text-2xl font-bold text-[#1A2343]" style={{ fontFamily: 'Poppins, sans-serif' }}>{appt.doctor.name}</div>
-                          <div className="text-base sm:text-lg text-gray-500 font-medium" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                        <div className="flex flex-col justify-center ml-2 min-w-0">
+                          <div className="text-lg sm:text-2xl font-bold text-[#1A2343] truncate" style={{ fontFamily: 'Poppins, sans-serif' }}>{appt.doctor.name}</div>
+                          <div className="text-base sm:text-lg text-gray-500 font-medium truncate" style={{ fontFamily: 'Poppins, sans-serif' }}>
                             Specialist in {appt.doctor.specialization}
                           </div>
                         </div>

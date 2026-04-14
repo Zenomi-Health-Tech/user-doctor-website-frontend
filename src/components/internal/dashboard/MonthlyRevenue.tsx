@@ -24,11 +24,11 @@ const chartConfig = {
 
 export function MonthlyRevenueComponent({ monthly }: MonthlyRevenueProps) {
   return (
-    <Card className=" h-96 overflow-hidden">
+    <Card className="h-96 overflow-hidden">
       <CardTitle className="text-[#013DC0] ml-10 mt-4 font-semibold text-lg mb-2">Revenue</CardTitle>
       <CardContent className="mt-2">
         <ChartContainer config={chartConfig}>
-          <div style={{ width: '650px', height: '305px' }}>
+          <div style={{ width: '100%', height: '305px' }}>
             <BarChart data={monthly} width={650} height={305}>
               <CartesianGrid vertical={false} />
               <XAxis

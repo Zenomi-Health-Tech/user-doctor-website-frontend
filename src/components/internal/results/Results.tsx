@@ -74,9 +74,9 @@ export default function Results() {
                   className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center px-4 sm:px-6 py-3 sm:py-4 text-left focus:outline-none"
                   onClick={() => setOpenCycle(isOpen ? null : result.id)}
                 >
-                  <span className="font-semibold text-base sm:text-lg">Cycle {result.cycle}</span>
-                  <span className="text-gray-500 text-xs sm:text-sm mt-1 sm:mt-0">Last Updated: {lastUpdated}</span>
-                  <span className="ml-0 sm:ml-4 text-lg sm:text-2xl">{isOpen ? '▲' : '▼'}</span>
+                  <span className="font-semibold text-base sm:text-lg min-w-0 truncate">Cycle {result.cycle}</span>
+                  <span className="text-gray-500 text-xs sm:text-sm mt-1 sm:mt-0 min-w-0 truncate">Last Updated: {lastUpdated}</span>
+                  <span className="ml-0 sm:ml-4 text-lg sm:text-2xl shrink-0">{isOpen ? '▲' : '▼'}</span>
                 </button>
                 {/* Accordion Content */}
                 {isOpen && (
@@ -94,7 +94,7 @@ export default function Results() {
                     </div>
                     {/* Bar Chart */}
                     <div className="rounded-2xl p-2 sm:p-6 mb-4 sm:mb-6 min-h-[220px] sm:min-h-[400px] flex items-center justify-center overflow-x-auto">
-                      <div className="w-[420px] sm:w-[700px]">
+                      <div className="min-w-[420px] w-full sm:min-w-[700px]">
                         <svg width="100%" height="220" viewBox="0 0 700 220" className="hidden sm:block">
                           {/* Y axis grid lines */}
                           {[0, 20, 40, 60, 80, 100].map((y) => (
@@ -262,7 +262,7 @@ export default function Results() {
         )}
       </div>
       {/* Right Column */}
-      <div className="w-full lg:w-[350px] flex flex-col gap-4 sm:gap-6 font-['Poppins'] mt-4 lg:mt-0">
+      <div className="w-full lg:w-[350px] lg:shrink-0 flex flex-col gap-4 sm:gap-6 font-['Poppins'] mt-4 lg:mt-0 overflow-hidden">
         {/* Doctor Card */}
         <div className="bg-white rounded-3xl shadow p-4 sm:p-6 flex flex-col items-center border border-[#BCBCBC]">
           <img src={topresultimage} alt="Doctor" className="w-36 h-20 sm:w-52 sm:h-32 object-cover rounded-xl mb-3 sm:mb-4" />
@@ -343,9 +343,9 @@ export default function Results() {
           <p className="text-gray-500 text-center mb-4 sm:mb-6 text-xs sm:text-base">Experience your AHA! moment by completing this simple steps</p>
           <ul className="w-full space-y-2 sm:space-y-3">
             {checklist.map((item) => (
-              <li key={item} className="flex items-center justify-between px-2 sm:px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-xs sm:text-base">
-                <span>{item}</span>
-                <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-white border border-gray-300 text-gray-400">✔️</span>
+              <li key={item} className="flex items-center justify-between gap-2 px-2 sm:px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-xs sm:text-base">
+                <span className="min-w-0 truncate">{item}</span>
+                <span className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full bg-white border border-gray-300 text-gray-400 shrink-0">✔️</span>
               </li>
             ))}
           </ul>

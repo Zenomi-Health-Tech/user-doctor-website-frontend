@@ -65,7 +65,7 @@ export function NavMain({
                 )}
                 {/* Only show text if not collapsed */}
                 {!isCollapsed && (
-                  <span className={`font-normal text-base ${isActivePage ? 'text-white' : 'text-[#636363]'}`}>{item.title}</span>
+                  <span className={`font-normal text-base truncate ${isActivePage ? 'text-white' : 'text-[#636363]'}`}>{item.title}</span>
                 )}
               </Link>
             </SidebarMenuItem>

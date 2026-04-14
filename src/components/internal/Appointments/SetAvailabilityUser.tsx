@@ -85,7 +85,7 @@ export default function SetAvailabilityUser() {
   // Doctor Card UI
   const doctor = doctors[0];
   const initials = doctor?.doctorName?.split(' ').map(n => n[0]).join('').toUpperCase() || '';
-  const truncatedSpec = doctor?.specialization?.length > 22 ? doctor.specialization.slice(0, 20) + '..' : doctor?.specialization || '';
+  const truncatedSpec = doctor?.specialization || '';
 
   return (
     <div className="w-full p-0 m-0 font-['Poppins'] min-h-[600px]">
@@ -94,15 +94,15 @@ export default function SetAvailabilityUser() {
         {doctor ? (
         <div className="flex items-center bg-white rounded-2xl border border-[#E5E5E5] p-4 mb-8 shadow-sm max-w-md">
           {doctor.photoUrl ? (
-            <img src={doctor.photoUrl} alt={doctor.doctorName} className="w-14 h-14 rounded-xl object-cover bg-[#F8F2F9] mr-4" />
+            <img src={doctor.photoUrl} alt={doctor.doctorName} className="w-14 h-14 rounded-xl object-cover bg-[#F8F2F9] mr-4 flex-shrink-0" />
           ) : (
-            <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[#F8F2F9] text-[#8B2D6C] text-xl font-bold mr-4">
+            <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-[#F8F2F9] text-[#8B2D6C] text-xl font-bold mr-4 flex-shrink-0">
               {initials}
             </div>
           )}
-          <div>
-            <div className="font-bold text-lg text-black">Dr.{doctor.doctorName}</div>
-            <div className="text-sm text-gray-700">Specialist in {truncatedSpec}</div>
+          <div className="min-w-0">
+            <div className="font-bold text-lg text-black truncate">Dr.{doctor.doctorName}</div>
+            <div className="text-sm text-gray-700 truncate">Specialist in {truncatedSpec}</div>
           </div>
         </div>
         ) : (
@@ -136,7 +136,7 @@ export default function SetAvailabilityUser() {
                 className="rounded-xl shadow-sm border"
                 styles={{
                   caption: { color: '#1A2343', fontWeight: 600 },
-                  day_selected: { background: 'linear-gradient(90deg, #8B2D6C 0%, #C6426E 100%)', color: 'white' },
+                  day_selected: { background: 'linear-gradient(90deg, #8B2D6C 0%, #704180 100%)', color: 'white' },
                   day: { borderRadius: '9999px', fontWeight: 500 },
                 }}
               />
@@ -159,7 +159,7 @@ export default function SetAvailabilityUser() {
                       return (
                         <button
                           key={slot.id}
-                          className={`py-2 rounded-full border w-full ${selectedSlot === slot.id ? 'bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white border-none' : 'bg-white text-gray-700 border-gray-300'}`}
+                          className={`py-2 rounded-full border w-full ${selectedSlot === slot.id ? 'bg-gradient-to-r from-[#8B2D6C] to-[#704180] text-white border-none' : 'bg-white text-gray-700 border-gray-300'}`}
                           onClick={() => setSelectedSlot(slot.id === selectedSlot ? null : slot.id)}
                           type="button"
                         >
@@ -171,7 +171,7 @@ export default function SetAvailabilityUser() {
                 );
               })() : <div className="text-gray-500 mb-4">No slots available for this date.</div>}
               <button
-                className="w-full py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-lg shadow hover:opacity-90 transition"
+                className="w-full py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#704180] text-white font-semibold text-lg shadow hover:opacity-90 transition"
                 onClick={handleBook}
                 disabled={loading || !selectedSlot}
               >

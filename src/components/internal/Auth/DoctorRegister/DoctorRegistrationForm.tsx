@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader } from 'lucide-react';
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-import axios from 'axios';
+import api from '@/utils/api';
 import { useNavigate } from "react-router-dom";
 
 const qualificationOptions = [
@@ -153,8 +153,8 @@ const DoctorRegistrationForm = () => {
             formData.append('medicalLicense', data.medicalLicense);
             formData.append('govtId', createPlaceholderFile());
 
-            const response = await axios.post(
-                'https://zenomi.elitceler.com/api/v1/doctors/register',
+            const response = await api.post(
+                '/doctors/register',
                 formData,
                 { headers: { 'Content-Type': 'multipart/form-data' } }
             );
@@ -187,9 +187,9 @@ const DoctorRegistrationForm = () => {
             <div className="mb-8">
                 <div className="flex items-center justify-between mb-2">
                     {steps.map((label, idx) => (
-                        <div key={label} className="flex-1 flex flex-col items-center">
-                            <div className={`rounded-full w-8 h-8 flex items-center justify-center text-white font-bold ${step >= idx ? 'bg-[#704180]' : 'bg-gray-300'}`}>{idx + 1}</div>
-                            <span className={`mt-2 text-xs font-medium ${step >= idx ? 'text-[#704180]' : 'text-gray-500'}`}>{label}</span>
+                        <div key={label} className="flex-1 flex flex-col items-center min-w-0">
+                            <div className={`rounded-full w-8 h-8 flex items-center justify-center text-white font-bold flex-shrink-0 ${step >= idx ? 'bg-[#704180]' : 'bg-gray-300'}`}>{idx + 1}</div>
+                            <span className={`mt-2 text-xs font-medium text-center truncate max-w-full ${step >= idx ? 'text-[#704180]' : 'text-gray-500'}`}>{label}</span>
                         </div>
                     ))}
                 </div>
@@ -253,8 +253,8 @@ const DoctorRegistrationForm = () => {
                             <label className="block text-sm font-medium text-gray-700 mb-1">Additional Qualifications</label>
                             <div className="flex gap-2 flex-wrap mb-2">
                                 {getValues('additionalQualifications')?.map((q, idx) => (
-                                    <span key={idx} className="bg-[#704180] text-white px-2 py-1 rounded-full flex items-center text-sm">
-                                        {q}
+                                    <span key={idx} className="bg-[#704180] text-white px-2 py-1 rounded-full flex items-center text-sm max-w-full">
+                                        <span className="truncate">{q}</span>
                                         <button type="button" className="ml-2 text-xs" onClick={() => {
                                             const arr = getValues('additionalQualifications').filter((_, i) => i !== idx);
                                             setValue('additionalQualifications', arr);

@@ -35,7 +35,7 @@ export default function AvailableSlots() {
     <div className="p-8 bg-[#FAF8FB] min-h-screen font-['Poppins']">
       {/* ...existing UI */}
       <button
-        className="mb-4 px-4 py-2 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold"
+        className="mb-4 px-4 py-2 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#704180] text-white font-semibold"
         onClick={handleShowAllSlots}
         type="button"
       >

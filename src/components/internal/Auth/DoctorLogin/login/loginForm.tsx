@@ -3,28 +3,46 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader } from "lucide-react";
 import { useGoogleLogin } from "@react-oauth/google";
-import axios from "axios";
-import { setAuthCookies } from "@/utils/cookies";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import api from "@/utils/api";
 
 const LoginForm: React.FC = () => {
     const { toast } = useToast();
     const navigate = useNavigate();
+    const { login } = useAuth();
     const [googleLoading, setGoogleLoading] = useState(false);
 
     const googleLogin = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
             setGoogleLoading(true);
             try {
-                const response = await axios.post('https://zenomi.elitceler.com/api/v1/doctors/google-signin', {
+                const response = await api.post('/doctors/google-signin', {
                     idToken: tokenResponse.access_token,
                 });
                 const token = response.data?.data?.token || response.data?.token;
                 if (token) {
                     Cookies.set('userId', response.data?.data?.doctor?.id || '', { expires: 7 });
-                    setAuthCookies({ token });
-                    window.location.href = '/';
+                    login(token);
+                    // Check doctor profile status and payment
+                    try {
+                        const profileRes = await api.get('/doctors/profile', {
+                            headers: { Authorization: `Bearer ${token}` },
+                        });
+                        const doc = profileRes.data?.data;
+                        if (doc && doc.profileStatus !== 'APPROVED') {
+                            toast({ title: "Verification Pending", description: "Your profile is under review.", className: "bg-yellow-500 text-white" });
+                            return;
+                        }
+                        if (doc && !doc.isPaid) {
+                            navigate('/doctor/payment-onboard');
+                            return;
+                        }
+                    } catch {
+                        // Profile fetch failed — let them through
+                    }
+                    navigate('/');
                 }
             } catch (err: any) {
                 const status = err.response?.status;
