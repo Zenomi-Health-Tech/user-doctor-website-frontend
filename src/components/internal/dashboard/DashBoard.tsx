@@ -397,7 +397,6 @@ export default function Dashboard() {
         if (tn.includes('nutrition')) {
           setNutritionResults(scoreRes.data);
         } else if (tn.includes('phq') || tn.includes('gad') || tn.includes('emotional') || tn.includes('anxiety') || tn.includes('depression')) {
-          // Show detailed results screen matching the app
           const d = scoreRes.data?.data || scoreRes.data || {};
           const userScore = d.user_score ?? d.score ?? formattedAnswers.reduce((s: number, a: any) => s + (parseInt(a.answer) || 0), 0);
           const maxScore = d.max_score_for_test ?? d.max_score ?? questions.length * 3;
@@ -409,6 +408,12 @@ export default function Dashboard() {
             gradient: isPHQ ? '#8B5CF6, #A855F7' : isGAD ? '#FF6B6B, #FF8E53' : '#FF6B9D, #C850C0',
           });
           setNutritionResults(null);
+          setShowProcessing(false);
+          // Don't show completion dialog or reload — results screen handles it
+          const res2 = await axios.get("https://zenomiai.elitceler.com/api/testnames", { headers: { Authorization: `Bearer ${token}` } });
+          setTests(res2.data);
+          setCurrentTestId(null);
+          return;
         } else {
           setNutritionResults(null);
         }
@@ -1006,53 +1011,58 @@ export default function Dashboard() {
           const tl = testName.toLowerCase();
           const isPHQ = tl.includes('phq');
           const isGAD = tl.includes('gad');
-          const grad = isPHQ ? '#8B5CF6, #A855F7' : isGAD ? '#FF6B6B, #FF8E53' : '#FF6B9D, #C850C0';
-          const optionEmojis = ['😊', '😐', '😟', '😥', '😰'];
-          const optionColors = [['#4CAF50','#4CAF50'],['#FFC107','#FFC107'],['#FF9800','#FF9800'],['#FF6B6B','#FF4444'],['#E53935','#C62828']];
+          const grad = isPHQ ? ['#8B5CF6', '#A855F7'] : isGAD ? ['#FF6B6B', '#FF8E53'] : ['#FF6B9D', '#C850C0'];
+          const optionEmojis = ['😊', '😐', '😟', '😥'];
+          const optionColors = ['#4CAF50', '#FFC107', '#FF9800', '#FF6B6B'];
           const answered = answers.filter((a: any) => a?.answer).length;
           const allAnswered = answered === questions.length && questions.length > 0;
+          const progress = questions.length ? answered / questions.length : 0;
           return (
-            <div className="fixed inset-0 z-50 flex flex-col" style={{ background: '#12121F' }}>
-              <div className="w-full max-w-2xl mx-auto flex flex-col flex-1 overflow-hidden">
+            <div className="fixed inset-0 z-50" style={{ background: '#1A1D2E' }}>
+              <div className="w-full max-w-2xl mx-auto flex flex-col h-full">
                 {/* Header */}
-                <div className="px-5 pt-4 pb-2 flex-shrink-0">
-                  <div className="flex items-center justify-between mb-3">
-                    <button onClick={() => { if (answered > 0) { if (confirm("Leave test? Your answers won't be saved.")) { setShowQuiz(false); setAnswers([]); } } else { setShowQuiz(false); setAnswers([]); } }} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:text-white text-sm">✕</button>
-                    <span className="text-white font-semibold text-sm">{testName}</span>
-                    <span className="text-white/40 text-xs">{answered}/{questions.length}</span>
+                <div className="px-6 pt-4 pb-2 flex-shrink-0">
+                  <div className="flex items-center mb-4">
+                    <button onClick={() => { setShowQuiz(false); setAnswers([]); }} className="text-[#8E8EA0]">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                    <span className="flex-1 text-center text-white font-semibold">{testName}</span>
+                    <span className="w-6" />
                   </div>
-                  <div className="h-[5px] rounded-full overflow-hidden" style={{ background: '#252840' }}>
-                    <div className="h-full rounded-full transition-all duration-500" style={{ width: `${questions.length ? (answered / questions.length) * 100 : 0}%`, background: `linear-gradient(90deg, ${grad})` }} />
+                  <div className="h-[5px] rounded-full overflow-hidden" style={{ background: '#2D3048' }}>
+                    <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress * 100}%`, background: `linear-gradient(90deg, ${grad[0]}, ${grad[1]})` }} />
                   </div>
+                  <p className="text-right text-xs mt-1.5" style={{ color: '#8E8EA0' }}>{answered} / {questions.length}</p>
                 </div>
 
                 {loadingQuestions ? (
-                  <div className="flex-1 flex items-center justify-center"><div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: grad.split(',')[0] }}></div></div>
+                  <div className="flex-1 flex items-center justify-center"><div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: grad[0] }} /></div>
                 ) : (
                   <>
-                    {/* All questions scrollable */}
-                    <div className="flex-1 overflow-y-auto px-5 py-3">
+                    <div className="flex-1 overflow-y-auto px-5 pb-28">
                       {questions.map((q: any, qIdx: number) => {
                         const selected = answers[qIdx]?.answer;
+                        const opts = (q.scaleOptions || []).slice(0, 4);
                         return (
-                          <div key={q.id || qIdx} className="mb-3 p-4 rounded-2xl" style={{ background: '#1E1E30' }}>
-                            <div className="flex items-start gap-3 mb-4">
+                          <div key={q.id || qIdx} className="mb-3 p-4 rounded-2xl" style={{ background: '#252840' }}>
+                            <div className="flex items-start gap-2.5 mb-4">
                               <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#4CAF50' }}>
                                 <span className="text-white text-xs font-bold">{qIdx + 1}</span>
                               </div>
-                              <span className="text-white text-sm font-semibold leading-snug">{q.question}</span>
+                              <span className="text-white text-[15px] font-semibold leading-snug">{q.question}</span>
                             </div>
-                            <div className={`grid gap-2`} style={{ gridTemplateColumns: `repeat(${Math.min(q.scaleOptions?.length || 4, 5)}, 1fr)` }}>
-                              {(q.scaleOptions || []).map((option: string, i: number) => {
+                            <div className="grid grid-cols-4 gap-1.5">
+                              {opts.map((option: string, i: number) => {
                                 const sel = selected === option;
-                                const emoji = optionEmojis[i] || '❓';
-                                const cols = optionColors[i] || optionColors[0];
                                 return (
                                   <button key={option} onClick={() => handleAnswer(option, qIdx)}
-                                    className="py-3 rounded-xl text-center transition-all flex flex-col items-center gap-1"
-                                    style={{ background: sel ? `linear-gradient(135deg, ${cols[0]}, ${cols[1]})` : '#252840', border: sel ? 'none' : '1px solid rgba(255,255,255,0.08)' }}>
-                                    <span className="text-lg">{emoji}</span>
-                                    <span className="text-[10px] font-bold" style={{ color: sel ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)' }}>{i}</span>
+                                    className="h-16 rounded-xl flex flex-col items-center justify-center transition-all"
+                                    style={{
+                                      background: sel ? optionColors[i] : '#2D3048',
+                                      border: sel ? 'none' : '1px solid rgba(255,255,255,0.06)',
+                                    }}>
+                                    <span className="text-base">{optionEmojis[i]}</span>
+                                    <span className="text-[13px] font-bold mt-0.5" style={{ color: sel ? 'white' : '#8E8EA0' }}>{i}</span>
                                   </button>
                                 );
                               })}
@@ -1062,12 +1072,15 @@ export default function Dashboard() {
                       })}
                     </div>
 
-                    {/* Submit button */}
-                    <div className="px-5 pb-5 pt-2 flex-shrink-0">
+                    {/* Fixed submit button */}
+                    <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 pt-4" style={{ background: '#1A1D2E' }}>
                       <button onClick={() => { if (allAnswered) handleSubmitQuiz(); }}
-                        className="w-full py-4 rounded-2xl text-white font-semibold transition-all"
-                        style={{ background: allAnswered ? `linear-gradient(135deg, ${grad})` : '#252840', color: allAnswered ? 'white' : 'rgba(255,255,255,0.3)' }}>
-                        {submittingQuiz ? 'Submitting...' : allAnswered ? 'Submit Assessment ✨' : `Answer all to submit (${answered}/${questions.length})`}
+                        className="w-full h-14 rounded-2xl text-white font-semibold transition-all"
+                        style={{
+                          background: allAnswered ? `linear-gradient(135deg, ${grad[0]}, ${grad[1]})` : '#2D3048',
+                          color: allAnswered ? 'white' : '#8E8EA0',
+                        }}>
+                        {submittingQuiz ? 'Submitting...' : allAnswered ? 'Submit Assessment ✨' : 'Answer all to submit'}
                       </button>
                     </div>
                   </>
