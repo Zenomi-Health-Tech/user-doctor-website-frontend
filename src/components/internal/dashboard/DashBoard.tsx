@@ -870,17 +870,22 @@ export default function Dashboard() {
           const gradient = isPHQ ? 'linear-gradient(135deg, #8B5CF6, #A855F7)' : isGAD ? 'linear-gradient(135deg, #FF6B6B, #FF8E53)' : 'linear-gradient(135deg, #FF6B9D, #C850C0)';
           const emoji = isPHQ ? '🧠' : isGAD ? '🧠' : '🌈';
           const label = isPHQ ? 'Depression Screening' : isGAD ? 'Anxiety Screening' : 'Emotional Wellness';
+          const titleLine1 = isPHQ ? 'PHQ-9' : isGAD ? 'GAD-7' : 'Emotional Health';
+          const titleLine2 = 'Assessment';
+          const subtitle = isPHQ ? 'Over the last 2 weeks, how often have you been bothered by these problems?' : isGAD ? 'Over the last 2 weeks, how often have you been bothered by these problems?' : 'Over the last 2 weeks, how often have you been experiencing the following?';
+          const duration = isPHQ ? '3' : isGAD ? '2' : '3';
+          const qCount = isPHQ ? '9' : isGAD ? '7' : '15';
           return (
             <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ background: '#12121F' }}>
               <div className="w-full max-w-sm flex flex-col items-center text-center relative z-10">
-                <button onClick={() => setSelectedTest(null)} className="absolute top-0 right-0 text-gray-500 hover:text-white text-2xl">&times;</button>
-                <div className="text-7xl mb-6">{emoji}</div>
-                <h2 className="text-3xl font-extrabold mb-4 bg-clip-text text-transparent" style={{ backgroundImage: gradient, WebkitBackgroundClip: 'text' }}>{selectedTest.name}</h2>
-                <p className="text-white/50 text-sm mb-8 leading-relaxed">{selectedTest.description || 'Over the last 2 weeks, how often have you been bothered by these problems?'}</p>
-                <div className="flex flex-wrap justify-center gap-2 mb-8">
-                  <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">⏱ Takes 3 mins</span>
-                  <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">📋 {selectedTest.question_count} Questions</span>
-                  <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">🎯 {label}</span>
+                <button onClick={() => setSelectedTest(null)} className="absolute top-0 right-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:text-white text-lg">✕</button>
+                <div className="text-7xl mb-7">{emoji}</div>
+                <h2 className="text-[34px] font-extrabold leading-tight mb-5" style={{ background: gradient, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{titleLine1}<br/>{titleLine2}</h2>
+                <p className="text-white/50 text-[15px] mb-7 leading-relaxed">{subtitle}</p>
+                <div className="flex flex-wrap justify-center gap-2.5 mb-9">
+                  <span className="bg-white/10 text-white/60 px-3.5 py-2 rounded-full text-xs font-medium">⏱ Takes {duration} mins</span>
+                  <span className="bg-white/10 text-white/60 px-3.5 py-2 rounded-full text-xs font-medium">📋 {selectedTest.question_count || qCount} Questions</span>
+                  <span className="bg-white/10 text-white/60 px-3.5 py-2 rounded-full text-xs font-medium">🎯 {label}</span>
                 </div>
                 <button onClick={handleStartTest} className="w-full py-3.5 rounded-2xl text-white font-bold text-lg mb-3" style={{ background: gradient, boxShadow: '0 10px 30px rgba(139,92,246,0.3)' }}>
                   {loadingQuestions ? 'Loading...' : "Let's Go 🚀"}
@@ -1012,7 +1017,7 @@ export default function Dashboard() {
                 {/* Header */}
                 <div className="px-5 pt-4 pb-2 flex-shrink-0">
                   <div className="flex items-center justify-between mb-3">
-                    <button onClick={() => { setShowQuiz(false); setAnswers([]); }} className="text-white/40 hover:text-white">✕</button>
+                    <button onClick={() => { if (answered > 0) { if (confirm("Leave test? Your answers won't be saved.")) { setShowQuiz(false); setAnswers([]); } } else { setShowQuiz(false); setAnswers([]); } }} className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:text-white text-sm">✕</button>
                     <span className="text-white font-semibold text-sm">{testName}</span>
                     <span className="text-white/40 text-xs">{answered}/{questions.length}</span>
                   </div>
