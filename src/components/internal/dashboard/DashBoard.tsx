@@ -1015,8 +1015,10 @@ export default function Dashboard() {
           const isPHQ = tl.includes('phq');
           const isGAD = tl.includes('gad');
           const grad = isPHQ ? ['#8B5CF6', '#A855F7'] : isGAD ? ['#FF6B6B', '#FF8E53'] : ['#FF6B9D', '#C850C0'];
-          const optionEmojis = ['😊', '😐', '😟', '😥'];
-          const optionColors = ['#4CAF50', '#FFC107', '#FF9800', '#FF6B6B'];
+          const isEmotional = !isPHQ && !isGAD;
+          const emojis = isEmotional ? ['🌟', '😊', '😐', '😟', '😣'] : ['😊', '😐', '😟', '😥'];
+          const maxOpts = isEmotional ? 5 : 4;
+          const gadColors = ['#4CAF50', '#FFC107', '#FF9800', '#FF6B6B'];
           const answered = answers.filter((a: any) => a?.answer).length;
           const allAnswered = answered === questions.length && questions.length > 0;
           const progress = questions.length ? answered / questions.length : 0;
@@ -1045,7 +1047,7 @@ export default function Dashboard() {
                     <div className="flex-1 overflow-y-auto px-5 pb-28">
                       {questions.map((q: any, qIdx: number) => {
                         const selected = answers[qIdx]?.answer;
-                        const opts = (q.scaleOptions || []).slice(0, 4);
+                        const opts = (q.scaleOptions || []).slice(0, maxOpts);
                         return (
                           <div key={q.id || qIdx} className="mb-3 p-4 rounded-2xl" style={{ background: '#252840' }}>
                             <div className="flex items-start gap-2.5 mb-4">
@@ -1054,18 +1056,25 @@ export default function Dashboard() {
                               </div>
                               <span className="text-white text-[15px] font-semibold leading-snug">{q.question}</span>
                             </div>
-                            <div className="grid grid-cols-4 gap-1.5">
+                            <div className={`grid gap-1.5`} style={{ gridTemplateColumns: `repeat(${opts.length}, 1fr)` }}>
                               {opts.map((option: string, i: number) => {
                                 const sel = selected === option;
+                                const bg = sel
+                                  ? isGAD ? gadColors[i] : `linear-gradient(135deg, ${grad[0]}, ${grad[1]})`
+                                  : '#2D3048';
                                 return (
                                   <button key={option} onClick={() => handleAnswer(option, qIdx)}
                                     className="h-16 rounded-xl flex flex-col items-center justify-center transition-all"
                                     style={{
-                                      background: sel ? optionColors[i] : '#2D3048',
+                                      background: bg,
                                       border: sel ? 'none' : '1px solid rgba(255,255,255,0.06)',
                                     }}>
-                                    <span className="text-base">{optionEmojis[i]}</span>
-                                    <span className="text-[13px] font-bold mt-0.5" style={{ color: sel ? 'white' : '#8E8EA0' }}>{i}</span>
+                                    <span className={isEmotional ? 'text-lg' : 'text-base'}>{emojis[i] || '❓'}</span>
+                                    {isEmotional ? (
+                                      <span className="text-[9px] mt-0.5 px-1 text-center leading-tight" style={{ color: sel ? 'rgba(255,255,255,0.9)' : '#8E8EA0' }}>{option.split(':')[0]}</span>
+                                    ) : (
+                                      <span className="text-[13px] font-bold mt-0.5" style={{ color: sel ? 'white' : '#8E8EA0' }}>{i}</span>
+                                    )}
                                   </button>
                                 );
                               })}
