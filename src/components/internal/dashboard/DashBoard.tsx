@@ -870,87 +870,33 @@ export default function Dashboard() {
         </div>
       )}
       {selectedTest && selectedTest.id !== SLEEP_TEST_ID && selectedTest.id !== NUTRITION_TEST_ID && (
-        <div 
-        style={{
-          backgroundImage: `url(${selectedTest.splash_image_s3_key})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          position: 'fixed',
-          width: '100vw',
-          height: '100vh',
-          top: 0,
-          left: 0,
-          zIndex: 50,
-        }}
-        className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#fff7fa] to-[#f8f3fa] p-0 m-0 fixed top-0 left-0 z-50">
-          <div
-            className="w-full max-w-xl rounded-3xl shadow-lg flex flex-col items-center relative  p-0 sm:p-8 min-h-[500px] mx-auto"
-           
-          >
-            {/* Optional: overlay for readability */}
-            <div className="absolute inset-0 rounded-3xl" style={{ background: selectedTest.splash_image_s3_key ? 'rgba(255,255,255,0.85)' : 'transparent', zIndex: 1 }}></div>
-            <div className="relative z-10 w-full flex flex-col items-center">
-              <button
-                className="absolute top-4 right-4 text-2xl text-gray-400 hover:text-gray-600 z-10"
-                onClick={() => setSelectedTest(null)}
-              >
-                &times;
-              </button>
-              <div className="flex flex-col items-center justify-center w-full">
-                {selectedTest.image_url && (
-                  <img
-                    src={selectedTest.image_url}
-                    alt="Splash"
-                    className="w-24 h-24 object-contain mb-6 mt-8"
-                  />
-                )}
-                <h2 className="text-2xl font-bold mb-2 text-center z-10 mt-4">
-                  Ready for Your {selectedTest.name}?
-                </h2>
-                <p className="text-gray-600 text-center mb-6 z-10">
-                  {selectedTest.description || "No description available"}
-                </p>
-                <div className="flex justify-center flex-wrap gap-3 mb-8 z-10">
-                  <span className="bg-[#F3EAF7] text-[#704180] px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium">
-                    <span role="img" aria-label="timer">
-                      ⏱
-                    </span>{" "}
-                    Takes 3 mins
-                  </span>
-                  <span className="bg-[#F3EAF7] text-[#704180] px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium">
-                    <span role="img" aria-label="questions">
-                      📋
-                    </span>{" "}
-                    {selectedTest.question_count} Questions
-                  </span>
-                  <span className="bg-[#F3EAF7] text-[#704180] px-4 py-2 rounded-full flex items-center gap-2 text-sm font-medium">
-                    <span role="img" aria-label="results">
-                      🎯
-                    </span>{" "}
-                    Personalized Results
-                  </span>
+        (() => {
+          const name = (selectedTest.name || '').toLowerCase();
+          const isPHQ = name.includes('phq') || name.includes('depression');
+          const isGAD = name.includes('gad') || name.includes('anxiety');
+          const gradient = isPHQ ? 'linear-gradient(135deg, #8B5CF6, #A855F7)' : isGAD ? 'linear-gradient(135deg, #FF6B6B, #FF8E53)' : 'linear-gradient(135deg, #FF6B9D, #C850C0)';
+          const emoji = isPHQ ? '🧠' : isGAD ? '🧠' : '🌈';
+          const label = isPHQ ? 'Depression Screening' : isGAD ? 'Anxiety Screening' : 'Emotional Wellness';
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ background: '#12121F' }}>
+              <div className="w-full max-w-sm flex flex-col items-center text-center relative z-10">
+                <button onClick={() => setSelectedTest(null)} className="absolute top-0 right-0 text-gray-500 hover:text-white text-2xl">&times;</button>
+                <div className="text-7xl mb-6">{emoji}</div>
+                <h2 className="text-3xl font-extrabold mb-4 bg-clip-text text-transparent" style={{ backgroundImage: gradient, WebkitBackgroundClip: 'text' }}>{selectedTest.name}</h2>
+                <p className="text-white/50 text-sm mb-8 leading-relaxed">{selectedTest.description || 'Over the last 2 weeks, how often have you been bothered by these problems?'}</p>
+                <div className="flex flex-wrap justify-center gap-2 mb-8">
+                  <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">⏱ Takes 3 mins</span>
+                  <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">📋 {selectedTest.question_count} Questions</span>
+                  <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">🎯 {label}</span>
                 </div>
-                <button
-                  className="w-full py-2 rounded-full text-white font-semibold text-lg mb-3 z-10"
-                  style={{
-                    background:
-                      "linear-gradient(90deg, #704180 6.54%, #8B2D6C 90.65%)",
-                  }}
-                  onClick={handleStartTest}
-                >
-                  Start test
+                <button onClick={handleStartTest} className="w-full py-3.5 rounded-2xl text-white font-bold text-lg mb-3" style={{ background: gradient, boxShadow: '0 10px 30px rgba(139,92,246,0.3)' }}>
+                  {loadingQuestions ? 'Loading...' : "Let's Go 🚀"}
                 </button>
-                <button
-                  className="w-full py-2 rounded-full border border-[#8B2D6C] text-[#8B2D6C] font-semibold text-lg z-10"
-                  onClick={() => setSelectedTest(null)}
-                >
-                  Cancel
-                </button>
+                <button onClick={() => setSelectedTest(null)} className="text-white/40 text-sm hover:text-white/60">← Back</button>
               </div>
             </div>
-          </div>
-        </div>
+          );
+        })()
       )}
       {showQuiz && isSleepQuiz && (
         <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: '#1A1D2E' }}>
@@ -1057,136 +1003,66 @@ export default function Dashboard() {
         />
       )}
       {showQuiz && !isSleepQuiz && !isNutritionQuiz && (
-        <div className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#fff7fa] to-[#f8f3fa] p-0 m-0 fixed top-0 left-0 z-50">
-          <div
-            className="w-full max-w-2xl mx-auto flex flex-col items-center justify-center min-h-screen"
-          >
-            <div
-              className="w-full bg-white rounded-3xl shadow-lg flex flex-col items-center relative font-['Urbanist'] p-0 sm:p-6"
-              style={{ minHeight: '500px' }}
-            >
-              <h2 className="text-2xl font-bold mb-2 text-left w-full px-8 pt-8">
-                {selectedTest?.name || "Test"} Quiz
-              </h2>
-              {loadingQuestions ? (
-                <div className="flex items-center justify-center h-[350px]">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B2D6C] mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading questions...</p>
-                  </div>
-                </div>
-              ) : questions.length > 0 ? (
-                <>
-                  {/* Progress bar */}
-                  <div className="w-full flex items-center mb-6 px-8">
-                    <div className="flex-1 h-3 bg-gray-200 rounded-full">
-                      <div
-                        className="h-3 rounded-full bg-gradient-to-r from-[#F3C96B] to-[#E5E0EA]"
-                        style={{
-                          width: `${((currentQuestion + 1) / questions.length) * 100}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className="w-full bg-[#F8F3FA] rounded-2xl p-8 flex flex-col items-center">
-                    <div className="text-center mb-4 text-gray-700 font-semibold">
-                      Question {String(currentQuestion + 1).padStart(2, "0")}/{questions.length}
-                    </div>
-                    <div className="text-center text-xl font-bold mb-8">
-                      {questions[currentQuestion]?.question}
-                    </div>
-                    <div className="flex flex-col gap-4 w-full max-w-xl">
-                      {/* Render input based on type */}
-                      {(() => {
-                        const q = questions[currentQuestion];
-                        if (!q) return null;
-                        if (q.questionType === "NUMBER") {
-                          return (
-                            <input
-                              type="number"
-                              className="w-full py-4 rounded-full border-2 border-[#8B2D6C] text-lg font-medium px-6"
-                              value={answers[currentQuestion]?.answer || ""}
-                              onChange={(e) => handleAnswer(e.target.value)}
-                            />
-                          );
-                        }
-                        if (q.questionType === "BOOLEAN") {
-                          return (
-                            <div className="flex gap-4">
-                              {["Yes", "No"].map((option) => (
-                                <button
-                                  key={option}
-                                  className={`flex-1 py-4 rounded-full border-2 text-lg font-medium ${
-                                    answers[currentQuestion]?.answer === option
-                                      ? "bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white"
-                                      : "border-[#8B2D6C] text-[#704180] bg-white"
-                                  }`}
-                                  onClick={() => handleAnswer(option)}
-                                >
-                                  {option}
-                                </button>
-                              ))}
-                            </div>
-                          );
-                        }
-                        if (q.questionType === "TEXT") {
-                          return (
-                            <textarea
-                              className="w-full py-4 rounded-2xl border-2 border-[#8B2D6C] text-lg font-medium px-6"
-                              rows={4}
-                              value={answers[currentQuestion]?.answer || ""}
-                              onChange={(e) => handleAnswer(e.target.value)}
-                            />
-                          );
-                        }
-                        // SCALE question
-                        return (q.scaleOptions || []).map((option: string) => (
-                          <button
-                            key={option}
-                            className={`w-full py-4 rounded-full border-2 text-lg font-medium ${
-                              answers[currentQuestion]?.answer === option
-                                ? "bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white"
-                                : "border-[#8B2D6C] text-[#704180] bg-white"
-                            }`}
-                            onClick={() => handleAnswer(option)} // Pass the full option string
-                          >
-                            {option.split(":")[0]}
-                          </button>
-                        ));
-                      })()}
-                    </div>
-                    <div className="flex justify-between w-full mt-8">
-                      <button
-                        className="px-8 py-2 rounded-full border-2 border-[#8B2D6C] text-[#8B2D6C] font-medium"
-                        onClick={handlePrev}
-                        disabled={currentQuestion === 0}
-                      >
-                        Previous
-                      </button>
-                      <button
-                        className="px-8 py-2 rounded-full bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white font-medium"
-                        onClick={handleNext}
-                        disabled={
-                          submittingQuiz ||
-                          !answers[currentQuestion] ||
-                          !answers[currentQuestion].answer
-                        }
-                      >
-                        {submittingQuiz
-                          ? "Submitting..."
-                          : currentQuestion === questions.length - 1
-                          ? "Submit"
-                          : "Next"}
-                      </button>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="flex items-center justify-center h-[350px]">
-                  <p className="text-gray-600">No questions available</p>
-                </div>
-              )}
+        <div className="fixed inset-0 z-50 flex flex-col" style={{ background: '#12121F' }}>
+          <div className="w-full max-w-2xl mx-auto flex flex-col flex-1 overflow-hidden">
+            {/* Header */}
+            <div className="px-6 pt-5 pb-3">
+              <div className="flex items-center justify-between mb-4">
+                <button onClick={() => { setShowQuiz(false); setAnswers([]); }} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white">&times;</button>
+                <span className="text-white font-semibold text-sm">{selectedTest?.name || 'Assessment'}</span>
+                <span className="text-white/40 text-xs">{currentQuestion + 1}/{questions.length}</span>
+              </div>
+              <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%`, background: 'linear-gradient(90deg, #7C5CFC, #6C8AFF)' }} />
+              </div>
             </div>
+
+            {loadingQuestions ? (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#7C5CFC]"></div>
+              </div>
+            ) : questions.length > 0 ? (
+              <div className="flex-1 overflow-y-auto px-6 py-4">
+                <p className="text-white/40 text-xs mb-2 font-medium">Question {String(currentQuestion + 1).padStart(2, '0')}</p>
+                <h3 className="text-white text-xl font-bold mb-8 leading-snug">{questions[currentQuestion]?.question}</h3>
+                <div className="flex flex-col gap-3">
+                  {(() => {
+                    const q = questions[currentQuestion];
+                    if (!q) return null;
+                    if (q.questionType === 'NUMBER') {
+                      return <input type="number" className="w-full py-4 rounded-2xl text-lg font-medium px-6 bg-[#252840] text-white border border-white/10 outline-none focus:border-[#7C5CFC]" value={answers[currentQuestion]?.answer || ''} onChange={(e) => handleAnswer(e.target.value)} />;
+                    }
+                    if (q.questionType === 'BOOLEAN') {
+                      return <div className="flex gap-3">{['Yes', 'No'].map(opt => {
+                        const sel = answers[currentQuestion]?.answer === opt;
+                        return <button key={opt} onClick={() => handleAnswer(opt)} className={`flex-1 py-4 rounded-2xl text-lg font-semibold transition-all ${sel ? 'text-white' : 'text-white/40 border border-white/10'}`} style={sel ? { background: 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' } : { background: '#252840' }}>{opt}</button>;
+                      })}</div>;
+                    }
+                    if (q.questionType === 'TEXT') {
+                      return <textarea className="w-full py-4 rounded-2xl text-lg px-6 bg-[#252840] text-white border border-white/10 outline-none focus:border-[#7C5CFC]" rows={4} value={answers[currentQuestion]?.answer || ''} onChange={(e) => handleAnswer(e.target.value)} />;
+                    }
+                    return (q.scaleOptions || []).map((option: string, i: number) => {
+                      const sel = answers[currentQuestion]?.answer === option;
+                      return <button key={option} onClick={() => handleAnswer(option)} className={`w-full py-4 rounded-2xl text-left px-5 font-medium transition-all ${sel ? 'text-white' : 'text-white/50 border border-white/10'}`} style={sel ? { background: 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' } : { background: '#252840' }}>
+                        <span className="text-white/30 mr-3 font-bold">{i}</span>{option.split(':')[0]}
+                      </button>;
+                    });
+                  })()}
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center"><p className="text-white/40">No questions available</p></div>
+            )}
+
+            {/* Bottom buttons */}
+            {questions.length > 0 && (
+              <div className="px-6 pb-6 pt-3 flex gap-3">
+                <button onClick={handlePrev} disabled={currentQuestion === 0} className="flex-1 py-4 rounded-2xl border border-white/20 text-white font-semibold disabled:opacity-30">Previous</button>
+                <button onClick={handleNext} disabled={submittingQuiz || !answers[currentQuestion]?.answer} className="flex-1 py-4 rounded-2xl text-white font-semibold disabled:opacity-30" style={{ background: answers[currentQuestion]?.answer ? 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' : '#252840' }}>
+                  {submittingQuiz ? 'Submitting...' : currentQuestion === questions.length - 1 ? 'Submit ✨' : 'Next →'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
