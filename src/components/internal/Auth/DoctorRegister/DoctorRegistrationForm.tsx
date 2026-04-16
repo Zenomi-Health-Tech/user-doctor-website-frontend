@@ -53,7 +53,7 @@ const specializationOptions = [
     'Other',
 ];
 
-const currencyOptions = [
+const _currencyOptions = [
     { label: '₹ INR', value: 'INR' },
     { label: '$ USD', value: 'USD' },
     { label: '€ EUR', value: 'EUR' },
@@ -91,7 +91,7 @@ const DoctorRegistrationForm = () => {
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
     const [countryCode, setCountryCode] = useState('+91');
-    const [currency, setCurrency] = useState('INR');
+    const [_currency, _setCurrency] = useState('INR');
     const navigate = useNavigate();
     const [step, setStep] = useState(0);
 

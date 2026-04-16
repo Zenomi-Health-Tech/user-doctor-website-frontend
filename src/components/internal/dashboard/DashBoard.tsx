@@ -97,6 +97,7 @@ export default function Dashboard() {
   console.log(isDoctor, "isDoctor");
   // Add a state to track the last completed test name
   const [lastCompletedTestName, setLastCompletedTestName] = useState<string | null>(null);
+  const [nutritionResults, setNutritionResults] = useState<any>(null);
   const SLEEP_TEST_ID = 'cmb7mnl5e0000qelpn6yjmyt0';
   const NUTRITION_TEST_ID = 'cmb7mnl8x0001qelpyyqkwk31';
   const isSleepQuiz = currentTestId === SLEEP_TEST_ID;
@@ -409,20 +410,19 @@ export default function Dashboard() {
           }
         }).catch(() => {});
       } else {
-        await axios.post(
+        const scoreRes = await axios.post(
           `https://zenomiai.elitceler.com/api/score-test/${currentTestId}`,
           { answers: formattedAnswers },
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        const completedTest = tests.find(t => t.id === currentTestId);
+        if (completedTest?.name?.toLowerCase().includes('nutrition')) {
+          setNutritionResults(scoreRes.data);
+        } else {
+          setNutritionResults(null);
+        }
       }
-      // Find the test name for the just-completed test
       const completedTest = tests.find(t => t.id === currentTestId);
-      // Store nutrition results if it's a nutrition test
-      if (completedTest?.name?.toLowerCase().includes('nutrition')) {
-        setNutritionResults(scoreRes.data);
-      } else {
-        setNutritionResults(null);
-      }
       setLastCompletedTestName(completedTest?.name || null);
       if (currentTestId !== SLEEP_TEST_ID) {
         setShowCompletionDialog(true);
