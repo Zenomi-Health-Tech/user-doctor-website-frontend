@@ -53,13 +53,6 @@ const specializationOptions = [
     'Other',
 ];
 
-const _currencyOptions = [
-    { label: '₹ INR', value: 'INR' },
-    { label: '$ USD', value: 'USD' },
-    { label: '€ EUR', value: 'EUR' },
-    { label: '£ GBP', value: 'GBP' },
-];
-
 const doctorSchema = z.object({
     name: z.string().min(1, 'Name is required'),
     email: z.string().email('Invalid email address'),
@@ -91,7 +84,6 @@ const DoctorRegistrationForm = () => {
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
     const [countryCode, setCountryCode] = useState('+91');
-    const [_currency, _setCurrency] = useState('INR');
     const navigate = useNavigate();
     const [step, setStep] = useState(0);
 
