@@ -105,6 +105,7 @@ export default function Dashboard() {
   const [sleepPart, setSleepPart] = useState(0);
   const [sleepExitOpen, setSleepExitOpen] = useState(false);
   const [sleepResults, setSleepResults] = useState<{score: number, max: number, assessment: string, sentiment: string} | null>(null);
+  const [quizResults, setQuizResults] = useState<{score: number, max: number, testName: string, gradient: string} | null>(null);
   const [hasSleepLog, setHasSleepLog] = useState(false);
   const [hasAppointment, setHasAppointment] = useState(false);
 
@@ -392,16 +393,32 @@ export default function Dashboard() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const completedTest = tests.find(t => t.id === currentTestId);
-        if (completedTest?.name?.toLowerCase().includes('nutrition')) {
+        const tn = (completedTest?.name || '').toLowerCase();
+        if (tn.includes('nutrition')) {
           setNutritionResults(scoreRes.data);
+        } else if (tn.includes('phq') || tn.includes('gad') || tn.includes('emotional') || tn.includes('anxiety') || tn.includes('depression')) {
+          // Show detailed results screen matching the app
+          const d = scoreRes.data?.data || scoreRes.data || {};
+          const userScore = d.user_score ?? d.score ?? formattedAnswers.reduce((s: number, a: any) => s + (parseInt(a.answer) || 0), 0);
+          const maxScore = d.max_score_for_test ?? d.max_score ?? questions.length * 3;
+          const isPHQ = tn.includes('phq') || tn.includes('depression');
+          const isGAD = tn.includes('gad') || tn.includes('anxiety');
+          setQuizResults({
+            score: userScore, max: maxScore,
+            testName: completedTest?.name || 'Assessment',
+            gradient: isPHQ ? '#8B5CF6, #A855F7' : isGAD ? '#FF6B6B, #FF8E53' : '#FF6B9D, #C850C0',
+          });
+          setNutritionResults(null);
         } else {
           setNutritionResults(null);
         }
       }
       const completedTest = tests.find(t => t.id === currentTestId);
       setLastCompletedTestName(completedTest?.name || null);
-      setShowCompletionDialog(true);
-      setTimeout(() => { setShowCompletionDialog(false); window.location.reload(); }, 2500);
+      if (!quizResults) {
+        setShowCompletionDialog(true);
+        setTimeout(() => { setShowCompletionDialog(false); window.location.reload(); }, 2500);
+      }
       // Re-fetch tests after submission to update completed count
       const res = await axios.get(
         "https://zenomiai.elitceler.com/api/testnames",
@@ -1050,6 +1067,64 @@ export default function Dashboard() {
                     </div>
                   </>
                 )}
+              </div>
+            </div>
+          );
+        })()
+      )}
+
+      {/* Quiz Results Screen (PHQ9/GAD7/Emotional) — matches app */}
+      {quizResults && (
+        (() => {
+          const s = quizResults.score;
+          const tn = quizResults.testName.toLowerCase();
+          const isPHQ = tn.includes('phq') || tn.includes('depression');
+          const isGAD = tn.includes('gad') || tn.includes('anxiety');
+          let severity = '', desc = '', severityColor = '';
+          if (isPHQ) {
+            severity = s <= 4 ? 'Minimal Depression' : s <= 9 ? 'Mild Depression' : s <= 14 ? 'Moderate Depression' : s <= 19 ? 'Moderately Severe' : 'Severe Depression';
+            desc = s <= 4 ? 'Your responses suggest minimal or no depressive symptoms. Keep maintaining your well-being! 🌟' : s <= 9 ? 'Your responses suggest mild depressive symptoms. Consider monitoring your mood and practicing self-care.' : s <= 14 ? 'Your responses suggest moderate depressive symptoms. Speaking with a healthcare provider may be helpful. 💬' : 'Your responses suggest significant depressive symptoms. Professional support is recommended. 🤝';
+            severityColor = s <= 4 ? '#4CAF50' : s <= 9 ? '#FFC107' : s <= 14 ? '#FF9800' : '#FF6B6B';
+          } else if (isGAD) {
+            severity = s <= 4 ? 'Minimal Anxiety' : s <= 9 ? 'Mild Anxiety' : s <= 14 ? 'Moderate Anxiety' : 'Severe Anxiety';
+            desc = s <= 4 ? 'Your anxiety levels appear to be within a normal range. Keep maintaining your healthy coping strategies! 🌟' : s <= 9 ? 'You may be experiencing mild anxiety. Consider incorporating relaxation techniques into your daily routine. 🧘' : s <= 14 ? 'Your results suggest moderate anxiety. It may be helpful to speak with a healthcare professional. 💬' : 'Your results indicate severe anxiety levels. We strongly recommend consulting with a healthcare professional. 🤝';
+            severityColor = s <= 4 ? '#4CAF50' : s <= 9 ? '#FFC107' : s <= 14 ? '#FF9800' : '#FF6B6B';
+          } else {
+            severity = s <= 25 ? 'Needs Support' : s <= 50 ? 'Developing' : 'Strong';
+            desc = s <= 25 ? 'Your emotional health needs attention. Consider speaking with a counselor or trusted adult. 💙' : s <= 50 ? "You're developing good emotional skills. Keep building on your strengths! 🌱" : 'Your emotional health is strong! Keep up the amazing self-awareness. 🌟';
+            severityColor = s <= 25 ? '#FF6B6B' : s <= 50 ? '#FFC107' : '#4CAF50';
+          }
+          return (
+            <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: '#12121F' }}>
+              <div className="max-w-lg mx-auto px-5 py-8">
+                {/* Title */}
+                <h1 className="text-2xl font-bold text-center mb-1 bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(135deg, ${quizResults.gradient})`, WebkitBackgroundClip: 'text' }}>{quizResults.testName}</h1>
+                <p className="text-sm text-center mb-8" style={{ color: 'rgba(255,255,255,0.4)' }}>Here are your results 📊</p>
+
+                {/* Score Card */}
+                <div className="rounded-[20px] overflow-hidden mb-4" style={{ background: '#1E1E30' }}>
+                  <div className="py-8 flex flex-col items-center" style={{ background: `linear-gradient(135deg, #FF8E53, ${quizResults.gradient.split(',')[0]})` }}>
+                    <span className="text-5xl mb-3">⛅</span>
+                    <span className="text-5xl font-bold text-white mb-2">{s}</span>
+                    <span className="px-5 py-2 rounded-full text-white text-sm font-bold" style={{ background: severityColor }}>{severity}</span>
+                    <span className="text-white/50 text-xs mt-2">Score: {s} / {quizResults.max}</span>
+                  </div>
+                  <div className="p-5">
+                    <p className="text-sm text-center leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>{desc}</p>
+                  </div>
+                </div>
+
+                {/* Disclaimer */}
+                <div className="rounded-2xl p-4 mb-6 border" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+                  <p className="text-xs text-center italic leading-relaxed" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                    This is a screening tool, not a diagnosis. Please consult a qualified healthcare professional for clinical evaluation.
+                  </p>
+                </div>
+
+                {/* Done button */}
+                <button onClick={() => { setQuizResults(null); window.location.reload(); }} className="w-full py-4 rounded-2xl text-white font-semibold text-base" style={{ background: `linear-gradient(135deg, ${quizResults.gradient})` }}>
+                  Done 🏠
+                </button>
               </div>
             </div>
           );
