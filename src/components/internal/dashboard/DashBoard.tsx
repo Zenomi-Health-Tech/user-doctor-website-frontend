@@ -274,71 +274,47 @@ export default function Dashboard() {
     }
   };
 
-  const handleAnswer = (answer: any) => {
-    const q = questions[currentQuestion];
-    // Ensure answers array has a placeholder for the current question if it's the first time answering it
+  const handleAnswer = (answer: any, qIdx?: number) => {
+    const idx = qIdx !== undefined ? qIdx : currentQuestion;
+    const q = questions[idx];
     const newAnswers = [...answers];
-    if (newAnswers.length <= currentQuestion) {
-      newAnswers.length = currentQuestion + 1;
+    if (newAnswers.length <= idx) {
+      newAnswers.length = idx + 1;
     }
 
-    // Handle different answer types
     let answerValue = answer;
     if (q.questionType === "SCALE") {
-      // For scale options, store the full option string (not just the label)
-      answerValue = answer; // answer is already the full option string from the button
+      answerValue = answer;
     } else if (Array.isArray(answer)) {
-      // If it's an array, take the first element
       answerValue = answer[0];
     }
 
-    newAnswers[currentQuestion] = {
+    newAnswers[idx] = {
       question: q.question,
       answer: answerValue,
     };
     setAnswers(newAnswers);
 
-    // Auto-advance for BOOLEAN and SCALE questions
-    if (
-      (q.questionType === "BOOLEAN" || q.questionType === "SCALE") &&
-      currentQuestion < questions.length - 1
-    ) {
-      setTimeout(() => {
-        setCurrentQuestion((prev) => prev + 1);
-      }, 200); // slight delay for UX
-    } else if (
-      (q.questionType === "BOOLEAN" || q.questionType === "SCALE") &&
-      currentQuestion === questions.length - 1
-    ) {
-      // If last question, auto-submit
-      setTimeout(() => {
-        handleSubmitQuiz();
-      }, 200);
+    // Auto-advance only in single-question mode (no qIdx passed)
+    if (qIdx === undefined) {
+      if (
+        (q.questionType === "BOOLEAN" || q.questionType === "SCALE") &&
+        currentQuestion < questions.length - 1
+      ) {
+        setTimeout(() => {
+          setCurrentQuestion((prev) => prev + 1);
+        }, 200);
+      } else if (
+        (q.questionType === "BOOLEAN" || q.questionType === "SCALE") &&
+        currentQuestion === questions.length - 1
+      ) {
+        setTimeout(() => {
+          handleSubmitQuiz();
+        }, 200);
+      }
     }
   };
 
-  const handleNext = () => {
-    if (currentQuestion < questions.length - 1) {
-      // Check if the current question has been answered before moving next
-      if (!answers[currentQuestion] || !answers[currentQuestion].answer) {
-        // Prevent moving to the next question if the current one is not answered
-        alert("Please answer the current question before proceeding.");
-        return;
-      }
-      setCurrentQuestion(currentQuestion + 1);
-    } else {
-      // Check if the last question is answered before submitting
-      if (!answers[currentQuestion] || !answers[currentQuestion].answer) {
-        alert("Please answer the last question before submitting.");
-        return;
-      }
-      handleSubmitQuiz();
-    }
-  };
-
-  const handlePrev = () => {
-    if (currentQuestion > 0) setCurrentQuestion(currentQuestion - 1);
-  };
   const handleHomeScreen = () => {
     setShowQuiz(false);
     setShowCompletionDialog(false);
@@ -1003,68 +979,81 @@ export default function Dashboard() {
         />
       )}
       {showQuiz && !isSleepQuiz && !isNutritionQuiz && (
-        <div className="fixed inset-0 z-50 flex flex-col" style={{ background: '#12121F' }}>
-          <div className="w-full max-w-2xl mx-auto flex flex-col flex-1 overflow-hidden">
-            {/* Header */}
-            <div className="px-6 pt-5 pb-3">
-              <div className="flex items-center justify-between mb-4">
-                <button onClick={() => { setShowQuiz(false); setAnswers([]); }} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white">&times;</button>
-                <span className="text-white font-semibold text-sm">{selectedTest?.name || 'Assessment'}</span>
-                <span className="text-white/40 text-xs">{currentQuestion + 1}/{questions.length}</span>
-              </div>
-              <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%`, background: 'linear-gradient(90deg, #7C5CFC, #6C8AFF)' }} />
+        (() => {
+          const testName = selectedTest?.name || 'Assessment';
+          const tl = testName.toLowerCase();
+          const isPHQ = tl.includes('phq');
+          const isGAD = tl.includes('gad');
+          const grad = isPHQ ? '#8B5CF6, #A855F7' : isGAD ? '#FF6B6B, #FF8E53' : '#FF6B9D, #C850C0';
+          const optionEmojis = ['😊', '😐', '😟', '😥', '😰'];
+          const optionColors = [['#4CAF50','#4CAF50'],['#FFC107','#FFC107'],['#FF9800','#FF9800'],['#FF6B6B','#FF4444'],['#E53935','#C62828']];
+          const answered = answers.filter((a: any) => a?.answer).length;
+          const allAnswered = answered === questions.length && questions.length > 0;
+          return (
+            <div className="fixed inset-0 z-50 flex flex-col" style={{ background: '#12121F' }}>
+              <div className="w-full max-w-2xl mx-auto flex flex-col flex-1 overflow-hidden">
+                {/* Header */}
+                <div className="px-5 pt-4 pb-2 flex-shrink-0">
+                  <div className="flex items-center justify-between mb-3">
+                    <button onClick={() => { setShowQuiz(false); setAnswers([]); }} className="text-white/40 hover:text-white">✕</button>
+                    <span className="text-white font-semibold text-sm">{testName}</span>
+                    <span className="text-white/40 text-xs">{answered}/{questions.length}</span>
+                  </div>
+                  <div className="h-[5px] rounded-full overflow-hidden" style={{ background: '#252840' }}>
+                    <div className="h-full rounded-full transition-all duration-500" style={{ width: `${questions.length ? (answered / questions.length) * 100 : 0}%`, background: `linear-gradient(90deg, ${grad})` }} />
+                  </div>
+                </div>
+
+                {loadingQuestions ? (
+                  <div className="flex-1 flex items-center justify-center"><div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: grad.split(',')[0] }}></div></div>
+                ) : (
+                  <>
+                    {/* All questions scrollable */}
+                    <div className="flex-1 overflow-y-auto px-5 py-3">
+                      {questions.map((q: any, qIdx: number) => {
+                        const selected = answers[qIdx]?.answer;
+                        return (
+                          <div key={q.id || qIdx} className="mb-3 p-4 rounded-2xl" style={{ background: '#1E1E30' }}>
+                            <div className="flex items-start gap-3 mb-4">
+                              <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#4CAF50' }}>
+                                <span className="text-white text-xs font-bold">{qIdx + 1}</span>
+                              </div>
+                              <span className="text-white text-sm font-semibold leading-snug">{q.question}</span>
+                            </div>
+                            <div className={`grid gap-2`} style={{ gridTemplateColumns: `repeat(${Math.min(q.scaleOptions?.length || 4, 5)}, 1fr)` }}>
+                              {(q.scaleOptions || []).map((option: string, i: number) => {
+                                const sel = selected === option;
+                                const emoji = optionEmojis[i] || '❓';
+                                const cols = optionColors[i] || optionColors[0];
+                                return (
+                                  <button key={option} onClick={() => handleAnswer(option, qIdx)}
+                                    className="py-3 rounded-xl text-center transition-all flex flex-col items-center gap-1"
+                                    style={{ background: sel ? `linear-gradient(135deg, ${cols[0]}, ${cols[1]})` : '#252840', border: sel ? 'none' : '1px solid rgba(255,255,255,0.08)' }}>
+                                    <span className="text-lg">{emoji}</span>
+                                    <span className="text-[10px] font-bold" style={{ color: sel ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)' }}>{i}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Submit button */}
+                    <div className="px-5 pb-5 pt-2 flex-shrink-0">
+                      <button onClick={() => { if (allAnswered) handleSubmitQuiz(); }}
+                        className="w-full py-4 rounded-2xl text-white font-semibold transition-all"
+                        style={{ background: allAnswered ? `linear-gradient(135deg, ${grad})` : '#252840', color: allAnswered ? 'white' : 'rgba(255,255,255,0.3)' }}>
+                        {submittingQuiz ? 'Submitting...' : allAnswered ? 'Submit Assessment ✨' : `Answer all to submit (${answered}/${questions.length})`}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
-
-            {loadingQuestions ? (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#7C5CFC]"></div>
-              </div>
-            ) : questions.length > 0 ? (
-              <div className="flex-1 overflow-y-auto px-6 py-4">
-                <p className="text-white/40 text-xs mb-2 font-medium">Question {String(currentQuestion + 1).padStart(2, '0')}</p>
-                <h3 className="text-white text-xl font-bold mb-8 leading-snug">{questions[currentQuestion]?.question}</h3>
-                <div className="flex flex-col gap-3">
-                  {(() => {
-                    const q = questions[currentQuestion];
-                    if (!q) return null;
-                    if (q.questionType === 'NUMBER') {
-                      return <input type="number" className="w-full py-4 rounded-2xl text-lg font-medium px-6 bg-[#252840] text-white border border-white/10 outline-none focus:border-[#7C5CFC]" value={answers[currentQuestion]?.answer || ''} onChange={(e) => handleAnswer(e.target.value)} />;
-                    }
-                    if (q.questionType === 'BOOLEAN') {
-                      return <div className="flex gap-3">{['Yes', 'No'].map(opt => {
-                        const sel = answers[currentQuestion]?.answer === opt;
-                        return <button key={opt} onClick={() => handleAnswer(opt)} className={`flex-1 py-4 rounded-2xl text-lg font-semibold transition-all ${sel ? 'text-white' : 'text-white/40 border border-white/10'}`} style={sel ? { background: 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' } : { background: '#252840' }}>{opt}</button>;
-                      })}</div>;
-                    }
-                    if (q.questionType === 'TEXT') {
-                      return <textarea className="w-full py-4 rounded-2xl text-lg px-6 bg-[#252840] text-white border border-white/10 outline-none focus:border-[#7C5CFC]" rows={4} value={answers[currentQuestion]?.answer || ''} onChange={(e) => handleAnswer(e.target.value)} />;
-                    }
-                    return (q.scaleOptions || []).map((option: string, i: number) => {
-                      const sel = answers[currentQuestion]?.answer === option;
-                      return <button key={option} onClick={() => handleAnswer(option)} className={`w-full py-4 rounded-2xl text-left px-5 font-medium transition-all ${sel ? 'text-white' : 'text-white/50 border border-white/10'}`} style={sel ? { background: 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' } : { background: '#252840' }}>
-                        <span className="text-white/30 mr-3 font-bold">{i}</span>{option.split(':')[0]}
-                      </button>;
-                    });
-                  })()}
-                </div>
-              </div>
-            ) : (
-              <div className="flex-1 flex items-center justify-center"><p className="text-white/40">No questions available</p></div>
-            )}
-
-            {/* Bottom buttons */}
-            {questions.length > 0 && (
-              <div className="px-6 pb-6 pt-3 flex gap-3">
-                <button onClick={handlePrev} disabled={currentQuestion === 0} className="flex-1 py-4 rounded-2xl border border-white/20 text-white font-semibold disabled:opacity-30">Previous</button>
-                <button onClick={handleNext} disabled={submittingQuiz || !answers[currentQuestion]?.answer} className="flex-1 py-4 rounded-2xl text-white font-semibold disabled:opacity-30" style={{ background: answers[currentQuestion]?.answer ? 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' : '#252840' }}>
-                  {submittingQuiz ? 'Submitting...' : currentQuestion === questions.length - 1 ? 'Submit ✨' : 'Next →'}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+          );
+        })()
       )}
 
       {showCompletionDialog && (
