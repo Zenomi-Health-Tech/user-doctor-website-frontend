@@ -424,11 +424,8 @@ export default function Dashboard() {
       }
       const completedTest = tests.find(t => t.id === currentTestId);
       setLastCompletedTestName(completedTest?.name || null);
-      if (currentTestId !== SLEEP_TEST_ID) {
-        setShowCompletionDialog(true);
-        // Auto-close after 2s and reload
-        setTimeout(() => { setShowCompletionDialog(false); window.location.reload(); }, 2000);
-      }
+      setShowCompletionDialog(true);
+      setTimeout(() => { setShowCompletionDialog(false); window.location.reload(); }, 2500);
       // Re-fetch tests after submission to update completed count
       const res = await axios.get(
         "https://zenomiai.elitceler.com/api/testnames",
@@ -722,7 +719,7 @@ export default function Dashboard() {
                               <h3 className="text-base font-semibold text-white truncate">{test.name}</h3>
                               <p className="text-xs text-white/50 line-clamp-2 mt-0.5">{test.description || "No description"}</p>
                             </div>
-                            {test.testStatus === "UNLOCKED" && (!showProcessing || currentTestId !== test.id) && (
+                            {test.testStatus === "UNLOCKED" && !showProcessing && (
                               <button onClick={() => setSelectedTest(test)} className="self-start px-6 py-1.5 rounded-full bg-white/25 text-white text-xs font-bold hover:bg-white/35 transition">
                                 Take test
                               </button>
