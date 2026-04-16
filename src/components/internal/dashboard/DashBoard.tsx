@@ -418,11 +418,14 @@ export default function Dashboard() {
           setNutritionResults(null);
         }
       }
-      const completedTest = tests.find(t => t.id === currentTestId);
-      setLastCompletedTestName(completedTest?.name || null);
-      if (!quizResults) {
+      const completedTest2 = tests.find(t => t.id === currentTestId);
+      setLastCompletedTestName(completedTest2?.name || null);
+      const hasDetailedResults = (completedTest2?.name || '').toLowerCase().match(/phq|gad|emotional|anxiety|depression|nutrition/);
+      if (!hasDetailedResults) {
         setShowCompletionDialog(true);
         setTimeout(() => { setShowCompletionDialog(false); window.location.reload(); }, 2500);
+      } else {
+        setShowCompletionDialog(true);
       }
       // Re-fetch tests after submission to update completed count
       const res = await axios.get(
@@ -1195,7 +1198,7 @@ export default function Dashboard() {
                 <button
                   className="w-full py-3 rounded-full text-white font-semibold text-lg"
                   style={{ background: "linear-gradient(90deg, #704180 6.54%, #8B2D6C 90.65%)" }}
-                  onClick={() => { setNutritionResults(null); handleHomeScreen(); }}
+                  onClick={() => { setNutritionResults(null); setShowCompletionDialog(false); window.location.reload(); }}
                 >
                   Done
                 </button>
