@@ -73,10 +73,10 @@ const PatientsList: React.FC = () => {
   }
 
   return (
-    <div className="p-8  min-h-screen font-['Poppins']">
-      <h1 className="text-3xl font-semibold mb-6 text-gray-800">Patient Details</h1>
-      <div className="flex items-center justify-between mb-8">
-        <div className="relative flex-1 max-w-md">
+    <div className="p-4 sm:p-8 min-h-screen font-['Poppins']">
+      <h1 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 text-gray-800">Patient Details</h1>
+      <div className="flex items-center gap-3 mb-6 sm:mb-8">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
             type="text"
@@ -86,7 +86,7 @@ const PatientsList: React.FC = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button className="p-3 rounded-full bg-white border border-gray-200 shadow-sm ml-4">
+        <button className="p-3 rounded-full bg-white border border-gray-200 shadow-sm flex-shrink-0">
           <SlidersHorizontal className="w-5 h-5 text-gray-500" />
         </button>
       </div>
