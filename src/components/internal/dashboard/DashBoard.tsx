@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
-import LottieLoader from "@/components/shared/LottieLoader";
 import NutritionQuiz from "./NutritionQuiz";
 import userTick from "@/assets/user-tick.png";
 import yellowcal from "@/assets/yellowcal.png";
@@ -487,7 +486,31 @@ export default function Dashboard() {
   //   }
   // }, []);
 
-  if (loading) return <LottieLoader text="Loading your dashboard..." />;
+  if (loading) return (
+    <div className="flex flex-col lg:flex-row gap-8 w-full max-w-6xl mx-auto mt-6 p-2 sm:p-4 md:p-8 font-['Poppins']">
+      <div className="flex-1 w-full max-w-[650px] mx-auto">
+        {/* Shimmer greeting */}
+        <div className="h-8 w-64 bg-gray-200 rounded-lg mb-6 animate-pulse" />
+        {/* Shimmer progress bar */}
+        <div className="h-3 w-40 bg-gray-200 rounded mb-2 animate-pulse" />
+        <div className="h-2 w-full bg-gray-200 rounded-full mb-6 animate-pulse" />
+        {/* Shimmer cards matching app's 3 skeleton cards */}
+        {[0, 1, 2].map(i => (
+          <div key={i} className="mb-4 w-full h-[140px] rounded-[20px] overflow-hidden relative" style={{ background: '#e5e7eb' }}>
+            <div className="absolute inset-0 animate-shimmer" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%)', backgroundSize: '200% 100%' }} />
+          </div>
+        ))}
+      </div>
+      <div className="w-full lg:w-[340px] flex flex-col gap-4">
+        <div className="h-[140px] rounded-2xl bg-gray-200 animate-pulse" />
+        <div className="h-[200px] rounded-2xl bg-gray-200 animate-pulse" />
+      </div>
+      <style>{`
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .animate-shimmer { animation: shimmer 1.5s infinite; }
+      `}</style>
+    </div>
+  );
 
   // Ensure tests is an array before proceeding
   if (!Array.isArray(tests) && !isDoctor) {

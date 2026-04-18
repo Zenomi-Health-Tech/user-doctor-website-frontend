@@ -31,16 +31,17 @@ export default function MobileBottomNav() {
       >
         {tabs.map((tab) => {
           const isActive = location.pathname === tab.path || location.pathname.startsWith(tab.path + '/');
+          const isSleep = tab.path === '/sleep-tracker' && !isActive;
           const Icon = tab.icon;
           return (
             <div key={tab.path} className="flex-1 h-full flex items-center justify-center px-0.5 py-1">
               <button
                 onClick={() => navigate(tab.path)}
-                className={`w-full h-full flex flex-col items-center justify-center rounded-full transition-all duration-300 ${isActive ? '' : ''}`}
-                style={isActive ? { background: '#704180' } : {}}
+                className={`w-full h-full flex flex-col items-center justify-center rounded-full transition-all duration-300`}
+                style={isActive ? { background: '#704180' } : isSleep ? { background: 'rgba(124,92,252,0.15)', border: '1.5px solid rgba(124,92,252,0.4)' } : {}}
               >
-                <Icon className="w-5 h-5" style={{ color: isActive ? 'white' : '#888' }} />
-                {isActive && <span className="text-[9px] text-white font-semibold mt-0.5 leading-none">{tab.label}</span>}
+                <Icon className="w-5 h-5" style={{ color: isActive ? 'white' : isSleep ? '#7C5CFC' : '#888' }} />
+                {(isActive || isSleep) && <span className="text-[9px] font-semibold mt-0.5 leading-none" style={{ color: isActive ? 'white' : '#7C5CFC' }}>{tab.label}</span>}
               </button>
             </div>
           );

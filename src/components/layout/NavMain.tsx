@@ -25,6 +25,7 @@ export function NavMain({
       <SidebarMenu className="space-y-1">
         {items.map((item) => {
           const isActive = location.pathname === item.url || location.pathname.startsWith(item.url + '/');
+          const isSleep = item.url === '/sleep-tracker';
           return (
             <SidebarMenuItem key={item.title}>
               <Link
@@ -32,7 +33,9 @@ export function NavMain({
                 className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 font-['Poppins']
                   ${isActive
                     ? "bg-[#8B2D6C] text-white shadow-sm"
-                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"}
+                    : isSleep
+                      ? "text-[#7C5CFC] bg-[#7C5CFC]/10 border border-[#7C5CFC]/30 hover:bg-[#7C5CFC]/20"
+                      : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"}
                 `}
               >
                 {item.icon && (
