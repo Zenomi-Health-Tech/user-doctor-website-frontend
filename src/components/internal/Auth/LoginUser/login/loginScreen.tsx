@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useGoogleLogin } from "@react-oauth/google";
+import { GoogleLogin } from "@react-oauth/google";
 import { ChevronLeft, Loader } from "lucide-react";
 import Lottie from "lottie-react";
 import axios from "axios";
@@ -15,47 +15,50 @@ const Component = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [anim, setAnim] = useState<any>(null);
+  const googleBtnRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/meditation.json").then(r => r.json()).then(setAnim).catch(() => {});
   }, []);
 
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setLoading(true);
-      try {
-        const res = await axios.post("https://zenomi.elitceler.com/api/v1/users/google-signin", {
-          idToken: tokenResponse.access_token,
-        });
-        const token = res.data?.data?.token || res.data?.token;
-        const userId = res.data?.data?.user?.id || res.data?.data?.id;
-        if (token) {
-          setAuthCookies({ token });
-          if (userId) Cookies.set("userId", userId, { expires: 7 });
-          login(token);
-          window.location.href = "/dashboard";
-        }
-      } catch (error: any) {
-        if (error.response?.status === 404) {
-          window.location.href = "/user/register";
-        } else {
-          toast({ title: "Error", description: error.response?.data?.message || "Sign-in failed", variant: "destructive" });
-        }
-      } finally {
-        setLoading(false);
+  const handleSuccess = async (credentialResponse: any) => {
+    const idToken = credentialResponse.credential;
+    if (!idToken) {
+      toast({ title: "Error", description: "Google sign-in failed", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await axios.post("https://zenomi.elitceler.com/api/v1/users/google-signin", { idToken });
+      const token = res.data?.data?.token || res.data?.token;
+      const userId = res.data?.data?.user?.id || res.data?.data?.id;
+      if (token) {
+        setAuthCookies({ token });
+        if (userId) Cookies.set("userId", userId, { expires: 7 });
+        login(token);
+        window.location.href = "/dashboard";
       }
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Google Sign-In failed", variant: "destructive" });
-    },
-  });
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        window.location.href = "/user/register";
+      } else {
+        toast({ title: "Error", description: error.response?.data?.message || "Sign-in failed", variant: "destructive" });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCustomClick = () => {
+    const btn = googleBtnRef.current?.querySelector('div[role="button"]') as HTMLElement;
+    if (btn) btn.click();
+  };
 
   return (
     <div
       className="flex items-center justify-center min-h-screen px-4 font-['Urbanist'] relative"
       style={{ background: "linear-gradient(135deg, #704180, #8B2D6C)" }}
     >
-      {/* Back button */}
       <button
         onClick={() => navigate(-1)}
         className="absolute top-4 left-4 sm:top-6 sm:left-6 w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 transition"
@@ -63,9 +66,7 @@ const Component = () => {
         <ChevronLeft className="w-5 h-5 text-white" />
       </button>
 
-      {/* Main content */}
       <div className="flex flex-col items-center w-full max-w-sm">
-        {/* Lottie animation */}
         {anim && (
           <div className="w-48 h-48 sm:w-56 sm:h-56 mb-6 sm:mb-9">
             <Lottie animationData={anim} loop />
@@ -75,14 +76,23 @@ const Component = () => {
         <h1 className="text-2xl sm:text-[28px] font-bold text-white mb-2">Welcome Back</h1>
         <p className="text-sm text-white/70 mb-6 sm:mb-8">Sign in with your Google account</p>
 
-        {/* Google button */}
+        {/* Hidden Google Login button */}
+        <div ref={googleBtnRef} className="absolute opacity-0 pointer-events-none">
+          <GoogleLogin
+            onSuccess={handleSuccess}
+            onError={() => toast({ title: "Error", description: "Google sign-in failed", variant: "destructive" })}
+            size="large"
+            text="continue_with"
+          />
+        </div>
+
         {loading ? (
           <div className="flex justify-center py-4">
             <Loader className="animate-spin h-6 w-6 text-white" />
           </div>
         ) : (
           <button
-            onClick={() => googleLogin()}
+            onClick={handleCustomClick}
             className="w-full h-[54px] bg-white rounded-full flex items-center justify-center gap-3 hover:bg-gray-50 transition active:scale-[0.98]"
           >
             <svg width="22" height="22" viewBox="0 0 48 48">
@@ -96,7 +106,6 @@ const Component = () => {
         )}
       </div>
 
-      {/* Footer */}
       <p className="absolute bottom-4 left-6 right-6 text-center text-xs text-white/50">
         By continuing, you agree to our Terms &amp; Privacy Policy
       </p>
