@@ -355,7 +355,7 @@ export default function Dashboard() {
     if (currentQuestion > 0) setCurrentQuestion(currentQuestion - 1);
   };
 
-  const handleHomeScreen = () => {
+  const handleHomeScreen = async () => {
     setShowQuiz(false);
     setShowCompletionDialog(false);
     setSelectedTest(null);
@@ -364,10 +364,30 @@ export default function Dashboard() {
     setPhq9Results(null);
     setEmotionalResults(null);
     setPostTestLoading(true);
-    // Give backend time to process and unlock next test, then reload
-    setTimeout(() => {
-      window.location.reload();
-    }, 3000);
+
+    // Poll until next test unlocks or max 15 seconds
+    const authCookie = Cookies.get("auth");
+    let token = "";
+    if (authCookie) { try { token = JSON.parse(authCookie).token; } catch { token = ""; } }
+    const prevCompleted = tests.filter(t => t.testStatus === "COMPLETED").length;
+
+    for (let i = 0; i < 10; i++) {
+      await new Promise(r => setTimeout(r, 1500));
+      try {
+        const res = await axios.get("https://zenomiai.elitceler.com/api/testnames", { headers: { Authorization: `Bearer ${token}` } });
+        if (Array.isArray(res.data)) {
+          const newCompleted = res.data.filter((t: any) => t.testStatus === "COMPLETED").length;
+          if (newCompleted > prevCompleted || newCompleted === res.data.length) {
+            setTests(res.data);
+            setPostTestLoading(false);
+            setCurrentTestId(null);
+            return;
+          }
+        }
+      } catch { }
+    }
+    // Fallback: reload after max attempts
+    window.location.reload();
   };
 
   const handleSubmitQuiz = async () => {
