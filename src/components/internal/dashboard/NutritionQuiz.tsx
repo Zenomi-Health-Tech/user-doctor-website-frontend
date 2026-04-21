@@ -44,6 +44,7 @@ export default function NutritionQuiz({ questions, onSubmit, onClose }: Props) {
   const [fruits, setFruits] = useState(1);
   const [veggies, setVeggies] = useState(1);
   const [water, setWater] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
 
   const grouped = STEPS.map(s => ({
     ...s,
@@ -65,12 +66,25 @@ export default function NutritionQuiz({ questions, onSubmit, onClose }: Props) {
   const canNext = current.questions.every(q => answers[q.id]);
 
   const handleSubmit = () => {
+    setSubmitting(true);
     const formatted = questions.filter(q => q.questionType !== 'INACTIVE').map(q => ({
       question: q.question,
       answer: answers[q.id] || '',
     }));
-    onSubmit(formatted, (r) => setResult(r));
+    onSubmit(formatted, (r) => { setResult(r); setSubmitting(false); });
   };
+
+  // ── Loading Screen ──
+  if (submitting) {
+    return (
+      <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center font-['Poppins']" style={{ background: '#0F1A15' }}>
+        <div className="text-6xl mb-6">🥑</div>
+        <div className="w-10 h-10 border-3 border-white/20 border-t-[#2D9F83] rounded-full animate-spin mb-4" />
+        <p className="text-white text-lg font-semibold">Analyzing your nutrition...</p>
+        <p className="text-white/50 text-sm mt-2">This takes a few seconds</p>
+      </div>
+    );
+  }
 
   // ── Results Screen ──
   if (result) {
