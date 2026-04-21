@@ -132,15 +132,25 @@ export default function Results() {
         {/* Download Report */}
         <div className="px-2.5 sm:px-0">
           {selected?.reportView && (
-            <a
-              href={selected.reportView}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={async () => {
+                try {
+                  // Re-fetch analytics to get a fresh presigned URL
+                  const res = await api.get('/users/analytics');
+                  const freshData = res.data.data || [];
+                  const fresh = freshData[selectedIdx];
+                  const url = fresh?.reportView || selected.reportView;
+                  window.open(url, '_blank');
+                } catch {
+                  // Fallback to stored URL
+                  window.open(selected.reportView, '_blank');
+                }
+              }}
               className="block w-full py-3 rounded-full text-white font-medium text-base text-center hover:opacity-90 transition"
               style={{ background: '#704180' }}
             >
               Download Report
-            </a>
+            </button>
           )}
 
           {/* Zenomi Learn Courses Card - only when all tests done */}
