@@ -32,15 +32,24 @@ export default function MobileBottomNav() {
         {tabs.map((tab) => {
           const isActive = location.pathname === tab.path || location.pathname.startsWith(tab.path + '/');
           const Icon = tab.icon;
+          const isSleep = tab.label === "Sleep";
           return (
             <div key={tab.path} className="flex-1 h-full flex items-center justify-center px-0.5 py-1">
               <button
                 onClick={() => navigate(tab.path)}
-                className={`w-full h-full flex flex-col items-center justify-center rounded-full transition-all duration-300 ${isActive ? '' : ''}`}
-                style={isActive ? { background: '#704180' } : {}}
+                className="w-full h-full flex flex-col items-center justify-center rounded-full transition-all duration-300"
+                style={
+                  isSleep
+                    ? isActive
+                      ? { background: 'linear-gradient(135deg, #E76F51, #9B59B6)' }
+                      : { background: 'linear-gradient(135deg, rgba(231,111,81,0.4), rgba(155,89,182,0.4))', border: '1.5px solid rgba(155,89,182,0.4)' }
+                    : isActive
+                      ? { background: '#704180' }
+                      : {}
+                }
               >
-                <Icon className="w-5 h-5" style={{ color: isActive ? 'white' : '#888' }} />
-                {isActive && <span className="text-[9px] text-white font-semibold mt-0.5 leading-none">{tab.label}</span>}
+                <Icon className="w-5 h-5" style={{ color: isSleep ? (isActive ? 'white' : 'rgba(255,255,255,0.7)') : isActive ? 'white' : '#888' }} />
+                {(isActive || isSleep) && <span className="text-[9px] font-semibold mt-0.5 leading-none" style={{ color: isSleep ? (isActive ? 'white' : 'rgba(255,255,255,0.7)') : 'white' }}>{tab.label}</span>}
               </button>
             </div>
           );

@@ -17,6 +17,12 @@ const STEPS = [
   { key: 'NUTRITION_STEP_6_ENERGY', label: 'Energy', emoji: '💧', title: 'Hydration & Energy', subtitle: 'Water and energy go hand in hand' },
 ];
 
+const ACCENT = '#2D9F83';
+const ACCENT_LIGHT = '#2D9F8322';
+const BG = '#0F1A15';
+const CARD = '#1A2E25';
+const CARD_LIGHT = '#223D32';
+
 const PROTEIN_EMOJIS: Record<string, string> = { 'Meat': '🥩', 'Fish': '🐟', 'Eggs': '🥚', 'Dairy': '🧀', 'Beans/Lentils': '🫘', 'Nuts/Seeds': '🥜', 'Tofu/Soy': '🍢', 'Protein Bars': '🍫' };
 const MEAL_FREQ_EMOJIS = ['✅', '👍', '👋', '😐', '❌'];
 const MEAL_LABELS = ['Breakfast', 'Lunch', 'Dinner'];
@@ -37,7 +43,6 @@ export default function NutritionQuiz({ questions, onSubmit, onClose }: Props) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [result, setResult] = useState<NutritionResult | null>(null);
 
-  // Group questions by step
   const grouped = STEPS.map(s => ({
     ...s,
     questions: s.key === 'SCALE'
@@ -68,61 +73,67 @@ export default function NutritionQuiz({ questions, onSubmit, onClose }: Props) {
   // ── Results Screen ──
   if (result) {
     const scoreLabel = result.score >= 80 ? 'Excellent' : result.score >= 60 ? 'Good' : result.score >= 40 ? 'Fair' : 'Needs Work';
-    const scoreColor = result.score >= 60 ? '#2D9F83' : result.score >= 40 ? '#F59E0B' : '#EF4444';
     const pct = result.score / (result.maxScore || 100);
-    const r = 70; const circ = 2 * Math.PI * r;
+    const r = 55; const circ = 2 * Math.PI * r;
 
     return (
-      <div className="fixed inset-0 z-[60] bg-white overflow-y-auto font-['Poppins']">
-        <div className="max-w-2xl mx-auto px-4 py-8 pb-24">
-          <h1 className="text-2xl font-bold text-center mb-1">Your Results ⚡</h1>
-          <p className="text-sm text-gray-500 text-center mb-8">Here's your nutritional health snapshot</p>
-
-          {/* Score circle */}
-          <div className="flex justify-center mb-8">
-            <svg width="180" height="180">
-              <circle cx="90" cy="90" r={r} stroke="#e5e7eb" strokeWidth="12" fill="none" />
-              <circle cx="90" cy="90" r={r} stroke={scoreColor} strokeWidth="12" fill="none"
+      <div className="fixed inset-0 z-[60] overflow-y-auto font-['Poppins']" style={{ background: '#F7FDFB' }}>
+        <div className="max-w-lg mx-auto px-4 py-8 pb-24">
+          {/* Header card with score */}
+          <div className="rounded-[24px] p-6 sm:p-8 mb-5 flex flex-col items-center" style={{ background: 'linear-gradient(135deg, #2D9F83, #1B7A5A)' }}>
+            <div className="text-4xl mb-3">🥑</div>
+            <h1 className="text-xl font-bold text-white mb-1">Your Nutrition Report</h1>
+            <p className="text-sm text-white/70 mb-5">Here's what your answers tell us 🔍</p>
+            <svg width="130" height="130" className="mb-3">
+              <circle cx="65" cy="65" r={r} stroke="rgba(255,255,255,0.25)" strokeWidth="10" fill="none" />
+              <circle cx="65" cy="65" r={r} stroke="white" strokeWidth="10" fill="none"
                 strokeDasharray={circ} strokeDashoffset={circ * (1 - pct)} strokeLinecap="round"
-                transform="rotate(-90 90 90)" className="transition-all duration-1000" />
-              <text x="90" y="85" textAnchor="middle" fontSize="36" fontWeight="bold" fill="black">{result.score}</text>
-              <text x="90" y="108" textAnchor="middle" fontSize="14" fill={scoreColor}>{scoreLabel}</text>
+                transform="rotate(-90 65 65)" className="transition-all duration-1000" />
+              <text x="50%" y="50%" textAnchor="middle" dy=".35em" fontSize="42" fill="white" fontWeight="bold">{result.score}</text>
             </svg>
+            <span className="px-4 py-1.5 rounded-full text-white text-sm font-bold" style={{ background: 'rgba(255,255,255,0.2)' }}>{scoreLabel}</span>
+            <p className="text-white/90 text-sm text-center mt-3">
+              {result.score >= 80 ? 'Outstanding nutrition habits! Keep it up! 🌟' : result.score >= 60 ? 'Good nutrition foundation. A few tweaks can make it great!' : result.score >= 40 ? 'Room for improvement. Small changes go a long way!' : 'Your nutrition needs attention. Let\'s work on building better habits!'}
+            </p>
           </div>
 
           {/* Category Breakdown */}
-          <div className="border border-gray-200 rounded-2xl p-5 mb-6">
-            <h3 className="font-bold text-lg mb-4">Category Breakdown</h3>
-            <div className="space-y-4">
-              {result.categories.map(cat => (
-                <div key={cat.name}>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm">{cat.emoji} {cat.name}</span>
-                    <span className="text-sm font-bold" style={{ color: '#2D9F83' }}>{cat.pct}%</span>
+          {result.categories.length > 0 && (
+            <div className="rounded-[20px] p-5 mb-4 bg-white" style={{ border: '1.5px solid #E8F8F3' }}>
+              <h3 className="font-bold text-gray-900 mb-4">📊 Category Breakdown</h3>
+              <div className="space-y-4">
+                {result.categories.map(cat => (
+                  <div key={cat.name}>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm text-gray-700">{cat.emoji} {cat.name}</span>
+                      <span className="text-sm font-bold" style={{ color: '#2D9F83' }}>{cat.pct}%</span>
+                    </div>
+                    <div className="h-2 rounded-full" style={{ background: '#E8F8F3' }}>
+                      <div className="h-2 rounded-full transition-all duration-700" style={{ width: `${cat.pct}%`, background: '#2D9F83' }} />
+                    </div>
                   </div>
-                  <div className="h-2 rounded-full bg-gray-100">
-                    <div className="h-2 rounded-full transition-all duration-700" style={{ width: `${cat.pct}%`, background: '#2D9F83' }} />
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Recommendations */}
           {result.recommendations.length > 0 && (
-            <div className="border border-gray-200 rounded-2xl p-5 mb-6">
-              <h3 className="font-bold text-lg mb-3">💡 Recommendations</h3>
+            <div className="rounded-[20px] p-5 mb-6 bg-white" style={{ border: '1.5px solid #E8F8F3' }}>
+              <h3 className="font-bold text-gray-900 mb-3">💡 Recommendations</h3>
               {result.recommendations.map((rec, i) => (
-                <div key={i} className="flex items-start gap-3 py-2 border-b border-gray-100 last:border-0">
-                  <span className="text-[#2D9F83] mt-0.5">→</span>
-                  <p className="text-sm text-gray-700">{rec}</p>
+                <div key={i} className="flex items-start gap-3 py-2.5 border-b border-[#E8F8F3] last:border-0">
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: '#E8F8F3' }}>
+                    <span className="text-xs font-bold" style={{ color: '#2D9F83' }}>→</span>
+                  </div>
+                  <p className="text-sm text-gray-600">{rec}</p>
                 </div>
               ))}
             </div>
           )}
 
-          <button onClick={onClose} className="w-full py-3.5 rounded-xl text-white font-semibold" style={{ background: '#2D9F83' }}>
-            🔄 Take Assessment Again
+          <button onClick={() => onClose()} className="w-full py-4 rounded-2xl text-white font-bold text-lg" style={{ background: 'linear-gradient(135deg, #2D9F83, #1B7A5A)' }}>
+            Done 🏠
           </button>
         </div>
       </div>
@@ -132,50 +143,61 @@ export default function NutritionQuiz({ questions, onSubmit, onClose }: Props) {
   // Special state for fruits/veggies counters
   const [fruits, setFruits] = useState(1);
   const [veggies, setVeggies] = useState(1);
-  // Water glasses
   const [water, setWater] = useState(0);
 
   return (
-    <div className="fixed inset-0 z-[60] bg-white overflow-y-auto font-['Poppins']">
+    <div className="fixed inset-0 z-[60] overflow-y-auto font-['Poppins']" style={{ background: BG }}>
       <div className="max-w-2xl mx-auto px-4 py-6 pb-32">
+        {/* Close button */}
+        <div className="flex items-center justify-between mb-4">
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+          <span className="text-xs text-gray-500 px-3 py-1 rounded-full" style={{ background: CARD }}>{step + 1} / {STEPS.length}</span>
+        </div>
+
         {/* Step indicator */}
         <div className="flex items-center justify-center mb-6">
           {STEPS.map((s, i) => (
             <div key={s.key} className="flex items-center">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all ${i < step ? 'bg-[#2D9F83] border-[#2D9F83] text-white' : i === step ? 'border-[#2D9F83] text-[#2D9F83] bg-white' : 'border-gray-300 text-gray-400'}`}>
-                {i < step ? <Check className="w-4 h-4" /> : i + 1}
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${i < step ? 'text-white' : i === step ? 'text-white' : 'text-gray-500'}`}
+                style={{ background: i < step ? ACCENT : i === step ? CARD_LIGHT : CARD, border: i === step ? `2px solid ${ACCENT}` : '2px solid transparent' }}>
+                {i < step ? <Check className="w-3.5 h-3.5" /> : i + 1}
               </div>
-              {i < STEPS.length - 1 && <div className={`w-8 sm:w-12 h-0.5 ${i < step ? 'bg-[#2D9F83]' : 'bg-gray-200'}`} />}
+              {i < STEPS.length - 1 && <div className="w-6 sm:w-10 h-0.5" style={{ background: i < step ? ACCENT : CARD }} />}
             </div>
           ))}
         </div>
-        <div className="flex justify-between px-1 mb-6 text-[10px] text-gray-500">
-          {STEPS.map(s => <span key={s.key} className="w-9 text-center">{s.label}</span>)}
+
+        {/* Progress bar */}
+        <div className="h-1 rounded-full mb-6" style={{ background: CARD }}>
+          <div className="h-1 rounded-full transition-all duration-500" style={{ width: `${((step + 1) / STEPS.length) * 100}%`, background: `linear-gradient(90deg, ${ACCENT}, #1A7A63)` }} />
         </div>
 
         {/* Title */}
-        <h2 className="text-2xl font-bold text-center mb-1">{current.title} {current.emoji}</h2>
-        <p className="text-sm text-gray-500 text-center mb-8">{current.subtitle}</p>
+        <h2 className="text-2xl font-bold text-center mb-1 text-white">{current.emoji} {current.title}</h2>
+        <p className="text-sm text-gray-400 text-center mb-8">{current.subtitle}</p>
 
         {/* Step content */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Step 1: You */}
           {step === 0 && current.questions.map(q => (
-            <div key={q.id}>
-              <p className="font-medium mb-3">{q.question}</p>
+            <div key={q.id} className="rounded-2xl p-4" style={{ background: CARD }}>
+              <p className="font-medium mb-3 text-white text-sm">{q.question}</p>
               {q.question.toLowerCase().includes('old') ? (
                 <div>
                   <div className="flex items-center gap-3">
                     <input type="range" min={8} max={25} value={answers[q.id] || '14'} onChange={e => setAnswer(q.id, e.target.value)}
-                      className="flex-1 h-2 rounded-full appearance-none cursor-pointer" style={{ background: `linear-gradient(to right, #2D9F83 ${((+(answers[q.id] || 14) - 8) / 17) * 100}%, #e5e7eb ${((+(answers[q.id] || 14) - 8) / 17) * 100}%)`, accentColor: '#2D9F83' }} />
-                    <span className="text-2xl font-bold text-[#2D9F83] w-10 text-right">{answers[q.id] || 14}</span>
+                      className="flex-1 h-2 rounded-full appearance-none cursor-pointer" style={{ background: `linear-gradient(to right, ${ACCENT} ${((+(answers[q.id] || 14) - 8) / 17) * 100}%, ${CARD_LIGHT} ${((+(answers[q.id] || 14) - 8) / 17) * 100}%)`, accentColor: ACCENT }} />
+                    <span className="text-2xl font-bold w-10 text-right" style={{ color: ACCENT }}>{answers[q.id] || 14}</span>
                   </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-3">
                   {q.scaleOptions.map(opt => (
                     <button key={opt} onClick={() => setAnswer(q.id, opt)}
-                      className={`py-4 rounded-xl border-2 text-center transition ${answers[q.id] === opt ? 'border-[#2D9F83] bg-[#2D9F83]/10' : 'border-gray-200'}`}>
+                      className="py-4 rounded-xl text-center transition-all"
+                      style={{ background: answers[q.id] === opt ? ACCENT : CARD_LIGHT, color: 'white', border: answers[q.id] === opt ? `2px solid ${ACCENT}` : '2px solid transparent' }}>
                       <div className="text-2xl mb-1">{opt === 'Male' ? '🧑' : opt === 'Female' ? '👩' : '🧑‍🤝‍🧑'}</div>
                       <div className="text-sm">{opt}</div>
                     </button>
@@ -187,13 +209,14 @@ export default function NutritionQuiz({ questions, onSubmit, onClose }: Props) {
 
           {/* Step 2: Protein */}
           {step === 1 && current.questions.map(q => (
-            <div key={q.id}>
-              <p className="font-medium mb-3">{q.question}</p>
+            <div key={q.id} className="rounded-2xl p-4" style={{ background: CARD }}>
+              <p className="font-medium mb-3 text-white text-sm">{q.question}</p>
               {q.question.includes('servings') ? (
                 <div className="flex gap-2">
                   {q.scaleOptions.map(opt => (
                     <button key={opt} onClick={() => setAnswer(q.id, opt)}
-                      className={`w-12 h-12 rounded-full border-2 text-lg font-bold transition ${answers[q.id] === opt ? 'bg-[#2D9F83] text-white border-[#2D9F83]' : 'border-gray-200'}`}>
+                      className="w-12 h-12 rounded-full text-lg font-bold transition-all"
+                      style={{ background: answers[q.id] === opt ? ACCENT : CARD_LIGHT, color: 'white' }}>
                       {opt}
                     </button>
                   ))}
@@ -204,7 +227,8 @@ export default function NutritionQuiz({ questions, onSubmit, onClose }: Props) {
                     const selected = (answers[q.id] || '').split(',').includes(opt);
                     return (
                       <button key={opt} onClick={() => toggleMulti(q.id, opt)}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition ${selected ? 'border-[#2D9F83] bg-[#2D9F83]/10' : 'border-gray-200'}`}>
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all"
+                        style={{ background: selected ? ACCENT : CARD_LIGHT, color: 'white', border: selected ? `2px solid ${ACCENT}` : '2px solid transparent' }}>
                         <span className="text-lg">{PROTEIN_EMOJIS[opt] || '🍖'}</span>
                         <span className="text-sm">{opt}</span>
                       </button>
@@ -217,17 +241,17 @@ export default function NutritionQuiz({ questions, onSubmit, onClose }: Props) {
 
           {/* Step 3: Fruits & Veggies */}
           {step === 2 && current.questions.map(q => (
-            <div key={q.id} className="grid grid-cols-2 gap-4">
+            <div key={q.id} className="grid grid-cols-2 gap-3">
               {[{ label: 'Fruits', emoji: '🍎', val: fruits, set: setFruits }, { label: 'Vegetables', emoji: '🥦', val: veggies, set: setVeggies }].map(item => (
-                <div key={item.label} className="border-2 border-gray-200 rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-1"><span className="text-lg">{item.emoji}</span><span className="font-bold">{item.label}</span></div>
-                  <p className="text-xs text-gray-500 mb-3">Servings per day (1 serving ≈ 1 cup)</p>
+                <div key={item.label} className="rounded-2xl p-4" style={{ background: CARD }}>
+                  <div className="flex items-center gap-2 mb-1"><span className="text-lg">{item.emoji}</span><span className="font-bold text-white text-sm">{item.label}</span></div>
+                  <p className="text-[10px] text-gray-500 mb-3">Servings/day (1 ≈ 1 cup)</p>
                   <div className="flex items-center justify-between">
                     <button onClick={() => { item.set(Math.max(0, item.val - 1)); setAnswer(q.id, `${item.label === 'Fruits' ? Math.max(0, item.val - 1) : fruits},${item.label === 'Vegetables' ? Math.max(0, item.val - 1) : veggies}`); }}
-                      className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-xl">−</button>
-                    <span className="text-3xl font-bold text-[#2D9F83]">{item.val}</span>
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-white" style={{ background: CARD_LIGHT }}>−</button>
+                    <span className="text-3xl font-bold" style={{ color: ACCENT }}>{item.val}</span>
                     <button onClick={() => { item.set(item.val + 1); setAnswer(q.id, `${item.label === 'Fruits' ? item.val + 1 : fruits},${item.label === 'Vegetables' ? item.val + 1 : veggies}`); }}
-                      className="w-10 h-10 rounded-full bg-[#2D9F83] text-white flex items-center justify-center text-xl">+</button>
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-lg text-white" style={{ background: ACCENT }}>+</button>
                   </div>
                 </div>
               ))}
@@ -236,12 +260,13 @@ export default function NutritionQuiz({ questions, onSubmit, onClose }: Props) {
 
           {/* Step 4: Meals */}
           {step === 3 && current.questions.map((q, qi) => (
-            <div key={q.id} className="border-2 border-gray-200 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-3"><span className="text-lg">{MEAL_EMOJIS[qi]}</span><span className="font-bold">{MEAL_LABELS[qi]}</span></div>
+            <div key={q.id} className="rounded-2xl p-4" style={{ background: CARD }}>
+              <div className="flex items-center gap-2 mb-3"><span className="text-lg">{MEAL_EMOJIS[qi]}</span><span className="font-bold text-white text-sm">{MEAL_LABELS[qi]}</span></div>
               <div className="flex flex-wrap gap-2">
                 {q.scaleOptions.map((opt, oi) => (
                   <button key={opt} onClick={() => setAnswer(q.id, opt)}
-                    className={`px-3 py-1.5 rounded-full text-sm border transition ${answers[q.id] === opt ? 'bg-[#2D9F83]/10 border-[#2D9F83]' : 'border-gray-200'}`}>
+                    className="px-3 py-1.5 rounded-full text-sm transition-all"
+                    style={{ background: answers[q.id] === opt ? ACCENT : CARD_LIGHT, color: answers[q.id] === opt ? 'white' : '#9CA3AF' }}>
                     {MEAL_FREQ_EMOJIS[oi]} {opt}
                   </button>
                 ))}
@@ -251,13 +276,14 @@ export default function NutritionQuiz({ questions, onSubmit, onClose }: Props) {
 
           {/* Step 5: Habits */}
           {step === 4 && current.questions.map(q => (
-            <div key={q.id}>
-              <p className="font-medium mb-3">{q.question}</p>
+            <div key={q.id} className="rounded-2xl p-4" style={{ background: CARD }}>
+              <p className="font-medium mb-3 text-white text-sm">{q.question}</p>
               {q.question.includes('eat out') ? (
                 <div className="space-y-2">
                   {q.scaleOptions.map((opt, i) => (
                     <button key={opt} onClick={() => setAnswer(q.id, opt)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition ${answers[q.id] === opt ? 'border-[#2D9F83] bg-[#2D9F83]/10' : 'border-gray-200'}`}>
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all"
+                      style={{ background: answers[q.id] === opt ? ACCENT : CARD_LIGHT, color: 'white' }}>
                       <span className="text-lg">{EATING_OUT_EMOJIS[i]}</span>
                       <span className="text-sm">{opt}</span>
                     </button>
@@ -267,7 +293,8 @@ export default function NutritionQuiz({ questions, onSubmit, onClose }: Props) {
                 <div className="grid grid-cols-2 gap-3">
                   {q.scaleOptions.map((opt, i) => (
                     <button key={opt} onClick={() => setAnswer(q.id, opt)}
-                      className={`flex flex-col items-center py-4 rounded-xl border-2 transition ${answers[q.id] === opt ? 'border-[#2D9F83] bg-[#2D9F83]/10' : 'border-gray-200'}`}>
+                      className="flex flex-col items-center py-4 rounded-xl transition-all"
+                      style={{ background: answers[q.id] === opt ? ACCENT : CARD_LIGHT, color: 'white' }}>
                       <span className="text-2xl mb-1">{SNACK_EMOJIS[i]}</span>
                       <span className="text-xs text-center px-2">{opt}</span>
                     </button>
@@ -279,28 +306,30 @@ export default function NutritionQuiz({ questions, onSubmit, onClose }: Props) {
 
           {/* Step 6: Energy */}
           {step === 5 && current.questions.map(q => (
-            <div key={q.id} className="border-2 border-gray-200 rounded-xl p-4">
-              <p className="font-medium mb-3">
+            <div key={q.id} className="rounded-2xl p-4" style={{ background: CARD }}>
+              <p className="font-medium mb-3 text-white text-sm">
                 {q.question.includes('water') ? '💧 ' : q.question.includes('energy') ? '⚡ ' : '🌙 '}{q.question}
               </p>
               {q.question.includes('water') ? (
                 <div>
-                  <p className="text-xs text-gray-500 mb-3">How many glasses (~250ml) per day?</p>
+                  <p className="text-[10px] text-gray-500 mb-3">How many glasses (~250ml) per day?</p>
                   <div className="flex flex-wrap gap-2">
                     {q.scaleOptions.map(opt => (
                       <button key={opt} onClick={() => { setWater(+opt); setAnswer(q.id, opt); }}
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg transition ${+opt <= water && water > 0 ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                        className="w-10 h-10 rounded-xl flex items-center justify-center text-lg transition-all"
+                        style={{ background: +opt <= water && water > 0 ? `${ACCENT}33` : CARD_LIGHT }}>
                         💧
                       </button>
                     ))}
                   </div>
-                  <p className="text-sm text-gray-500 mt-2">{water} glasses</p>
+                  <p className="text-sm text-gray-400 mt-2">{water} glasses</p>
                 </div>
               ) : q.question.includes('energy') ? (
                 <div className="flex gap-2">
                   {q.scaleOptions.map((opt, i) => (
                     <button key={opt} onClick={() => setAnswer(q.id, opt)}
-                      className={`flex-1 flex flex-col items-center py-3 rounded-xl border-2 transition ${answers[q.id] === opt ? 'border-[#2D9F83] bg-blue-50' : 'border-gray-200'}`}>
+                      className="flex-1 flex flex-col items-center py-3 rounded-xl transition-all"
+                      style={{ background: answers[q.id] === opt ? ACCENT : CARD_LIGHT, color: 'white' }}>
                       <span className="text-2xl">{ENERGY_EMOJIS[i]}</span>
                       <span className="text-[10px] mt-1">{opt}</span>
                     </button>
@@ -310,7 +339,8 @@ export default function NutritionQuiz({ questions, onSubmit, onClose }: Props) {
                 <div className="grid grid-cols-2 gap-3">
                   {q.scaleOptions.map((opt, i) => (
                     <button key={opt} onClick={() => setAnswer(q.id, opt)}
-                      className={`flex flex-col items-center py-4 rounded-xl border-2 transition ${answers[q.id] === opt ? 'border-[#2D9F83] bg-blue-50' : 'border-gray-200'}`}>
+                      className="flex flex-col items-center py-4 rounded-xl transition-all"
+                      style={{ background: answers[q.id] === opt ? ACCENT : CARD_LIGHT, color: 'white' }}>
                       <span className="text-2xl mb-1">{SLEEP_EMOJIS[i]}</span>
                       <span className="text-xs text-center">{opt}</span>
                     </button>
@@ -324,14 +354,14 @@ export default function NutritionQuiz({ questions, onSubmit, onClose }: Props) {
         {/* Navigation */}
         <div className="flex items-center justify-between mt-8">
           <button onClick={() => step > 0 ? setStep(step - 1) : onClose()}
-            className="flex items-center gap-1 px-5 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600">
+            className="flex items-center gap-1 px-5 py-2.5 rounded-xl text-sm text-gray-400"
+            style={{ background: CARD }}>
             <ChevronLeft className="w-4 h-4" /> Back
           </button>
-          <span className="text-sm text-gray-400">{step + 1} / {STEPS.length}</span>
           <button onClick={() => isLast ? handleSubmit() : setStep(step + 1)}
             disabled={!canNext && step !== 2}
             className="flex items-center gap-1 px-5 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-40"
-            style={{ background: '#2D9F83' }}>
+            style={{ background: `linear-gradient(135deg, ${ACCENT}, #1A7A63)` }}>
             {isLast ? 'See Results' : 'Next'} <ChevronRight className="w-4 h-4" />
           </button>
         </div>

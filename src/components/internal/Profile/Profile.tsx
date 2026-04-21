@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "@/utils/api";
+import axios from "axios";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -22,6 +23,7 @@ export default function Profile() {
   const { isDoctor } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [allTestsDone, setAllTestsDone] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -33,6 +35,15 @@ export default function Profile() {
       } catch {}
       setLoading(false);
     })();
+    if (!isDoctor) {
+      const authCookie = Cookies.get("auth");
+      let token = "";
+      if (authCookie) { try { token = JSON.parse(authCookie).token; } catch { token = ""; } }
+      if (token) {
+        axios.get("https://zenomiai.elitceler.com/api/testnames", { headers: { Authorization: `Bearer ${token}` } })
+          .then(res => { if (Array.isArray(res.data) && res.data.length > 0 && res.data.every((t: any) => t.testStatus === "COMPLETED")) setAllTestsDone(true); }).catch(() => {});
+      }
+    }
   }, [isDoctor]);
 
   const handleLogout = () => { Cookies.remove("auth"); navigate("/chooserole"); };
@@ -102,6 +113,16 @@ export default function Profile() {
         {/* Menu Group 2 */}
         <MenuCard items={menuGroup2} />
         <div className="h-4" />
+
+        {/* View Courses */}
+        {!isDoctor && allTestsDone && (
+          <a href="https://learn.zenomi.com" target="_blank" rel="noopener noreferrer"
+            className="w-full rounded-full py-4 flex items-center justify-center gap-2.5 text-white font-semibold mb-4"
+            style={{ background: 'linear-gradient(90deg, #704180, #8B2D6C)' }}>
+            <img src="/zenomiLogo.png" alt="Z" className="w-5 h-5 rounded" />
+            View Courses
+          </a>
+        )}
 
         {/* Logout */}
         <button onClick={handleLogout} className="w-full rounded-[30px] border border-[#EEE] p-5 shadow-sm flex items-center gap-2.5">

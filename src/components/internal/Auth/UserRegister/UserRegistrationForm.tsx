@@ -17,7 +17,6 @@ const userSchema = z.object({
     phoneNumber: z.string().min(10, 'Phone number must be at least 10 digits'),
     gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
     dob: z.string().min(1, 'Date of birth is required'),
-    bloodGroup: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']),
     referralCode: z.string().min(1, 'Referral code is required'),
 });
 type UserFormData = z.infer<typeof userSchema>;
@@ -93,12 +92,14 @@ const UserRegistrationForm = () => {
             <div className="space-y-4">
                 {/* Name Input */}
                 <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Name*</label>
                     <input
                         {...register('name')}
                         type="text"
-                        placeholder="Full Name"
-                        className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2"
-                        style={{ '--tw-ring-color': '#704180' } as React.CSSProperties}
+                        placeholder="Enter your name"
+                        maxLength={20}
+                        className="w-full p-3 rounded-full border-2 border-transparent focus:outline-none focus:border-[#704180] transition-colors"
+                        style={{ backgroundColor: '#FCF8FA' }}
                     />
                     {errors.name && (
                         <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
@@ -107,42 +108,16 @@ const UserRegistrationForm = () => {
 
                 {/* Email Input */}
                 <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Email Address*</label>
                     <input
                         {...register('email')}
                         type="email"
-                        placeholder="Email Address"
-                        className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2"
-                        style={{ '--tw-ring-color': '#704180' } as React.CSSProperties}
+                        placeholder="Enter your email address"
+                        className="w-full p-3 rounded-full border-2 border-transparent focus:outline-none focus:border-[#704180] transition-colors"
+                        style={{ backgroundColor: '#FCF8FA' }}
                     />
                     {errors.email && (
                         <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
-                    )}
-                </div>
-
-                {/* Phone Input */}
-                <div>
-                    <PhoneInput
-                        country="in"
-                        onlyCountries={['in']}
-                        onChange={handlePhoneChange}
-                        inputStyle={{
-                            width: "100%",
-                            height: "48px",
-                            fontSize: "16px",
-                            borderRadius: "12px",
-                            border: "1px solid #e2e8f0",
-                            backgroundColor: "#ffffff",
-                        }}
-                        containerStyle={{
-                            width: "100%"
-                        }}
-                        buttonStyle={{
-                            borderRadius: "12px 0 0 12px",
-                            border: "1px solid #e2e8f0"
-                        }}
-                    />
-                    {errors.phoneNumber && (
-                        <p className="text-red-500 text-sm mt-1">{errors.phoneNumber.message}</p>
                     )}
                 </div>
 
@@ -150,10 +125,10 @@ const UserRegistrationForm = () => {
                 <div>
                     <select
                         {...register('gender')}
-                        className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2"
-                        style={{ '--tw-ring-color': '#704180' } as React.CSSProperties}
+                        className="w-full p-3 rounded-full border-2 border-transparent focus:outline-none focus:border-[#704180] appearance-none transition-colors"
+                        style={{ backgroundColor: '#FCF8FA' }}
                     >
-                        <option value="">Select Gender</option>
+                        <option value="">Select your gender</option>
                         <option value="MALE">Male</option>
                         <option value="FEMALE">Female</option>
                         <option value="OTHER">Other</option>
@@ -163,57 +138,51 @@ const UserRegistrationForm = () => {
                     )}
                 </div>
 
-                {/* Date of Birth */}
+                {/* Phone Input */}
                 <div>
-                    <input
-                        {...register('dob')}
-                        type="date"
-                        className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2"
-                        style={{ '--tw-ring-color': '#704180' } as React.CSSProperties}
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Phone Number*</label>
+                    <PhoneInput
+                        country="in"
+                        onlyCountries={['in']}
+                        onChange={handlePhoneChange}
+                        inputStyle={{
+                            width: "100%",
+                            height: "48px",
+                            fontSize: "16px",
+                            borderRadius: "9999px",
+                            border: "2px solid transparent",
+                            backgroundColor: "#FCF8FA",
+                        }}
+                        containerStyle={{
+                            width: "100%"
+                        }}
+                        buttonStyle={{
+                            borderRadius: "9999px 0 0 9999px",
+                            border: "2px solid transparent",
+                            backgroundColor: "#FCF8FA",
+                        }}
                     />
-                    {errors.dob && (
-                        <p className="text-red-500 text-sm mt-1">{errors.dob.message}</p>
+                    {errors.phoneNumber && (
+                        <p className="text-red-500 text-sm mt-1">{errors.phoneNumber.message}</p>
                     )}
                 </div>
 
-                {/* Blood Group */}
+                {/* Doctor Referral Code */}
                 <div>
-                    <select
-                        {...register('bloodGroup')}
-                        className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2"
-                        style={{ '--tw-ring-color': '#704180' } as React.CSSProperties}
-                    >
-                        <option value="">Select Blood Group</option>
-                        <option value="A+">A+</option>
-                        <option value="A-">A-</option>
-                        <option value="B+">B+</option>
-                        <option value="B-">B-</option>
-                        <option value="AB+">AB+</option>
-                        <option value="AB-">AB-</option>
-                        <option value="O+">O+</option>
-                        <option value="O-">O-</option>
-                    </select>
-                    {errors.bloodGroup && (
-                        <p className="text-red-500 text-sm mt-1">{errors.bloodGroup.message}</p>
-                    )}
-                </div>
-
-                {/* Referral Code Input */}
-                <div>
-                    {/* <label className="block mb-1 font-medium">Doctor Referral Code</label> */}
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Doctor Referral Code*</label>
                     <div className="flex items-center">
-                        <span className="bg-gray-100 px-3 py-3 rounded-l-xl border border-gray-200 border-r-0 text-gray-500 select-none">
-                            Zenomi-
+                        <span className="px-4 py-3 rounded-l-full border-2 border-transparent text-[#704180] font-semibold select-none" style={{ backgroundColor: '#FCF8FA' }}>
+                            ZENOMI-
                         </span>
                     <input
                         type="text"
-                            maxLength={4}
+                            maxLength={6}
                             inputMode="numeric"
-                            className="w-full p-3 rounded-r-xl border border-gray-200 focus:outline-none focus:ring-2"
-                            placeholder="1234"
+                            className="w-full p-3 rounded-r-full border-2 border-transparent focus:outline-none focus:border-[#704180] transition-colors"
+                            style={{ backgroundColor: '#FCF8FA' }}
+                            placeholder="Enter doctor referral code"
                             value={referralCodeDigits}
                             onChange={e => {
-                                // Only allow digits
                                 const val = e.target.value.replace(/[^0-9]/g, "");
                                 setReferralCodeDigits(val);
                                 setValue("referralCode", val, { shouldValidate: true });
@@ -224,12 +193,26 @@ const UserRegistrationForm = () => {
                         <p className="text-red-500 text-sm mt-1">{errors.referralCode.message}</p>
                     )}
                 </div>
+
+                {/* Date of Birth */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Date of Birth*</label>
+                    <input
+                        {...register('dob')}
+                        type="date"
+                        className="w-full p-3 rounded-full border-2 border-transparent focus:outline-none focus:border-[#704180] transition-colors"
+                        style={{ backgroundColor: '#FCF8FA' }}
+                    />
+                    {errors.dob && (
+                        <p className="text-red-500 text-sm mt-1">{errors.dob.message}</p>
+                    )}
+                </div>
             </div>
 
             <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-12 text-white rounded-xl transition-colors font-medium"
+                className="w-full h-12 text-white rounded-full transition-colors font-medium"
                 style={{
                     background: 'linear-gradient(89.79deg, #704180 5.07%, #8B2D6C 95.83%)',
                 }}

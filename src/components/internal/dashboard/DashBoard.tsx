@@ -8,7 +8,6 @@ import yellowcal from "@/assets/yellowcal.png";
 import purplecal from "@/assets/purplecal.png";
 import greencal from "@/assets/greencal.png";
 import { useNavigate } from "react-router-dom";
-import PeopleTest from "@/assets/PeopleTest.svg";
 
 // Import the WellnessReport component
 import { useAuth } from "@/context/AuthContext"; // Import useAuth from the new context
@@ -101,9 +100,17 @@ export default function Dashboard() {
   const NUTRITION_TEST_ID = 'cmb7mnl8x0001qelpyyqkwk31';
   const isSleepQuiz = currentTestId === SLEEP_TEST_ID;
   const isNutritionQuiz = currentTestId === NUTRITION_TEST_ID;
+  const GAD7_TEST_ID = 'cmb7mnlch0002qelp5tpv8v09';
+  const PHQ9_TEST_ID = 'cmb7mnlfq0003qelptwtfniai';
+  const isGad7Quiz = currentTestId === GAD7_TEST_ID;
+  const isPhq9Quiz = currentTestId === PHQ9_TEST_ID;
+  const isEmotionalQuiz = currentTestId ? tests.find(t => t.id === currentTestId)?.name?.toUpperCase().includes('EMOTIONAL') ?? false : false;
   const [sleepPart, setSleepPart] = useState(0);
   const [sleepExitOpen, setSleepExitOpen] = useState(false);
   const [sleepResults, setSleepResults] = useState<{score: number, max: number, assessment: string, sentiment: string} | null>(null);
+  const [gad7Results, setGad7Results] = useState<{score: number, max: number, label: string, description: string} | null>(null);
+  const [phq9Results, setPhq9Results] = useState<{score: number, max: number, label: string, description: string} | null>(null);
+  const [emotionalResults, setEmotionalResults] = useState<{score: number, max: number, categories: {name: string, emoji: string, score: number, max: number, label: string}[]} | null>(null);
   const [hasSleepLog, setHasSleepLog] = useState(false);
   const [hasAppointment, setHasAppointment] = useState(false);
 
@@ -167,8 +174,11 @@ export default function Dashboard() {
     };
     fetchData();
 
-    // WebSocket connection only for non-doctors
-  }, [isDoctor]); // Dependency on isDoctor to re-run when type changes
+    // Re-fetch tests when user returns to the tab (e.g., after retest assignment)
+    const onFocus = () => { if (!isDoctor) fetchData(); };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [isDoctor]);
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -192,21 +202,19 @@ export default function Dashboard() {
   useEffect(() => {
     if (!isDoctor) {
       const fetchCourses = async () => {
-        const authCookie = Cookies.get("auth");
-        let token = "";
-        if (authCookie) {
-          try {
-            token = JSON.parse(authCookie).token;
-          } catch (e) {
-            token = "";
+        try {
+          const authCookie = Cookies.get("auth");
+          let token = "";
+          if (authCookie) {
+            try { token = JSON.parse(authCookie).token; } catch { token = ""; }
           }
-        }
-        const res = await api.get("/users/get-all-courses", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.data && res.data.success) {
-          setCourses(res.data.data);
-        }
+          const res = await api.get("/users/get-all-courses", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.data && res.data.success) {
+            setCourses(res.data.data || []);
+          }
+        } catch { }
       };
       fetchCourses();
     }
@@ -316,6 +324,13 @@ export default function Dashboard() {
     }
   };
 
+  const handleScrollableAnswer = (idx: number, answer: string) => {
+    const newAnswers = [...answers];
+    if (newAnswers.length <= idx) newAnswers.length = idx + 1;
+    newAnswers[idx] = { question: questions[idx].question, answer };
+    setAnswers(newAnswers);
+  };
+
   const handleNext = () => {
     if (currentQuestion < questions.length - 1) {
       // Check if the current question has been answered before moving next
@@ -338,12 +353,21 @@ export default function Dashboard() {
   const handlePrev = () => {
     if (currentQuestion > 0) setCurrentQuestion(currentQuestion - 1);
   };
+  const [postTestLoading, setPostTestLoading] = useState(false);
+
   const handleHomeScreen = () => {
     setShowQuiz(false);
     setShowCompletionDialog(false);
     setSelectedTest(null);
-    // Reloading the page might not be the best UX, consider re-fetching data instead
-    window.location.reload();
+    setSleepResults(null);
+    setGad7Results(null);
+    setPhq9Results(null);
+    setEmotionalResults(null);
+    setPostTestLoading(true);
+    // Give backend time to process and unlock next test, then reload
+    setTimeout(() => {
+      window.location.reload();
+    }, 3000);
   };
 
   const handleSubmitQuiz = async () => {
@@ -357,8 +381,9 @@ export default function Dashboard() {
         token = "";
       }
     }
-    setShowProcessing(true); // Show processing card immediately
-    setShowQuiz(false); // Close the quiz modal/dialog immediately
+    const hasCustomResults = currentTestId === SLEEP_TEST_ID || currentTestId === GAD7_TEST_ID || currentTestId === PHQ9_TEST_ID || (tests.find(t => t.id === currentTestId)?.name?.toUpperCase().includes('EMOTIONAL'));
+    if (!hasCustomResults) setShowProcessing(true);
+    setShowQuiz(false);
     try {
       // Find the current test object
       const currentTest = tests.find(t => t.id === currentTestId);
@@ -386,8 +411,53 @@ export default function Dashboard() {
         return { question: a.question, answer: a.answer };
       });
 
+      // For GAD-7 test, compute score locally and show results immediately
+      if (currentTestId === GAD7_TEST_ID) {
+        let total = 0;
+        formattedAnswers.forEach((a: any) => { total += parseInt(a.answer) || 0; });
+        const max = 21;
+        const label = total <= 4 ? 'Minimal Anxiety' : total <= 9 ? 'Mild Anxiety' : total <= 14 ? 'Moderate Anxiety' : 'Severe Anxiety';
+        const description = total <= 4 ? 'Your anxiety levels appear minimal. Keep maintaining healthy habits!' : total <= 9 ? 'You may be experiencing mild anxiety. Consider relaxation techniques.' : total <= 14 ? 'Moderate anxiety detected. Consider speaking with a professional.' : 'Your responses suggest severe anxiety. Please consult a healthcare provider.';
+        setGad7Results({ score: total, max, label, description });
+        setShowQuiz(false);
+        axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formattedAnswers }, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+      }
+      // For PHQ-9 test, compute score locally and show results immediately
+      else if (currentTestId === PHQ9_TEST_ID) {
+        let total = 0;
+        formattedAnswers.forEach((a: any) => { total += parseInt(a.answer) || 0; });
+        const max = 27;
+        const label = total <= 4 ? 'Minimal Depression' : total <= 9 ? 'Mild Depression' : total <= 14 ? 'Moderate Depression' : total <= 19 ? 'Moderately Severe' : 'Severe Depression';
+        const description = total <= 4 ? 'Your responses suggest minimal depression. Keep up the good work!' : total <= 9 ? 'Mild depression indicated. Self-care and monitoring recommended.' : total <= 14 ? 'Moderate depression detected. Consider professional support.' : total <= 19 ? 'Moderately severe depression. Professional consultation recommended.' : 'Severe depression indicated. Please seek professional help promptly.';
+        setPhq9Results({ score: total, max, label, description });
+        setShowQuiz(false);
+        axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formattedAnswers }, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+      }
+      // For Emotional Health test
+      else if (tests.find(t => t.id === currentTestId)?.name?.toUpperCase().includes('EMOTIONAL')) {
+        const catNames = [{ name: 'Self-Awareness', emoji: '🧠' }, { name: 'Self-Regulation', emoji: '🎯' }, { name: 'Motivation', emoji: '🚀' }];
+        let totalScore = 0;
+        const categories = catNames.map((cat, ci) => {
+          let catScore = 0;
+          for (let i = 0; i < 5; i++) {
+            const qIdx = ci * 5 + i;
+            const q = questions[qIdx];
+            const optCount = q?.scaleOptions?.length || 5;
+            const ansIdx = parseInt(formattedAnswers[qIdx]?.answer) || 0;
+            catScore += (optCount - 1) - ansIdx;
+          }
+          const catMax = 5 * ((questions[ci * 5]?.scaleOptions?.length || 5) - 1);
+          totalScore += catScore;
+          const catLabel = catScore <= 8 ? 'Needs Attention' : catScore <= 16 ? 'Growing Stronger' : 'Thriving';
+          return { ...cat, score: catScore, max: catMax, label: catLabel };
+        });
+        const max = categories.reduce((s, c) => s + c.max, 0);
+        setEmotionalResults({ score: totalScore, max, categories });
+        setShowQuiz(false);
+        axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formattedAnswers }, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+      }
       // For sleep test, compute score locally and show results immediately
-      if (currentTestId === SLEEP_TEST_ID) {
+      else if (currentTestId === SLEEP_TEST_ID) {
         const scaleMap: Record<string, number> = { 'None': 0, 'Rarely': 1, 'Moderate': 2, 'Severe': 3, 'Very Severe': 4 };
         let total = 0;
         formattedAnswers.forEach((a: any) => { total += scaleMap[a.answer] || 0; });
@@ -418,10 +488,8 @@ export default function Dashboard() {
       // Find the test name for the just-completed test
       const completedTest = tests.find(t => t.id === currentTestId);
       setLastCompletedTestName(completedTest?.name || null);
-      if (currentTestId !== SLEEP_TEST_ID) {
+      if (currentTestId !== SLEEP_TEST_ID && currentTestId !== GAD7_TEST_ID && currentTestId !== PHQ9_TEST_ID && !tests.find(t => t.id === currentTestId)?.name?.toUpperCase().includes('EMOTIONAL')) {
         setShowCompletionDialog(true);
-        // Auto-close after 2s and reload
-        setTimeout(() => { setShowCompletionDialog(false); window.location.reload(); }, 2000);
       }
       // Re-fetch tests after submission to update completed count
       const res = await axios.get(
@@ -484,6 +552,7 @@ export default function Dashboard() {
   // }, []);
 
   if (loading) return <LottieLoader text="Loading your dashboard..." />;
+  if (postTestLoading) return <LottieLoader text="Preparing your next test..." />;
 
   // Ensure tests is an array before proceeding
   if (!Array.isArray(tests) && !isDoctor) {
@@ -510,7 +579,7 @@ export default function Dashboard() {
           ? "relative z-30 pointer-events-none select-none"
           : "relative z-10"
       }>
-        <div className="flex flex-col lg:flex-row justify-center gap-4 lg:gap-8 p-2 sm:p-4 md:p-8 min-h-screen font-['Poppins'] w-full overflow-x-hidden">
+        <div className="flex flex-col lg:flex-row justify-center gap-4 lg:gap-8 px-3 py-1 sm:p-4 md:p-8 min-h-screen font-['Poppins'] w-full overflow-x-hidden">
           {/* Conditionally render content based on user type */}
           {isDoctor ? (
             <div className="w-full font-['Poppins']">
@@ -523,7 +592,7 @@ export default function Dashboard() {
               </h2>
               {/* Analytics Cards */}
               {doctorAnalytics && (
-                <div className="grid grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
                   <div
                     className="bg-[#8B2D6C05] rounded-2xl p-6 flex flex-col items-center justify-center shadow cursor-pointer"
                     onClick={() => navigate("/patients")}
@@ -642,7 +711,7 @@ export default function Dashboard() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col lg:flex-row gap-8 w-full max-w-6xl mx-auto mt-6">
+            <div className="flex flex-col lg:flex-row gap-8 w-full max-w-6xl mx-auto mt-2 sm:mt-6">
               {/* Left Column: Tests and Courses */}
               <div className="flex-1 w-full max-w-[650px] font-['Poppins'] mx-auto">
                 <h2 className="text-lg sm:text-2xl font-semibold mb-2 font-['Urbanist'] truncate">
@@ -651,50 +720,66 @@ export default function Dashboard() {
                 </h2>
                 {showProcessing && (
                   <div className="my-4 w-full max-w-xl mx-auto">
-                    <div className="bg-white rounded-2xl p-4 flex items-center justify-between shadow">
-                      <div className="flex items-center gap-4">
+                    <div className="bg-white rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow">
+                      <div className="flex items-center gap-3 sm:gap-4">
                         <img
                           src="https://zenomi.s3.ap-south-1.amazonaws.com/testanimations/WhatsApp_Image_2025-06-16_at_15.32.46_e9afbbd2.webp"
                           alt="Processing"
-                          style={{ width: "64px", height: "64px", objectFit: "contain", display: "block" }}
+                          style={{ width: "48px", height: "48px", objectFit: "contain", display: "block" }}
+                          className="sm:!w-[64px] sm:!h-[64px]"
                         />
-                        <span className="text-lg font-semibold">Zenomi AI is processing</span>
+                        <span className="text-sm sm:text-lg font-semibold">Zenomi AI is processing</span>
                       </div>
                       <span className="text-xl font-bold">{processingTime}s</span>
                     </div>
                   </div>
                 )}
-                {/* Progress Bar */}
-                <div className="mb-4 sm:mb-6 font-['Poppins']">
-                  <div className="flex justify-between text-xs sm:text-sm text-gray-500 mb-1 font-['Poppins']">
-                    <span>{completedCount} of {tests.length} completed</span>
-                  </div>
-                  <div className="w-full h-2 bg-gray-200 rounded-full">
-                    <div
-                      className="h-2 rounded-full bg-gradient-to-r from-[#704180] to-[#8B2D6C]"
-                      style={{ width: `${tests.length ? (completedCount / tests.length) * 100 : 0}%` }}
-                    />
-                  </div>
-                </div>
                 {/* Tests Section */}
                 {completedCount === tests.length && tests.length > 0 ? (
-                  <div className="rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between bg-[#E9D7F7] relative min-h-[200px] mb-8 w-full">
-                    <div className="flex-1">
-                      <h2 className="text-2xl sm:text-3xl font-bold mb-2">All your tests are complete!</h2>
-                      <div className="w-full h-4 bg-gray-200 rounded-full mb-3">
-                        <div className="h-4 rounded-full bg-[#F6C851]" style={{ width: '100%' }} />
+                  <>
+                    {/* All Complete Card - matches app */}
+                    <div className="rounded-[20px] relative overflow-hidden mb-4 w-full" style={{ background: 'linear-gradient(135deg, #704180, #8B2D6C)', height: 'auto', minHeight: '160px' }}>
+                      {/* Decorative circles */}
+                      <div className="absolute top-[-10px] right-[80px] w-[60px] h-[60px] rounded-full bg-white/[0.07]" />
+                      <div className="absolute bottom-[20px] right-[40px] w-[100px] h-[100px] rounded-full bg-white/[0.05]" />
+                      <div className="absolute top-[40px] right-[120px] w-[30px] h-[30px] rounded-full bg-white/[0.06]" />
+
+                      <div className="flex items-center justify-between p-5 relative z-10">
+                        <div className="flex-1">
+                          <h2 className="text-lg sm:text-xl font-bold text-white leading-tight font-['Urbanist']">All your tests are<br/>complete!</h2>
+                          <div className="w-[180px] sm:w-[200px] h-1.5 bg-white/20 rounded-full mt-3 mb-1.5">
+                            <div className="h-1.5 rounded-full bg-[#F8AE0E]" style={{ width: '100%' }} />
+                          </div>
+                          <p className="text-white/70 text-xs sm:text-sm font-['Urbanist']">{completedCount} of {tests.length} tests completed</p>
+                        </div>
+                        {/* Clipboard illustration */}
+                        <div className="relative w-[90px] h-[120px] flex-shrink-0 ml-4">
+                          <div className="absolute inset-0 rounded-xl border border-white/20 bg-white/[0.15] px-2.5 py-4 flex flex-col justify-evenly">
+                            {[0,1,2,3].map(i => (
+                              <div key={i} className="flex items-center gap-2">
+                                <div className="w-4 h-4 rounded bg-[#F8AE0E] flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+                                </div>
+                                <div className="flex-1 h-1.5 rounded-full bg-white/30" />
+                              </div>
+                            ))}
+                          </div>
+                          <div className="absolute top-[-2px] left-1/2 -translate-x-1/2 w-9 h-3 rounded bg-white/25" />
+                        </div>
                       </div>
-                      <div className="text-lg mb-4">{completedCount} out of {tests.length} tests completed</div>
                     </div>
-                    {/* Optional: Illustration on the right */}
-                    <img
-                      src={PeopleTest}
-                      alt="All tests complete"
-                      className="w-40 h-40 object-contain ml-6 hidden sm:block"
-                    />
-                  </div>
+
+                    {/* Zenomi Learn moved outside ternary */}
+                  </>
                 ) : (
                   <div className="flex flex-col gap-4 font-['Poppins']">
+                    {/* Progress Bar */}
+                    <div>
+                      <p className="text-xs sm:text-sm text-gray-500 mb-1">{completedCount} of {tests.length} completed</p>
+                      <div className="w-full h-2 bg-gray-200 rounded-full">
+                        <div className="h-2 rounded-full bg-gradient-to-r from-[#704180] to-[#8B2D6C]" style={{ width: `${tests.length ? (completedCount / tests.length) * 100 : 0}%` }} />
+                      </div>
+                    </div>
                     {tests?.map((test) => (
                       <div
                         key={test.id}
@@ -709,8 +794,8 @@ export default function Dashboard() {
                           <div className="absolute top-0 right-0 z-20 px-4 py-1 text-white text-[10px] font-bold" style={{ background: '#009511', borderRadius: '0 16px 0 20px' }}>Completed</div>
                         )}
 
-                        <div className="flex items-center gap-3 p-5">
-                          <img src={test.image_url} alt={test.name} className="w-[100px] h-[100px] rounded-xl object-cover flex-shrink-0" />
+                        <div className="flex items-center gap-3 p-3 sm:p-5">
+                          <img src={test.image_url} alt={test.name} className="w-[70px] h-[70px] sm:w-[100px] sm:h-[100px] rounded-xl object-cover flex-shrink-0" />
                           <div className="flex-1 min-w-0 flex flex-col gap-3">
                             <div>
                               <h3 className="text-base font-semibold text-white truncate">{test.name}</h3>
@@ -744,44 +829,42 @@ export default function Dashboard() {
                     ))}
                   </div>
                 )}
-                {/* Courses section below the card, column layout */}
-                {completedCount === tests.length && tests.length > 0 && courses.length > 0 && (
-                  <div className="w-full mt-8">
-                    <h2 className="text-xl sm:text-2xl font-semibold mb-4">Continue learning</h2>
-                    <div className="flex flex-col gap-4 sm:gap-6 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-[#8B2D6C]/40 scrollbar-track-transparent pr-2">
-                      {courses.map((course) => (
-                        <div
-                          key={course.id}
-                          className="rounded-3xl p-4 sm:p-8 bg-gradient-to-r from-[#704180] to-[#8B2D6C] text-white flex flex-col md:flex-row items-center md:items-start justify-between shadow-lg relative min-h-[140px] md:min-h-[180px] w-full"
-                        >
-                          <div className="flex-1 min-w-0 w-full">
-                            <div className="uppercase text-xs sm:text-sm tracking-widest text-[#D1B3E0] mb-2">Category - {course.category}</div>
-                            <div className="text-base sm:text-2xl font-bold mb-2 break-words">{course.title}</div>
-                            <a
-                              href={course.courseLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-block mt-4 px-4 py-2 sm:px-6 sm:py-3 rounded-full bg-white text-[#8B2D6C] font-semibold text-sm sm:text-lg shadow hover:bg-[#F3EAF7] transition w-full sm:w-auto text-center"
-                            >
-                              Continue →
-                            </a>
-                          </div>
-                          {/* Decorative shapes (optional) */}
-                          <div className="hidden md:block absolute right-8 top-8 opacity-20 pointer-events-none select-none">
-                            <svg width="120" height="120">
-                              <circle cx="30" cy="30" r="30" fill="#fff" />
-                              <rect x="60" y="20" width="40" height="40" fill="#fff" />
-                              <circle cx="90" cy="90" r="25" fill="#fff" />
-                            </svg>
-                          </div>
-                        </div>
-                      ))}
+                {/* Zenomi Learn Courses Card - only when all tests done */}
+                {completedCount === tests.length && tests.length > 0 && (
+                <div className="rounded-[20px] overflow-hidden mt-4 w-full" style={{ background: 'linear-gradient(135deg, #704180, #8B2D6C)' }}>
+                  <div className="p-5">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-white/[0.15] flex items-center justify-center text-xl">🎓</div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-white font-bold text-[15px] sm:text-[17px] font-['Urbanist']">Zenomi Learn Courses</h3>
+                        <p className="text-white/50 text-[11px] sm:text-xs">Curated for your wellness journey</p>
+                      </div>
+                      {courses.length > 0 && <div className="px-2.5 py-1 rounded-full bg-white/20 text-white text-xs font-bold">{courses.length}</div>}
                     </div>
+                    {courses.length > 0 && (
+                      <div className="space-y-2 mb-4">
+                        {courses.map((course) => (
+                          <a key={course.id} href={course.courseLink} target="_blank" rel="noopener noreferrer"
+                            className="flex items-center gap-3 px-3.5 py-3 rounded-[14px] bg-white/10 hover:bg-white/[0.15] transition">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white text-sm font-semibold truncate">{course.title}</p>
+                              <p className="text-white/50 text-[11px]">{course.category}</p>
+                            </div>
+                            <svg className="w-3.5 h-3.5 text-white/40 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    <a href="https://zenomilearn.zenomihealth.com" target="_blank" rel="noopener noreferrer"
+                      className="block w-full py-3.5 rounded-[14px] bg-white text-center text-[#704180] text-sm font-bold hover:bg-gray-50 transition">
+                      {courses.length > 0 ? 'View All Courses →' : 'View Courses →'}
+                    </a>
                   </div>
+                </div>
                 )}
               </div>
               {/* Right Column */}
-              <div className="w-full lg:w-[340px] flex flex-col gap-4 font-['Poppins'] mt-4 lg:mt-0">
+              <div className="hidden lg:flex w-full lg:w-[340px] flex-col gap-4 font-['Poppins']">
                 {/* Book Therapy Card */}
                 <div className="rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #704180, #8B2D6C)' }}>
                   <div className="p-5 text-white">
@@ -820,6 +903,7 @@ export default function Dashboard() {
                     ))}
                   </div>
                 </div>
+                {/* Zenomi Learn Courses - shown in left column when all tests done */}
               </div>
             </div>
           )}
@@ -853,20 +937,82 @@ export default function Dashboard() {
         </div>
       )}
       {selectedTest && selectedTest.id === NUTRITION_TEST_ID && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-white">
-          <div className="text-center px-8 max-w-sm">
-            <button onClick={() => setSelectedTest(null)} className="absolute top-4 right-4 text-2xl text-gray-400">&times;</button>
-            <div className="text-7xl mb-6 animate-bounce" style={{ animationDuration: '2s' }}>🥑</div>
-            <h2 className="text-3xl font-bold mb-1">Teen Nutrition</h2>
-            <h2 className="text-3xl font-bold text-[#2D9F83] mb-4">Check-Up</h2>
-            <p className="text-gray-500 text-sm mb-8">Discover how your daily eating habits stack up. Takes about 2 minutes — let's see your score!</p>
-            <button onClick={handleStartTest} className="px-8 py-3 rounded-xl text-white font-semibold text-base" style={{ background: '#2D9F83' }}>
-              {loadingQuestions ? 'Loading...' : '🔬 Start Assessment'}
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4" style={{ background: '#0F1A15' }}>
+          <div className="w-full max-w-sm flex flex-col items-center text-center relative z-10">
+            <button onClick={() => setSelectedTest(null)} className="absolute top-0 right-0 text-gray-500 hover:text-white text-2xl">&times;</button>
+            <div className="text-6xl mb-6">🥑</div>
+            <h2 className="text-3xl font-extrabold mb-4 bg-gradient-to-r from-[#2D9F83] to-[#1A7A63] bg-clip-text text-transparent">Nutrition Check-Up</h2>
+            <p className="text-white/50 text-sm mb-8 leading-relaxed">Discover how your daily eating habits stack up. Takes about 2 minutes — let's see your score! 🔬</p>
+            <div className="flex flex-wrap justify-center gap-2 mb-8">
+              <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">⏱ Takes 2 mins</span>
+              <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">📋 {selectedTest.question_count} Questions</span>
+              <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">🎯 Personalized</span>
+            </div>
+            <button onClick={handleStartTest} className="w-full py-3.5 rounded-2xl text-white font-bold text-lg mb-3" style={{ background: 'linear-gradient(135deg, #2D9F83, #1A7A63)', boxShadow: '0 10px 30px rgba(45,159,131,0.4)' }}>
+              {loadingQuestions ? 'Loading...' : "Let's Go 🚀"}
             </button>
+            <button onClick={() => setSelectedTest(null)} className="text-white/40 text-sm hover:text-white/60">← Back</button>
           </div>
         </div>
       )}
-      {selectedTest && selectedTest.id !== SLEEP_TEST_ID && selectedTest.id !== NUTRITION_TEST_ID && (
+      {selectedTest && selectedTest.id === GAD7_TEST_ID && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ background: '#1A1D2E' }}>
+          <div className="w-full max-w-sm flex flex-col items-center text-center relative z-10">
+            <button onClick={() => setSelectedTest(null)} className="absolute top-0 right-0 text-gray-500 hover:text-white text-2xl">&times;</button>
+            <div className="text-6xl mb-6">🧠</div>
+            <h2 className="text-3xl font-extrabold mb-4 bg-gradient-to-r from-[#FF6B8A] to-[#FF8E53] bg-clip-text text-transparent">GAD-7 Assessment</h2>
+            <p className="text-white/50 text-sm mb-8 leading-relaxed">Over the last 2 weeks, how often have you been bothered by anxiety symptoms? Answer {selectedTest.question_count} quick questions.</p>
+            <div className="flex flex-wrap justify-center gap-2 mb-8">
+              <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">⏱ Takes 2 mins</span>
+              <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">📋 {selectedTest.question_count} Questions</span>
+              <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">🎯 Personalized</span>
+            </div>
+            <button onClick={handleStartTest} className="w-full py-3.5 rounded-2xl text-white font-bold text-lg mb-3" style={{ background: 'linear-gradient(135deg, #FF6B8A, #FF8E53)', boxShadow: '0 10px 30px rgba(255,107,138,0.4)' }}>
+              {loadingQuestions ? 'Loading...' : "Let's Go 🚀"}
+            </button>
+            <button onClick={() => setSelectedTest(null)} className="text-white/40 text-sm hover:text-white/60">← Back</button>
+          </div>
+        </div>
+      )}
+      {selectedTest && selectedTest.id === PHQ9_TEST_ID && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ background: '#1A1D2E' }}>
+          <div className="w-full max-w-sm flex flex-col items-center text-center relative z-10">
+            <button onClick={() => setSelectedTest(null)} className="absolute top-0 right-0 text-gray-500 hover:text-white text-2xl">&times;</button>
+            <div className="text-6xl mb-6">🧠</div>
+            <h2 className="text-3xl font-extrabold mb-4 bg-gradient-to-r from-[#8B5CF6] to-[#A855F7] bg-clip-text text-transparent">PHQ-9 Assessment</h2>
+            <p className="text-white/50 text-sm mb-8 leading-relaxed">Over the last 2 weeks, how often have you been bothered by these problems?</p>
+            <div className="flex flex-wrap justify-center gap-2 mb-8">
+              <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">⏱ Takes 3 mins</span>
+              <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">📋 {selectedTest.question_count} Questions</span>
+              <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">🎯 Depression Screening</span>
+            </div>
+            <button onClick={handleStartTest} className="w-full py-3.5 rounded-2xl text-white font-bold text-lg mb-3" style={{ background: 'linear-gradient(135deg, #8B5CF6, #A855F7)', boxShadow: '0 10px 30px rgba(139,92,246,0.4)' }}>
+              {loadingQuestions ? 'Loading...' : "Let's Go 🚀"}
+            </button>
+            <button onClick={() => setSelectedTest(null)} className="text-white/40 text-sm hover:text-white/60">← Back</button>
+          </div>
+        </div>
+      )}
+      {selectedTest && selectedTest.name?.toUpperCase().includes('EMOTIONAL') && selectedTest.id !== SLEEP_TEST_ID && selectedTest.id !== NUTRITION_TEST_ID && selectedTest.id !== GAD7_TEST_ID && selectedTest.id !== PHQ9_TEST_ID && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ background: '#1A1D2E' }}>
+          <div className="w-full max-w-sm flex flex-col items-center text-center relative z-10">
+            <button onClick={() => setSelectedTest(null)} className="absolute top-0 right-0 text-gray-500 hover:text-white text-2xl">&times;</button>
+            <div className="text-6xl mb-6">🌈</div>
+            <h2 className="text-3xl font-extrabold mb-4 bg-gradient-to-r from-[#FF6B9D] to-[#C850C0] bg-clip-text text-transparent">Emotional Health Assessment</h2>
+            <p className="text-white/50 text-sm mb-8 leading-relaxed">Over the last 2 weeks, how often have you been experiencing the following?</p>
+            <div className="flex flex-wrap justify-center gap-2 mb-8">
+              <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">⏱ Takes 3 mins</span>
+              <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">📋 {selectedTest.question_count} Questions</span>
+              <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">🎯 Emotional Wellness</span>
+            </div>
+            <button onClick={handleStartTest} className="w-full py-3.5 rounded-2xl text-white font-bold text-lg mb-3" style={{ background: 'linear-gradient(135deg, #FF6B9D, #C850C0)', boxShadow: '0 10px 30px rgba(255,107,157,0.4)' }}>
+              {loadingQuestions ? 'Loading...' : "Let's Go 🚀"}
+            </button>
+            <button onClick={() => setSelectedTest(null)} className="text-white/40 text-sm hover:text-white/60">← Back</button>
+          </div>
+        </div>
+      )}
+      {selectedTest && selectedTest.id !== SLEEP_TEST_ID && selectedTest.id !== NUTRITION_TEST_ID && selectedTest.id !== GAD7_TEST_ID && selectedTest.id !== PHQ9_TEST_ID && !selectedTest.name?.toUpperCase().includes('EMOTIONAL') && (
         <div 
         style={{
           backgroundImage: `url(${selectedTest.splash_image_s3_key})`,
@@ -983,9 +1129,9 @@ export default function Dashboard() {
                     </div>
                     <div className="grid grid-cols-5 gap-2">
                       {(q.scaleOptions || []).map((option: string, i: number) => (
-                        <button key={option} onClick={() => handleAnswer(option)} className={`py-3 rounded-xl text-center transition-all ${selected === option ? 'text-white' : 'text-gray-400 border border-white/10'}`} style={selected === option ? { background: 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' } : { background: '#2D3048' }}>
+                        <button key={option} onClick={() => handleScrollableAnswer(globalIdx, option)} className={`py-3 rounded-xl text-center transition-all ${selected === option ? 'text-white' : 'text-gray-400 border border-white/10'}`} style={selected === option ? { background: 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' } : { background: '#2D3048' }}>
                           <div className="text-lg font-bold">{i}</div>
-                          <div className="text-[9px] mt-0.5">{option}</div>
+                          <div className="text-[10px] mt-0.5">{option}</div>
                         </button>
                       ))}
                     </div>
@@ -1032,28 +1178,160 @@ export default function Dashboard() {
       {showQuiz && isNutritionQuiz && (
         <NutritionQuiz
           questions={questions}
-          onClose={() => { setShowQuiz(false); setCurrentTestId(null); }}
-          onSubmit={async (formatted) => {
-            setShowQuiz(false);
-            setShowProcessing(true);
+          onClose={() => handleHomeScreen()}
+          onSubmit={async (formatted, onResult) => {
             try {
               const authCookie = Cookies.get("auth");
               let token = "";
               if (authCookie) { try { token = JSON.parse(authCookie).token; } catch { token = ""; } }
-              await axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formatted }, { headers: { Authorization: `Bearer ${token}` } });
-              const completedTest = tests.find(t => t.id === currentTestId);
-              setLastCompletedTestName(completedTest?.name || null);
-              setShowCompletionDialog(true);
-              setTimeout(() => { setShowCompletionDialog(false); window.location.reload(); }, 2000);
+              const response = await axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formatted }, { headers: { Authorization: `Bearer ${token}` } });
+              const d = response.data || {};
+              onResult({
+                score: d.user_score ?? d.score ?? 0,
+                maxScore: d.max_score_for_test ?? d.maxScore ?? 100,
+                label: d.label ?? '',
+                categories: d.categories ?? [],
+                recommendations: d.recommendations ?? [],
+              });
               const res = await axios.get("https://zenomiai.elitceler.com/api/testnames", { headers: { Authorization: `Bearer ${token}` } });
               setTests(res.data);
-            } catch { alert("Failed to submit. Please try again."); }
-            setShowProcessing(false);
+            } catch {
+              // Still show results even if API fails
+              onResult({ score: 0, maxScore: 100, label: '', categories: [], recommendations: [] });
+            }
             setCurrentTestId(null);
           }}
         />
       )}
-      {showQuiz && !isSleepQuiz && !isNutritionQuiz && (
+      {showQuiz && isGad7Quiz && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: '#1A1D2E' }}>
+          <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 pb-32">
+            <div className="flex items-center justify-between mb-4">
+              <button onClick={() => { setShowQuiz(false); setAnswers([]); }} className="text-gray-400 hover:text-white">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+              <span className="text-xs text-gray-500 bg-[#2D3048] px-3 py-1 rounded-full">{answers.filter(a => a?.answer).length} / {questions.length}</span>
+            </div>
+            <h2 className="text-2xl font-bold text-white text-center mb-1">🧠 GAD-7 Assessment</h2>
+            <p className="text-sm text-gray-400 text-center mb-4">Over the last 2 weeks, how often have you been bothered by the following?</p>
+            <div className="h-1 bg-[#2D3048] rounded-full mb-6">
+              <div className="h-1 rounded-full transition-all duration-500" style={{ width: `${(answers.filter(a => a?.answer).length / questions.length) * 100}%`, background: 'linear-gradient(90deg, #FF6B8A, #FF8E53)' }} />
+            </div>
+            {questions.map((q: any, idx: number) => {
+              const selected = answers[idx]?.answer;
+              return (
+                <div key={q.id || idx} className="mb-3 p-4 rounded-2xl" style={{ background: '#252840' }}>
+                  <div className="flex items-start gap-3 mb-4">
+                    <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: '#22C55E' }}>{idx + 1}</span>
+                    <span className="text-white text-sm font-semibold leading-snug">{q.question}</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {(q.scaleOptions || []).map((option: string, i: number) => {
+                      const emojis = ['😌', '😐', '😟', '😰'];
+                      const selectedBgs = ['linear-gradient(135deg, #22C55E, #16A34A)', 'linear-gradient(135deg, #EAB308, #CA8A04)', 'linear-gradient(135deg, #F97316, #EA580C)', 'linear-gradient(135deg, #EF4444, #DC2626)'];
+                      return (
+                        <button key={option} onClick={() => handleScrollableAnswer(idx, option)} className={`min-h-[72px] h-full flex flex-col items-center justify-center rounded-xl text-center transition-all ${selected === option ? 'text-white' : 'text-gray-400 border border-white/10'}`} style={selected === option ? { background: selectedBgs[i] } : { background: '#2D3048' }}>
+                          <div className="text-lg">{emojis[i]}</div>
+                          <div className="text-[10px] mt-0.5 px-1 leading-tight">{option}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+            <button onClick={() => { if (answers.filter(a => a?.answer).length === questions.length) handleSubmitQuiz(); }} className="w-full py-4 rounded-2xl text-white font-bold text-lg mt-6" style={{ background: answers.filter(a => a?.answer).length === questions.length ? 'linear-gradient(135deg, #FF6B8A, #FF8E53)' : '#2D3048', color: answers.filter(a => a?.answer).length === questions.length ? 'white' : '#8E8EA0' }}>
+              Submit Answers ✨
+            </button>
+          </div>
+        </div>
+      )}
+      {showQuiz && isPhq9Quiz && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: '#1A1D2E' }}>
+          <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 pb-32">
+            <div className="flex items-center justify-between mb-4">
+              <button onClick={() => { setShowQuiz(false); setAnswers([]); }} className="text-gray-400 hover:text-white">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+              <span className="text-xs text-gray-500 bg-[#2D3048] px-3 py-1 rounded-full">{answers.filter(a => a?.answer).length} / {questions.length}</span>
+            </div>
+            <h2 className="text-2xl font-bold text-white text-center mb-1">💜 PHQ-9 Assessment</h2>
+            <p className="text-sm text-gray-400 text-center mb-4">Over the last 2 weeks, how often have you been bothered by these problems?</p>
+            <div className="h-1 bg-[#2D3048] rounded-full mb-6">
+              <div className="h-1 rounded-full transition-all duration-500" style={{ width: `${(answers.filter(a => a?.answer).length / questions.length) * 100}%`, background: 'linear-gradient(90deg, #8B5CF6, #A78BFA)' }} />
+            </div>
+            {questions.map((q: any, idx: number) => {
+              const selected = answers[idx]?.answer;
+              return (
+                <div key={q.id || idx} className="mb-3 p-4 rounded-2xl" style={{ background: '#252840' }}>
+                  <div className="flex items-start gap-3 mb-4">
+                    <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: '#8B5CF6' }}>{idx + 1}</span>
+                    <span className="text-white text-sm font-semibold leading-snug">{q.question}</span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {(q.scaleOptions || []).map((option: string, i: number) => {
+                      const emojis = ['😌', '😐', '😟', '😰'];
+                      return (
+                        <button key={option} onClick={() => handleScrollableAnswer(idx, option)} className={`min-h-[72px] h-full flex flex-col items-center justify-center rounded-xl text-center transition-all ${selected === option ? 'text-white' : 'text-gray-400 border border-white/10'}`} style={selected === option ? { background: 'linear-gradient(135deg, #8B5CF6, #A78BFA)' } : { background: '#2D3048' }}>
+                          <div className="text-lg">{emojis[i]}</div>
+                          <div className="text-[10px] mt-0.5 px-1 leading-tight">{option}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+            <button onClick={() => { if (answers.filter(a => a?.answer).length === questions.length) handleSubmitQuiz(); }} className="w-full py-4 rounded-2xl text-white font-bold text-lg mt-6" style={{ background: answers.filter(a => a?.answer).length === questions.length ? 'linear-gradient(135deg, #8B5CF6, #A78BFA)' : '#2D3048', color: answers.filter(a => a?.answer).length === questions.length ? 'white' : '#8E8EA0' }}>
+              Submit Answers ✨
+            </button>
+          </div>
+        </div>
+      )}
+      {showQuiz && isEmotionalQuiz && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: '#1A1D2E' }}>
+          <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 pb-32">
+            <div className="flex items-center justify-between mb-4">
+              <button onClick={() => { setShowQuiz(false); setAnswers([]); }} className="text-gray-400 hover:text-white">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+              <span className="text-xs text-gray-500 bg-[#2D3048] px-3 py-1 rounded-full">{answers.filter(a => a?.answer).length} / {questions.length}</span>
+            </div>
+            <h2 className="text-2xl font-bold text-white text-center mb-1">💚 Emotional Health</h2>
+            <p className="text-sm text-gray-400 text-center mb-2">Explore your emotional well-being across 3 dimensions</p>
+            <div className="h-1 bg-[#2D3048] rounded-full mb-6">
+              <div className="h-1 rounded-full transition-all duration-500" style={{ width: `${(answers.filter(a => a?.answer).length / questions.length) * 100}%`, background: 'linear-gradient(90deg, #FF6B8A, #E040FB)' }} />
+            </div>
+            {[{ title: 'Self-Awareness 🧠', start: 0 }, { title: 'Self-Regulation 🎯', start: 5 }, { title: 'Motivation 🚀', start: 10 }].map((section) => (
+              <div key={section.title} className="mb-6">
+                <h3 className="text-white font-bold text-lg mb-3">{section.title}</h3>
+                {questions.slice(section.start, section.start + 5).map((q: any, idx: number) => {
+                  const globalIdx = section.start + idx;
+                  const selected = answers[globalIdx]?.answer;
+                  const emojis = ['🌟', '😊', '😐', '😟', '😣'];
+                  return (
+                    <div key={q.id || globalIdx} className="mb-3 p-4 rounded-2xl" style={{ background: '#252840' }}>
+                      <p className="text-white text-sm font-semibold mb-3">{q.question}</p>
+                      <div className="grid grid-cols-5 gap-2">
+                        {(q.scaleOptions || []).map((option: string, i: number) => (
+                          <button key={option} onClick={() => handleScrollableAnswer(globalIdx, option)} className={`min-h-[72px] h-full flex flex-col items-center justify-center rounded-xl text-center transition-all ${selected === option ? 'text-white' : 'text-gray-400 border border-white/10'}`} style={selected === option ? { background: 'linear-gradient(135deg, #FF6B8A, #E040FB)' } : { background: '#2D3048' }}>
+                            <div className="text-lg">{emojis[i] || '❓'}</div>
+                            <div className="text-[10px] mt-0.5 px-1 leading-tight">{option}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+            <button onClick={() => { if (answers.filter(a => a?.answer).length === questions.length) handleSubmitQuiz(); }} className="w-full py-4 rounded-2xl text-white font-bold text-lg mt-4" style={{ background: answers.filter(a => a?.answer).length === questions.length ? 'linear-gradient(135deg, #FF6B8A, #E040FB)' : '#2D3048', color: answers.filter(a => a?.answer).length === questions.length ? 'white' : '#8E8EA0' }}>
+              Submit Answers ✨
+            </button>
+          </div>
+        </div>
+      )}
+      {showQuiz && !isSleepQuiz && !isNutritionQuiz && !isGad7Quiz && !isPhq9Quiz && !isEmotionalQuiz && (
         <div className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#fff7fa] to-[#f8f3fa] p-0 m-0 fixed top-0 left-0 z-50">
           <div
             className="w-full max-w-2xl mx-auto flex flex-col items-center justify-center min-h-screen"
@@ -1147,7 +1425,7 @@ export default function Dashboard() {
                             }`}
                             onClick={() => handleAnswer(option)} // Pass the full option string
                           >
-                            {option.split(":")[0]}
+                            {option.includes(':') ? option.split(':').slice(1).join(':').trim() : option}
                           </button>
                         ));
                       })()}
@@ -1189,31 +1467,26 @@ export default function Dashboard() {
       )}
 
       {showCompletionDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-3xl p-10 w-full max-w-lg shadow-lg flex flex-col items-center relative">
-            <h2 className="text-2xl font-bold mb-2 text-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #704180, #8B2D6C)' }}>
+          <div className="w-full max-w-lg px-6 flex flex-col items-center text-center">
+            <svg className="w-20 h-20 text-white mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <h2 className="text-2xl font-bold mb-3 text-white">
               You've Completed the {lastCompletedTestName || 'Test'}!
             </h2>
-            <p className="text-gray-600 text-center mb-6">
+            <p className="text-white/80 text-base mb-8">
               Your results are ready and personalized just for you.
             </p>
             <button
-              className="w-full py-3 rounded-full text-white font-semibold text-lg mb-3"
-              style={{
-                background:
-                  "linear-gradient(90deg, #704180 6.54%, #8B2D6C 90.65%)",
-              }}
+              className="w-full py-4 rounded-full bg-white text-[#704180] font-bold text-lg mb-4"
               onClick={() => handleHomeScreen()}
             >
-              Back to homescreen
+              Done
             </button>
-            {/* Only show 'Take next test' if not all tests are completed */}
             {completedCount !== tests.length && (
               <button
-                className="w-full py-3 rounded-full border border-[#8B2D6C] text-[#8B2D6C] font-semibold text-lg"
+                className="w-full py-4 rounded-full bg-white text-[#704180] font-bold text-lg"
                 onClick={() => {
                   setShowCompletionDialog(false);
-                  // Find the next unlocked test
                   const nextTest = tests.find(t => t.testStatus === 'UNLOCKED');
                   if (nextTest) setSelectedTest(nextTest);
                 }}
@@ -1294,7 +1567,98 @@ export default function Dashboard() {
               ))}
             </div>
 
-            <button onClick={() => { setSleepResults(null); window.location.reload(); }} className="w-full py-4 rounded-2xl text-white font-bold text-lg" style={{ background: 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' }}>
+            <button onClick={() => handleHomeScreen()} className="w-full py-4 rounded-2xl text-white font-bold text-lg" style={{ background: 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' }}>
+              Done 🏠
+            </button>
+          </div>
+        </div>
+      )}
+      {/* GAD-7 Results Screen */}
+      {gad7Results && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: '#1A1D2E' }}>
+          <div className="max-w-lg mx-auto px-4 py-8 pb-24">
+            <h1 className="text-2xl font-bold text-center mb-1 bg-gradient-to-r from-[#FF6B8A] to-[#FF8E53] bg-clip-text text-transparent">GAD-7 Results</h1>
+            <p className="text-sm text-gray-400 text-center mb-8">Here's what your answers tell us 🔍</p>
+            <div className="rounded-2xl p-8 mb-4 flex flex-col items-center" style={{ background: '#252840' }}>
+              <div className="text-5xl mb-4">⛅</div>
+              <span className="text-[56px] font-bold leading-none mb-1 bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(135deg, ${gad7Results.score <= 4 ? '#4CAF50, #66BB6A' : gad7Results.score <= 9 ? '#FFC107, #FFD54F' : gad7Results.score <= 14 ? '#FF9800, #FFB74D' : '#FF6B6B, #FF4444'})` }}>{gad7Results.score}</span>
+              <p className="text-sm text-gray-500 mb-4">out of 21</p>
+              <span className="px-4 py-1.5 rounded-full text-white text-sm font-bold mb-3" style={{ background: 'linear-gradient(135deg, #FF6B8A, #FF8E53)' }}>{gad7Results.label}</span>
+              <p className="text-sm text-gray-400 text-center">{gad7Results.description}</p>
+            </div>
+            <div className="rounded-2xl p-4 mb-6" style={{ background: '#252840' }}>
+              <p className="text-xs text-gray-500 text-center">⚠️ This is a screening tool, not a diagnosis. Please consult a healthcare professional for clinical evaluation.</p>
+            </div>
+            <button onClick={() => handleHomeScreen()} className="w-full py-4 rounded-2xl text-white font-bold text-lg" style={{ background: 'linear-gradient(135deg, #FF6B8A, #FF8E53)' }}>
+              Done 🏠
+            </button>
+          </div>
+        </div>
+      )}
+      {/* PHQ-9 Results Screen */}
+      {phq9Results && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: '#1A1D2E' }}>
+          <div className="max-w-lg mx-auto px-5 py-6 pb-24">
+            {/* Main card */}
+            <div className="rounded-[20px] overflow-hidden mb-4" style={{ background: '#252840' }}>
+              {/* Gradient header with score */}
+              <div className="w-full py-8 flex flex-col items-center" style={{ background: 'linear-gradient(135deg, #FF8E53, #8B5CF6)' }}>
+                <div className="text-5xl mb-3">⛅</div>
+                <span className="text-[48px] font-bold text-white leading-none">{phq9Results.score}</span>
+                <p className="text-sm text-white/70 mt-1">out of 27</p>
+                <p className="text-xl font-bold text-white mt-2 text-center px-4">{phq9Results.label}</p>
+              </div>
+              {/* Description */}
+              <div className="p-5">
+                <p className="text-sm text-gray-400 text-center leading-relaxed">{phq9Results.description}</p>
+              </div>
+            </div>
+            {/* Disclaimer */}
+            <div className="rounded-2xl p-4 mb-6 border border-white/10">
+              <p className="text-xs text-gray-500 text-center leading-relaxed">Disclaimer: This is a screening tool, not a diagnosis. Please consult a qualified healthcare professional for clinical evaluation.</p>
+            </div>
+            <button onClick={() => handleHomeScreen()} className="w-full py-4 rounded-2xl text-white font-bold text-lg" style={{ background: 'linear-gradient(135deg, #8B5CF6, #A78BFA)' }}>
+              Done 🏠
+            </button>
+          </div>
+        </div>
+      )}
+      {/* Emotional Health Results Screen */}
+      {emotionalResults && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: '#1A1D2E' }}>
+          <div className="max-w-lg mx-auto px-5 py-6 pb-24">
+            {/* Score card with gradient header */}
+            <div className="rounded-[20px] overflow-hidden mb-4" style={{ background: '#252840' }}>
+              <div className="w-full py-7 flex flex-col items-center" style={{ background: 'linear-gradient(135deg, #FF8E53, #FF6B9D)' }}>
+                <div className="text-4xl mb-3">🌱</div>
+                <h1 className="text-[28px] font-bold text-white">{emotionalResults.score <= 25 ? 'Needs Attention' : emotionalResults.score <= 50 ? 'Growing Stronger' : 'Thriving'}</h1>
+              </div>
+              <div className="p-5 text-center">
+                <p className="text-base font-semibold text-white mb-2">Total Score: {emotionalResults.score} / {emotionalResults.max}</p>
+                <p className="text-sm text-gray-400 leading-relaxed">
+                  {emotionalResults.score <= 25
+                    ? "Your emotional well-being could use some extra care right now. Consider reaching out to a counselor or someone you trust. 💙"
+                    : emotionalResults.score <= 50
+                      ? "You're making good progress with your emotional skills. Keep building on what's working for you! 🌱"
+                      : "Your emotional well-being is in a great place! Your self-awareness and resilience are shining through. 🌟"}
+                </p>
+              </div>
+            </div>
+            {/* Category cards in a row */}
+            <div className="grid grid-cols-3 gap-2 mb-6">
+              {emotionalResults.categories.map((cat) => (
+                <div key={cat.name} className="rounded-2xl p-3 flex flex-col items-center" style={{ background: '#252840' }}>
+                  <div className="text-2xl mb-1.5">{cat.emoji}</div>
+                  <p className="text-[11px] font-semibold text-white text-center mb-2.5">{cat.name}</p>
+                  <div className="w-full h-1.5 rounded-full bg-[#1A1D2E] mb-2">
+                    <div className="h-1.5 rounded-full" style={{ width: `${(cat.score / cat.max) * 100}%`, background: 'linear-gradient(90deg, #FF6B9D, #C850C0)' }} />
+                  </div>
+                  <p className="text-sm font-bold text-white">{cat.score}/{cat.max}</p>
+                  <p className="text-[10px] text-gray-400 mt-1">{cat.label}</p>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => handleHomeScreen()} className="w-full py-4 rounded-2xl text-white font-bold text-lg" style={{ background: 'linear-gradient(135deg, #FF6B9D, #C850C0)' }}>
               Done 🏠
             </button>
           </div>
