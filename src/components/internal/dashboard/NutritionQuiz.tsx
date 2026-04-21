@@ -41,6 +41,9 @@ export default function NutritionQuiz({ questions, onSubmit, onClose }: Props) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [result, setResult] = useState<NutritionResult | null>(null);
+  const [fruits, setFruits] = useState(1);
+  const [veggies, setVeggies] = useState(1);
+  const [water, setWater] = useState(0);
 
   const grouped = STEPS.map(s => ({
     ...s,
@@ -138,11 +141,6 @@ export default function NutritionQuiz({ questions, onSubmit, onClose }: Props) {
       </div>
     );
   }
-
-  // Special state for fruits/veggies counters
-  const [fruits, setFruits] = useState(1);
-  const [veggies, setVeggies] = useState(1);
-  const [water, setWater] = useState(0);
 
   return (
     <div className="fixed inset-0 z-[60] overflow-y-auto font-['Poppins']" style={{ background: BG }}>

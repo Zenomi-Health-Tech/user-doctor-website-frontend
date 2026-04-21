@@ -113,6 +113,7 @@ export default function Dashboard() {
   const [emotionalResults, setEmotionalResults] = useState<{score: number, max: number, categories: {name: string, emoji: string, score: number, max: number, label: string}[]} | null>(null);
   const [hasSleepLog, setHasSleepLog] = useState(false);
   const [hasAppointment, setHasAppointment] = useState(false);
+  const [postTestLoading, setPostTestLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -353,7 +354,6 @@ export default function Dashboard() {
   const handlePrev = () => {
     if (currentQuestion > 0) setCurrentQuestion(currentQuestion - 1);
   };
-  const [postTestLoading, setPostTestLoading] = useState(false);
 
   const handleHomeScreen = () => {
     setShowQuiz(false);
