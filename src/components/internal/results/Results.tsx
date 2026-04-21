@@ -135,15 +135,19 @@ export default function Results() {
             <button
               onClick={async () => {
                 try {
-                  // Re-fetch analytics to get a fresh presigned URL
                   const res = await api.get('/users/analytics');
                   const freshData = res.data.data || [];
                   const fresh = freshData[selectedIdx];
                   const url = fresh?.reportView || selected.reportView;
-                  window.open(url, '_blank');
+                  // Test if URL is accessible before opening
+                  const check = await fetch(url, { method: 'HEAD' }).catch(() => null);
+                  if (check && check.ok) {
+                    window.open(url, '_blank');
+                  } else {
+                    alert('Your report is still being generated. Please check back in a few minutes.');
+                  }
                 } catch {
-                  // Fallback to stored URL
-                  window.open(selected.reportView, '_blank');
+                  alert('Your report is still being generated. Please check back in a few minutes.');
                 }
               }}
               className="block w-full py-3 rounded-full text-white font-medium text-base text-center hover:opacity-90 transition"
