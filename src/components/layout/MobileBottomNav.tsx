@@ -31,9 +31,8 @@ export default function MobileBottomNav() {
       >
         {tabs.map((tab) => {
           const isActive = location.pathname === tab.path || location.pathname.startsWith(tab.path + '/');
-          const isSleep = tab.path === '/sleep-tracker' && !isActive;
-          const Icon = tab.icon;
           const isSleep = tab.label === "Sleep";
+          const Icon = tab.icon;
           return (
             <div key={tab.path} className="flex-1 h-full flex items-center justify-center px-0.5 py-1">
               <button

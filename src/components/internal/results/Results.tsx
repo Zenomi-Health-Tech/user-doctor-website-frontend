@@ -187,7 +187,6 @@ export default function Results() {
 // ── Animated Bar Chart ──
 function AnimatedBarChart({ data, animated }: { data: { title: string; value: number }[]; animated: boolean }) {
   const chartH = 220;
-  const chartHSm = 260;
   return (
     <div>
       <div className="flex">

@@ -18,7 +18,6 @@ const STEPS = [
 ];
 
 const ACCENT = '#2D9F83';
-const ACCENT_LIGHT = '#2D9F8322';
 const BG = '#0F1A15';
 const CARD = '#1A2E25';
 const CARD_LIGHT = '#223D32';
