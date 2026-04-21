@@ -151,18 +151,6 @@ export default function Results() {
             </button>
           )}
 
-          {/* Zenomi Learn prompt */}
-          <a href="https://zenomilearn.zenomihealth.com" target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-3 mt-5 px-4 py-3.5 rounded-2xl transition hover:opacity-90"
-            style={{ background: 'linear-gradient(135deg, #704180, #8B2D6C)' }}>
-            <span className="text-xl">🎓</span>
-            <div className="flex-1">
-              <p className="text-white text-sm font-semibold">Check out Zenomi Learn</p>
-              <p className="text-white/50 text-[11px]">Courses curated for your wellness journey</p>
-            </div>
-            <svg className="w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
-          </a>
-
           {/* Zenomi Learn Courses Card - only when all tests done */}
           {allTestsDone && (
           <div className="rounded-[20px] overflow-hidden mt-[30px]" style={{ background: 'linear-gradient(135deg, #704180, #8B2D6C)' }}>
