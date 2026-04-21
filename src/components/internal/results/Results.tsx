@@ -151,22 +151,6 @@ export default function Results() {
             </button>
           )}
 
-          {/* Zenomi Learn */}
-          <div className="mt-5 rounded-2xl border border-[#F0EBF4] bg-[#F6F2F7] p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#8B2D6C]/10 flex items-center justify-center text-lg">🎓</div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-[#704180]">Explore Zenomi Learn</p>
-                <p className="text-[11px] text-[#808080]">Wellness courses picked just for you</p>
-              </div>
-              <a href="https://zenomilearn.zenomihealth.com" target="_blank" rel="noopener noreferrer"
-                className="px-4 py-1.5 rounded-full text-xs font-semibold text-white flex-shrink-0"
-                style={{ background: '#8B2D6C' }}>
-                View →
-              </a>
-            </div>
-          </div>
-
           {/* Zenomi Learn Courses Card - only when all tests done */}
           {allTestsDone && (
           <div className="rounded-[20px] overflow-hidden mt-[30px]" style={{ background: 'linear-gradient(135deg, #704180, #8B2D6C)' }}>
