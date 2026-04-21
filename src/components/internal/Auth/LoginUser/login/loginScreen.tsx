@@ -1,21 +1,33 @@
-import { GoogleLogin } from "@react-oauth/google";
+import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
+import { ChevronLeft, Loader } from "lucide-react";
+import Lottie from "lottie-react";
 import axios from "axios";
 import { setAuthCookies } from "@/utils/cookies";
 import Cookies from "js-cookie";
-import zenomiLogo from "@/assets/zenomiLogo.png";
 
 const Component = () => {
   const { toast } = useToast();
   const { login } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [anim, setAnim] = useState<any>(null);
+  const googleBtnRef = useRef<HTMLDivElement>(null);
 
-  const handleGoogleSuccess = async (credentialResponse: any) => {
+  useEffect(() => {
+    fetch("/meditation.json").then(r => r.json()).then(setAnim).catch(() => {});
+  }, []);
+
+  const handleSuccess = async (credentialResponse: any) => {
     const idToken = credentialResponse.credential;
     if (!idToken) {
       toast({ title: "Error", description: "Google sign-in failed", variant: "destructive" });
       return;
     }
+    setLoading(true);
     try {
       const res = await axios.post("https://zenomi.elitceler.com/api/v1/users/google-signin", { idToken });
       const token = res.data?.data?.token || res.data?.token;
@@ -32,7 +44,14 @@ const Component = () => {
       } else {
         toast({ title: "Error", description: error.response?.data?.message || "Sign-in failed", variant: "destructive" });
       }
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleCustomClick = () => {
+    const btn = googleBtnRef.current?.querySelector('div[role="button"]') as HTMLElement;
+    if (btn) btn.click();
   };
 
   return (
@@ -49,12 +68,10 @@ const Component = () => {
         <p className="text-xs text-gray-400 mb-8 font-['Poppins']">Wellness assessments, sleep tracking & more</p>
         <div className="w-full flex justify-center">
           <GoogleLogin
-            onSuccess={handleGoogleSuccess}
+            onSuccess={handleSuccess}
             onError={() => toast({ title: "Error", description: "Google sign-in failed", variant: "destructive" })}
             size="large"
-            width="300"
             text="continue_with"
-            shape="pill"
           />
         </div>
         <button onClick={() => window.location.href = '/chooserole'} className="text-xs text-[#8B2D6C] mt-6 font-medium font-['Poppins'] hover:underline">
@@ -64,6 +81,10 @@ const Component = () => {
           By continuing, you agree to Zenomi's Terms of Service and Privacy Policy
         </p>
       </div>
+
+      <p className="absolute bottom-4 left-6 right-6 text-center text-xs text-white/50">
+        By continuing, you agree to our Terms &amp; Privacy Policy
+      </p>
     </div>
   );
 };

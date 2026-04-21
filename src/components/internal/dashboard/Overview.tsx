@@ -38,20 +38,20 @@ const Overview: React.FC<OverviewProps> = ({
 
   return (
     <div className="bg-white rounded-lg p-4">
-      <div className="flex justify-between space-x-4">
+      <div className="flex flex-col md:flex-row justify-between gap-4">
         {stats.map((stat, index) => (
           <Card
             key={index}
-            className="flex-1 shadow-[8px_12px_18px_0px_#DADEE8] rounded-lg p-4 w-[350px] h-[159px]  text-start  relative border border-[#DEEBFD]"
+            className="flex-1 shadow-[8px_12px_18px_0px_#DADEE8] rounded-lg p-4 min-h-[159px] text-start relative border border-[#DEEBFD]"
           >
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 min-w-0">
               {/* Image at the top left corner */}
               <img
                 src={stat.imgSrc}
                 alt={stat.label}
-                className="w-12 h-12"
+                className="w-12 h-12 flex-shrink-0"
               />
-              <p className="text-lg font-semibold">{stat.label}</p>
+              <p className="text-lg font-semibold truncate">{stat.label}</p>
             </div>
             {/* Stats with number and text stacked */}
             <div className="text-3xl font-semibold  text-[#013DC0] ml-16">

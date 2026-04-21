@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader } from 'lucide-react';
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-import axios from 'axios';
+import api from '@/utils/api';
 import { useNavigate } from "react-router-dom";
 
 const QUALIFICATIONS = [
@@ -34,7 +34,7 @@ const doctorSchema = z.object({
     name: z.string().min(1, 'Name is required'),
     email: z.string().email('Invalid email address'),
     phoneNumber: z.string().min(10, 'Phone number must be at least 10 digits'),
-    gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
+    gender: z.enum(['MALE', 'FEMALE', 'OTHER'], { required_error: 'Gender is required' }),
     qualification: z.string().min(1, 'Qualification is required'),
     additionalQualifications: z.array(z.string()),
     specialization: z.string().min(1, 'Specialization is required'),
@@ -52,6 +52,9 @@ const steps = ['Personal Information', 'Professional Information', 'Practice & F
 const selectClass = "w-full p-3 rounded-full border-2 border-transparent focus:outline-none focus:border-[#704180] appearance-none transition-colors";
 const inputClass = "w-full p-3 rounded-full border-2 border-transparent focus:outline-none focus:border-[#704180] transition-colors";
 const fieldBg = { backgroundColor: '#FCF8FA' };
+
+const selectClass = "w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 bg-gray-50";
+const inputClass = selectClass;
 
 const DoctorRegistrationForm = () => {
     const [loading, setLoading] = useState(false);
@@ -75,6 +78,21 @@ const DoctorRegistrationForm = () => {
         if (!country.dialCode) return;
         setCountryCode(`+${country.dialCode}`);
         setValue("phoneNumber", value.replace(country.dialCode, ""));
+    };
+
+    // Create a tiny 1x1 transparent PNG as placeholder for govtId
+    const createPlaceholderFile = (): File => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        const ctx = canvas.getContext('2d')!;
+        ctx.clearRect(0, 0, 1, 1);
+        const dataUrl = canvas.toDataURL('image/png');
+        const arr = dataUrl.split(',');
+        const bstr = atob(arr[1]);
+        const u8arr = new Uint8Array(bstr.length);
+        for (let i = 0; i < bstr.length; i++) u8arr[i] = bstr.charCodeAt(i);
+        return new File([u8arr], 'placeholder.png', { type: 'image/png' });
     };
 
     const onSubmit = async (data: DoctorFormData) => {

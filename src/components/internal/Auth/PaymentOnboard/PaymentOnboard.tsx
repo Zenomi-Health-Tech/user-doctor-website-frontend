@@ -27,7 +27,7 @@ function PaymentScreen() {
   };
 
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center relative font-['Poppins'] bg-gradient-to-b from-[#8B2D6C] to-[#C6426E] overflow-hidden">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center relative font-['Poppins'] bg-gradient-to-b from-[#8B2D6C] to-[#704180] overflow-hidden">
         {/* Grid overlay */}
         <div className="absolute inset-0 pointer-events-none z-0">
           <svg width="100%" height="100%" className="w-full h-full" style={{ position: 'absolute', top: 0, left: 0 }}>
@@ -46,7 +46,7 @@ function PaymentScreen() {
             <div className="text-[3rem] md:text-[4rem] font-bold text-[#FFD966] leading-none drop-shadow-lg" style={{ fontFamily: 'serif' }}>Elite</div>
           </div>
           {/* Pricing Card */}
-          <div className="w-full max-w-md bg-gradient-to-b from-[#8B2D6C]/60 to-[#C6426E]/60 rounded-2xl border border-[#FFD966] p-8 flex flex-col items-center mb-8 shadow-lg relative">
+          <div className="w-full max-w-md bg-gradient-to-b from-[#8B2D6C]/60 to-[#704180]/60 rounded-2xl border border-[#FFD966] p-8 flex flex-col items-center mb-8 shadow-lg relative">
             <div className="absolute -top-5 left-1/2 -translate-x-1/2">
               <span className="px-6 py-1 rounded-full bg-[#FFD966] text-[#8B2D6C] font-semibold text-sm shadow border border-[#FFD966]">Plus Exclusive Access</span>
             </div>
@@ -55,37 +55,37 @@ function PaymentScreen() {
             <button className="w-full py-3 rounded-full bg-gradient-to-r from-[#FFD966] to-[#EAC96B] text-[#8B2D6C] font-semibold text-lg shadow hover:opacity-90 transition mb-2">Buy gold subscription now</button>
           </div>
           {/* Features Card */}
-          <div className="w-full max-w-md bg-gradient-to-b from-[#8B2D6C]/60 to-[#C6426E]/60 rounded-2xl border border-[#FFD966] p-8 flex flex-col items-center mb-8 shadow-lg">
+          <div className="w-full max-w-md bg-gradient-to-b from-[#8B2D6C]/60 to-[#704180]/60 rounded-2xl border border-[#FFD966] p-8 flex flex-col items-center mb-8 shadow-lg">
             <ul className="w-full flex flex-col gap-5 text-white text-lg">
               <li className="flex items-center gap-3">
-                <span className="text-[#FFD966]">
+                <span className="text-[#FFD966] shrink-0">
                   <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="4" /><path d="M9 12l2 2 4-4" /></svg>
                 </span>
-                Verified Doctor Profile
+                <span className="min-w-0">Verified Doctor Profile</span>
               </li>
               <li className="flex items-center gap-3">
-                <span className="text-[#FFD966]">
+                <span className="text-[#FFD966] shrink-0">
                   <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a4 4 0 1 1 8 0v2" /></svg>
                 </span>
-                Access to Patient Appointments
+                <span className="min-w-0">Access to Patient Appointments</span>
               </li>
               <li className="flex items-center gap-3">
-                <span className="text-[#FFD966]">
+                <span className="text-[#FFD966] shrink-0">
                   <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3h18v18H3V3z" opacity="0.2" /><path d="M7 17V7h10v10H7z" /></svg>
                 </span>
-                Personalized Dashboard
+                <span className="min-w-0">Personalized Dashboard</span>
               </li>
               <li className="flex items-center gap-3">
-                <span className="text-[#FFD966]">
+                <span className="text-[#FFD966] shrink-0">
                   <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="4" /><path d="M12 8v4l3 3" /></svg>
                 </span>
-              Secure Payments & Data
+                <span className="min-w-0">Secure Payments & Data</span>
               </li>
               <li className="flex items-center gap-3">
-                <span className="text-[#FFD966]">
+                <span className="text-[#FFD966] shrink-0">
                   <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="4" /><path d="M8 12h8" /></svg>
                 </span>
-                Exclusive Platform Access
+                <span className="min-w-0">Exclusive Platform Access</span>
               </li>
             </ul>
           </div>

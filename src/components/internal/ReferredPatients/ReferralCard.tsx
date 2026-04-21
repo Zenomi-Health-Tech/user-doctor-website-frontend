@@ -71,8 +71,8 @@ const ReferralCard: React.FC = () => {
         </div>
       )}
       {/* Referral Offer Card */}
-      <div className="bg-[#8B2D6C] rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between relative overflow-hidden mb-4">
-        <div className="flex-1">
+      <div className="bg-[#8B2D6C] rounded-2xl p-4 sm:p-8 flex flex-col md:flex-row items-center justify-between relative overflow-hidden mb-4">
+        <div className="flex-1 min-w-0">
           <div className="text-white text-2xl font-bold mb-2">Get 5 FREE referrals free</div>
           <div className="text-white text-base mb-4">You can onboard up to 5 patients via referral without any charges.</div>
           <button onClick={handleGenerateNow} className="px-6 py-2 cursor-pointer rounded-full bg-[#FCB35B] text-[#8B2D6C] font-semibold shadow hover:opacity-90 transition">Generate now</button>
@@ -84,9 +84,9 @@ const ReferralCard: React.FC = () => {
       </div>
       {/* Referral Code Banner */}
       {referralCode && (
-        <div className="bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] rounded-xl px-6 py-4 flex items-center justify-between shadow">
-          <div className="text-white text-lg font-semibold">Your Referral Code:</div>
-          <div className="text-[#FFD700] text-2xl font-bold tracking-widest">{referralCode}</div>
+        <div className="bg-gradient-to-r from-[#8B2D6C] to-[#704180] rounded-xl px-6 py-4 flex items-center justify-between shadow gap-4">
+          <div className="text-white text-lg font-semibold shrink-0">Your Referral Code:</div>
+          <div className="text-[#FFD700] text-2xl font-bold tracking-widest truncate min-w-0">{referralCode}</div>
         </div>
       )}
     </div>

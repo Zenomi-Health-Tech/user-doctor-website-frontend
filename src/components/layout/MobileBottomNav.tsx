@@ -31,6 +31,7 @@ export default function MobileBottomNav() {
       >
         {tabs.map((tab) => {
           const isActive = location.pathname === tab.path || location.pathname.startsWith(tab.path + '/');
+          const isSleep = tab.path === '/sleep-tracker' && !isActive;
           const Icon = tab.icon;
           const isSleep = tab.label === "Sleep";
           return (

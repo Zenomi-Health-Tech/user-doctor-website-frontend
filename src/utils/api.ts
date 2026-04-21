@@ -1,6 +1,6 @@
 // @/utils/api.ts
 import axios, { AxiosError, AxiosRequestHeaders, InternalAxiosRequestConfig } from "axios";
-import { getAuthCookies } from "./cookies";
+import { getAuthCookies, clearAuthCookies } from "./cookies";
 
 const api = axios.create({
   baseURL: "https://zenomi.elitceler.com/api/v1",
@@ -23,6 +23,18 @@ api.interceptors.request.use(
   },
   (error: AxiosError) => {
     console.error("Request error:", error);
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor to handle expired tokens
+api.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      clearAuthCookies();
+      window.location.href = "/chooserole";
+    }
     return Promise.reject(error);
   }
 );

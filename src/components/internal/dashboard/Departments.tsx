@@ -14,16 +14,16 @@ type DepartmentsProps = {
 
 const Departments: React.FC<DepartmentsProps> = ({ departments }) => {
   return (
-    <Card className="bg-white w-[323px] shadow-[8px_12px_18px_0px_#DADEE8] border border-[#DEEBFD] rounded-lg">
+    <Card className="bg-white w-full max-w-[323px] shadow-[8px_12px_18px_0px_#DADEE8] border border-[#DEEBFD] rounded-lg">
       <CardTitle className="text-lg font-semibold mb-4 bg-[#E9F4FF] text-start py-2 rounded-t-lg"><span className="ml-4">Departments</span></CardTitle>
       <CardContent className="space-y-4">
         {departments.map((department) => (
           <div
             key={department.id}
-            className="flex justify-between items-center border-b pb-2"
+            className="flex justify-between items-center border-b pb-2 min-w-0 gap-2"
           >
-            <span className="font-medium  text-sm">{department.name}</span>
-            <Badge className="font-semibold rounded-2xl bg-[#013DC0] px-4">
+            <span className="font-medium text-sm truncate min-w-0">{department.name}</span>
+            <Badge className="font-semibold rounded-2xl bg-[#013DC0] px-4 flex-shrink-0">
               {department.patientCount}
             </Badge>
           </div>

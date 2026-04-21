@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader } from 'lucide-react';
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-import axios from 'axios';
+import api from '@/utils/api';
 import { useNavigate } from "react-router-dom";
 
 
@@ -61,7 +61,7 @@ const UserRegistrationForm = () => {
             const referralCode = referralCodeDigits ? `Zenomi-${referralCodeDigits}` : undefined;
             const payload = { ...data, countryCode, dob: new Date(data.dob).toISOString(), referralCode };
 
-            const response = await axios.post('https://zenomi.elitceler.com/api/v1/users/register-user', payload);
+            const response = await api.post('/users/register-user', payload);
 
             toast({
                 title: "Success",
@@ -76,7 +76,8 @@ const UserRegistrationForm = () => {
 
             console.log('Success:', response.data);
         } catch (error: any) {
-            const errorMessage = error.response?.data?.message || 'Registration failed';
+            const errData = error.response?.data;
+            const errorMessage = (errData && typeof errData === 'object' && errData.message) ? errData.message : 'Registration failed. Please try again.';
             toast({
                 title: "Error",
                 description: errorMessage,

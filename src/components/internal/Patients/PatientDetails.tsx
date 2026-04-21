@@ -155,11 +155,11 @@ const PatientDetails: React.FC = () => {
             patient.name.charAt(0).toUpperCase()
           )}
         </div>
-        <div className="flex-1 flex flex-col gap-2">
-          <h1 className="text-2xl md:text-3xl font-bold text-[#1A2343] mb-1">{patient.name}</h1>
+        <div className="flex-1 flex flex-col gap-2 min-w-0">
+          <h1 className="text-2xl md:text-3xl font-bold text-[#1A2343] mb-1 truncate">{patient.name}</h1>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1 text-gray-700 text-base">
-            <span><span className="font-semibold">Email:</span> {patient.email}</span>
-            <span><span className="font-semibold">Phone:</span> {patient.countryCode} {patient.phoneNumber}</span>
+            <span className="truncate"><span className="font-semibold">Email:</span> {patient.email}</span>
+            <span className="truncate"><span className="font-semibold">Phone:</span> {patient.countryCode} {patient.phoneNumber}</span>
             <span><span className="font-semibold">Gender:</span> {patient.gender}</span>
             <span><span className="font-semibold">DOB:</span> {formatDate(patient.dob)}</span>
             <span><span className="font-semibold">Created:</span> {formatDate(patient.createdAt)}</span>
@@ -212,10 +212,10 @@ const PatientDetails: React.FC = () => {
                       </div>
                       <div className="flex flex-wrap gap-2 md:gap-3">
                         {test.reportView && (
-                          <a href={test.reportView} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white text-sm font-semibold shadow hover:opacity-90 transition">View Report</a>
+                          <a href={test.reportView} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#704180] text-white text-sm font-semibold shadow hover:opacity-90 transition">View Report</a>
                         )}
                         {test.detailedReportView && (
-                          <a href={test.detailedReportView} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white text-sm font-semibold shadow hover:opacity-90 transition">View Detailed</a>
+                          <a href={test.detailedReportView} target="_blank" rel="noopener noreferrer" className="px-3 py-1 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#704180] text-white text-sm font-semibold shadow hover:opacity-90 transition">View Detailed</a>
                         )}
                       </div>
                     </div>
@@ -274,7 +274,7 @@ const PatientDetails: React.FC = () => {
                           }
                         }}
                         disabled={assigning}
-                        className="px-5 py-2 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold shadow hover:opacity-90 transition disabled:opacity-60"
+                        className="px-5 py-2 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#704180] text-white font-semibold shadow hover:opacity-90 transition disabled:opacity-60"
                       >
                         {assigning ? 'Reassigning...' : 'Retake the Test'}
                       </button>
@@ -299,7 +299,7 @@ const PatientDetails: React.FC = () => {
           <button
             onClick={handleAssignCourse}
             disabled={assigning}
-            className="px-6 py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#C6426E] text-white font-semibold text-lg shadow hover:opacity-90 transition disabled:opacity-60"
+            className="px-6 py-3 rounded-full bg-gradient-to-r from-[#8B2D6C] to-[#704180] text-white font-semibold text-lg shadow hover:opacity-90 transition disabled:opacity-60"
           >
             {assigning ? 'Assigning...' : 'Assign Course'}
           </button>

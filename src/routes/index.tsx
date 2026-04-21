@@ -110,6 +110,10 @@ export default function AppRouter() {
           element: <SleepTracker />,
         },
         {
+          path: "/sleep-tracker",
+          element: <ProtectedRoute element={<SleepTracker />} />,
+        },
+        {
           path: "/profile",
           element: <Profile />,
         },

@@ -28,5 +28,9 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": [
+    "src/components/internal/Auth/DoctorLogin/otp",
+    "src/components/internal/Auth/LoginUser/otp"
+  ]
 }

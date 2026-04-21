@@ -1,12 +1,13 @@
 // ProtectedRoute.tsx
 import { Navigate } from "react-router-dom";
-import { getAuthCookies } from "@/utils/cookies"; // Import your cookie utility function
+import { getAuthCookies } from "@/utils/cookies";
 
 interface ProtectedRouteProps {
   element: JSX.Element;
-  isPublic?: boolean; // Prop to determine if route is public
-  alreadyLoggedInRedirect?: string; // Custom redirect if already logged in
+  isPublic?: boolean;
+  alreadyLoggedInRedirect?: string;
 }
+
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ element, isPublic, alreadyLoggedInRedirect }) => {
   const authUser = getAuthCookies();
   console.log("[ProtectedRoute]", { isPublic, hasToken: !!authUser?.token, alreadyLoggedInRedirect, path: window.location.pathname });

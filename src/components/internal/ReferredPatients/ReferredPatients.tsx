@@ -301,11 +301,11 @@ const ReferredPatientsList: React.FC = () => {
   }
 
   return (
-    <div className="p-8 min-h-screen font-['Poppins'] bg-[#FAF8FC]">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-        <h1 className="text-3xl font-semibold text-gray-800 mb-4 md:mb-0">Referral patients</h1>
-        <div className="flex items-center gap-4 w-full md:w-auto">
-          <div className="relative flex-1 max-w-xs">
+    <div className="p-4 sm:p-8 min-h-screen font-['Poppins'] bg-[#FAF8FC]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-800 mb-4 sm:mb-0">Referral patients</h1>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="relative flex-1 sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
@@ -315,13 +315,13 @@ const ReferredPatientsList: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <button className="p-3 rounded-full bg-[#F5F3F7] border border-gray-200 shadow-sm">
+          <button className="p-3 rounded-full bg-[#F5F3F7] border border-gray-200 shadow-sm flex-shrink-0">
             <SlidersHorizontal className="w-5 h-5 text-gray-500" />
           </button>
         </div>
       </div>
       {/* Referral Offer Card at the top */}
-      <div className="bg-[#8B2D6C] rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between mb-8 relative overflow-hidden">
+      <div className="bg-[#8B2D6C] rounded-2xl p-5 sm:p-8 flex flex-col md:flex-row items-center justify-between mb-8 relative overflow-hidden">
         <div className="flex-1">
           <div className="text-white text-2xl font-bold mb-2">Get 5 FREE referrals free</div>
           <div className="w-full h-4 bg-[#E6A94A]/40 rounded-full mb-2 mt-4">
@@ -345,35 +345,35 @@ const ReferredPatientsList: React.FC = () => {
           filteredReferralCodes.map((ref) => (
             <div
               key={ref.id}
-              className="bg-white rounded-2xl px-6 py-4 flex items-center justify-between shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200"
+              className="bg-white rounded-2xl px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200 gap-3"
               style={{ cursor: ref.isUsed && ref.user ? 'pointer' : 'default' }}
               onClick={() => ref.isUsed && ref.user ? navigate(`/patients/${ref.user.id}`) : undefined}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 min-w-0">
                 {ref.isUsed && ref.user && ref.user.profilePicture ? (
                   <img
                     src={ref.user.profilePicture}
                     alt={ref.user.name}
-                    className="w-12 h-12 rounded-full object-cover"
+                    className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-[#8B2D6C1A] flex items-center justify-center text-[#8B2D6C] font-semibold text-lg">
+                  <div className="w-12 h-12 rounded-full bg-[#8B2D6C1A] flex items-center justify-center text-[#8B2D6C] font-semibold text-lg flex-shrink-0">
                     {ref.isUsed && ref.user && ref.user.name ? ref.user.name.charAt(0).toUpperCase() : ref.referralCode.slice(-2)}
                   </div>
                 )}
-                <div>
-                  <p className="font-medium text-gray-800 text-lg">
+                <div className="min-w-0">
+                  <p className="font-medium text-gray-800 text-base sm:text-lg truncate">
                     {ref.isUsed && ref.user && ref.user.name ? ref.user.name : 'Unclaimed'}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 truncate">
                     {ref.isUsed && ref.user && ref.user.claimedAt ? `Joined on ${new Date(ref.user.claimedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}` : 'Not yet claimed'}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-6">
-                <span className="text-[#8B2D6C] font-medium text-base">Referral code - {ref.referralCode}</span>
-                <button className="w-10 h-10 flex items-center justify-center rounded-full bg-[#8B2D6C1A] hover:bg-[#8B2D6C]/10 transition">
-                  <ArrowRight className="w-6 h-6 text-[#8B2D6C]" />
+              <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-6 flex-shrink-0 pl-16 sm:pl-0">
+                <span className="text-[#8B2D6C] font-medium text-xs sm:text-base truncate">Code: {ref.referralCode}</span>
+                <button className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-[#8B2D6C1A] hover:bg-[#8B2D6C]/10 transition flex-shrink-0">
+                  <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 text-[#8B2D6C]" />
                 </button>
               </div>
             </div>

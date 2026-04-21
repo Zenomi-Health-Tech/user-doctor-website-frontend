@@ -1,148 +1,91 @@
-import React, { useCallback } from "react";
-import { useForm, SubmitHandler } from "react-hook-form";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import useStore from "@/zustand/store";
-import PhoneInput from "react-phone-input-2";
-import "react-phone-input-2/lib/style.css";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { handleApiError } from "@/utils/errorHandler";
 import { useToast } from "@/hooks/use-toast";
-// Import the Loader icon from lucide-react
 import { Loader } from "lucide-react";
+import { useGoogleLogin } from "@react-oauth/google";
+import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import api from "@/utils/api";
 
+const LoginForm: React.FC = () => {
+    const { toast } = useToast();
+    const navigate = useNavigate();
+    const { login } = useAuth();
+    const [googleLoading, setGoogleLoading] = useState(false);
 
-// testing
-
-// Define validation schema using Zod
-const schema = z.object({
-    phoneNumber: z
-        .string()
-        .min(10, "Phone number must be at least 10 digits")
-        .max(10, "Phone number must be exactly 10 digits"),
-});
-
-type FormData = z.infer<typeof schema>;
-
-interface LoginFormProps {
-    onSuccess: () => void;
-}
-
-const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
-    const {
-        handleSubmit,
-        setValue,
-        formState: { errors },
-    } = useForm<FormData>({
-        resolver: zodResolver(schema),
+    const googleLogin = useGoogleLogin({
+        onSuccess: async (tokenResponse) => {
+            setGoogleLoading(true);
+            try {
+                const response = await api.post('/users/google-signin', {
+                    idToken: tokenResponse.access_token,
+                });
+                const token = response.data?.data?.token || response.data?.token;
+                if (token) {
+                    Cookies.set('userId', response.data?.data?.user?.id || '', { expires: 7 });
+                    login(token);
+                    // Check if user profile is complete
+                    try {
+                        const profileRes = await api.get('/users/profile', {
+                            headers: { Authorization: `Bearer ${token}` },
+                        });
+                        const userData = profileRes.data?.data;
+                        if (userData && (!userData.phoneNumber || !userData.phoneNumber.trim())) {
+                            navigate('/user/register');
+                            return;
+                        }
+                    } catch {
+                        // Profile fetch failed — let them through
+                    }
+                    navigate('/');
+                }
+            } catch (err: any) {
+                if (err.response?.status === 404) {
+                    toast({ title: "New User", description: "Please register first.", className: "bg-blue-500 text-white" });
+                    navigate('/user/register');
+                } else {
+                    const errData = err.response?.data;
+                    const msg = (errData && typeof errData === 'object' && errData.message) ? errData.message : 'Sign in failed';
+                    toast({ title: "Error", description: msg, variant: "destructive" });
+                }
+            } finally {
+                setGoogleLoading(false);
+            }
+        },
+        onError: () => {
+            toast({ title: "Error", description: "Google Sign-In failed", variant: "destructive" });
+        },
     });
 
-    const userRequestOtp = useStore((state) => state.userRequestOtp);
-    const loading = useStore((state) => state.loading);
-    const updatePhoneDetails = useStore((state) => state.updatePhoneDetails);
-    const { toast } = useToast();
-
-    const onSubmit: SubmitHandler<FormData> = async () => {
-        try {
-            await userRequestOtp();
-            toast({
-                title: "Success",
-                description: "OTP sent successfully",
-                variant: "default",
-                className: "bg-green-500 text-white",
-            });
-            onSuccess();
-        } catch (error) {
-            const errorMessage = handleApiError(error);
-            toast({
-                title: "Error",
-                description: errorMessage,
-                variant: "destructive",
-            });
-        }
-    };
-
-    const handlePhoneChange = useCallback(
-        (value: string, country: { dialCode?: string }) => {
-            if (!country.dialCode) {
-                toast({
-                    title: "Error",
-                    description: "Invalid country code.",
-                    variant: "destructive",
-                });
-                return;
-            }
-
-            // Remove the country code from the value to get just the phone number
-            const phoneNumber = value.replace(country.dialCode, "");
-            
-            // Add + to the country code
-            const countryCode = `+${country.dialCode}`;
-            
-            // Update both country code and phone number in the store
-            updatePhoneDetails(countryCode, phoneNumber);
-            
-            // Update form value with just the phone number
-            setValue("phoneNumber", phoneNumber);
-        },
-        [setValue, updatePhoneDetails, toast]
-    );
-
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-6 font-['Poppins']">
+        <div className="w-full space-y-6 font-['Poppins']">
             <div className="text-center mb-8">
-                <h1 className="text-2xl font-semibold mb-2 font-['Poppins']">Sign in to your Account</h1>
-                <p className="text-gray-600 font-['Poppins']">Enter your mobile number to get started</p>
-            </div>
-            
-            <div className="space-y-4">
-                <PhoneInput
-                    country="in"
-                    onlyCountries={['in']}
-                    onChange={handlePhoneChange}
-                    inputStyle={{
-                        width: "100%",
-                        height: "48px",
-                        fontSize: "16px",
-                        borderRadius: "12px",
-                        border: "1px solid #e2e8f0",
-                        backgroundColor: "#f8fafc",
-                        fontFamily: "Poppins, sans-serif"
-                    }}
-                    containerStyle={{
-                        width: "100%"
-                    }}
-                    buttonStyle={{
-                        borderRadius: "12px 0 0 12px",
-                        border: "1px solid #e2e8f0",
-                        fontFamily: "Poppins, sans-serif"
-                    }}
-                />
-                {errors.phoneNumber && (
-                    <p className="text-red-500 text-sm text-center font-['Poppins']">
-                        {errors.phoneNumber.message}
-                    </p>
-                )}
+                <h1 className="text-2xl font-semibold mb-2">Sign in to your Account</h1>
+                <p className="text-gray-600">Continue with your Google account</p>
             </div>
 
             <Button
-                type="submit"
-                disabled={loading}
-                className="w-full cursor-pointer h-12 font-['Poppins'] text-white rounded-xl transition-colors font-['Poppins']"
-                style={{
-                    background: 'linear-gradient(89.79deg, #704180 5.07%, #8B2D6C 95.83%)',
-                }}
+                type="button"
+                onClick={() => googleLogin()}
+                disabled={googleLoading}
+                className="w-full h-12 bg-white hover:bg-gray-50 text-gray-700 rounded-xl border border-gray-200"
             >
-                {loading ? (
-                    <div className="flex items-center justify-center">
-                        <Loader className="animate-spin h-5 w-5 mr-2" />
-                        <span className="font-['Poppins']">Sending OTP...</span>
-                    </div>
+                {googleLoading ? (
+                    <Loader className="animate-spin h-5 w-5" />
                 ) : (
-                    "Send OTP"
+                    <div className="flex items-center justify-center gap-3">
+                        <svg width="20" height="20" viewBox="0 0 48 48">
+                            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                        </svg>
+                        <span>Continue with Google</span>
+                    </div>
                 )}
             </Button>
-        </form>
+        </div>
     );
 };
 
