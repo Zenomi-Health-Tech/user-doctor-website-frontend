@@ -1199,7 +1199,6 @@ export default function Dashboard() {
               // Still show results even if API fails
               onResult({ score: 0, maxScore: 100, label: '', categories: [], recommendations: [] });
             }
-            setCurrentTestId(null);
           }}
         />
       )}
