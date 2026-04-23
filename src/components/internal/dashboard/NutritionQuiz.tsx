@@ -6,6 +6,7 @@ interface NutritionResult {
   score: number; maxScore: number; label: string;
   categories: { name: string; emoji: string; pct: number }[];
   recommendations: string[];
+  assessment: string;
 }
 
 const STEPS = [
@@ -88,44 +89,48 @@ export default function NutritionQuiz({ questions, onSubmit, onClose }: Props) {
 
   // ── Results Screen ──
   if (result) {
-    const scoreLabel = result.score >= 80 ? 'Excellent' : result.score >= 60 ? 'Good' : result.score >= 40 ? 'Fair' : 'Needs Work';
-    const pct = result.score / (result.maxScore || 100);
+    const scoreLabel = result.score >= 80 ? 'Excellent' : result.score >= 60 ? 'Good' : result.score >= 40 ? 'Fair' : result.score >= 20 ? 'Needs Work' : 'Poor';
+    const pct = result.maxScore > 0 ? result.score / result.maxScore : 0;
     const r = 55; const circ = 2 * Math.PI * r;
+    // Semi-circle gauge (matching app's 270° arc)
+    const gaugeTotal = circ * 0.75; // 270 degrees
+    const gaugeOffset = gaugeTotal * (1 - Math.min(pct, 1));
 
     return (
-      <div className="fixed inset-0 z-[60] overflow-y-auto font-['Poppins']" style={{ background: '#F7FDFB' }}>
+      <div className="fixed inset-0 z-[60] overflow-y-auto font-['Poppins']" style={{ background: BG }}>
         <div className="max-w-lg mx-auto px-4 py-8 pb-24">
           {/* Header card with score */}
           <div className="rounded-[24px] p-6 sm:p-8 mb-5 flex flex-col items-center" style={{ background: 'linear-gradient(135deg, #2D9F83, #1B7A5A)' }}>
-            <div className="text-4xl mb-3">🥑</div>
-            <h1 className="text-xl font-bold text-white mb-1">Your Nutrition Report</h1>
-            <p className="text-sm text-white/70 mb-5">Here's what your answers tell us 🔍</p>
-            <svg width="130" height="130" className="mb-3">
-              <circle cx="65" cy="65" r={r} stroke="rgba(255,255,255,0.25)" strokeWidth="10" fill="none" />
-              <circle cx="65" cy="65" r={r} stroke="white" strokeWidth="10" fill="none"
-                strokeDasharray={circ} strokeDashoffset={circ * (1 - pct)} strokeLinecap="round"
-                transform="rotate(-90 65 65)" className="transition-all duration-1000" />
-              <text x="50%" y="50%" textAnchor="middle" dy=".35em" fontSize="42" fill="white" fontWeight="bold">{result.score}</text>
+            <h1 className="text-2xl font-bold text-white mb-1">🥗 Nutrition Results</h1>
+            <p className="text-sm text-white/70 mb-5">Here's your nutritional health snapshot</p>
+            <svg width="170" height="170" className="mb-3">
+              <circle cx="85" cy="85" r={r} stroke="rgba(255,255,255,0.25)" strokeWidth="12" fill="none"
+                strokeLinecap="round" strokeDasharray={gaugeTotal} strokeDashoffset={0}
+                transform="rotate(135 85 85)" />
+              <circle cx="85" cy="85" r={r} stroke="white" strokeWidth="12" fill="none"
+                strokeLinecap="round" strokeDasharray={gaugeTotal} strokeDashoffset={gaugeOffset}
+                transform="rotate(135 85 85)" className="transition-all duration-1000" />
+              <text x="50%" y="50%" textAnchor="middle" dy=".35em" fontSize="42" fill="white" fontWeight="bold">{Math.round(pct * 100)}</text>
             </svg>
-            <span className="px-4 py-1.5 rounded-full text-white text-sm font-bold" style={{ background: 'rgba(255,255,255,0.2)' }}>{scoreLabel}</span>
-            <p className="text-white/90 text-sm text-center mt-3">
-              {result.score >= 80 ? 'Outstanding nutrition habits! Keep it up! 🌟' : result.score >= 60 ? 'Good nutrition foundation. A few tweaks can make it great!' : result.score >= 40 ? 'Room for improvement. Small changes go a long way!' : 'Your nutrition needs attention. Let\'s work on building better habits!'}
-            </p>
+            <span className="px-4 py-1.5 rounded-full text-white text-sm font-semibold" style={{ background: 'rgba(255,255,255,0.2)' }}>{scoreLabel}</span>
+            {result.assessment && (
+              <p className="text-white/90 text-sm text-center mt-3 font-medium">{result.assessment}</p>
+            )}
           </div>
 
           {/* Category Breakdown */}
           {result.categories.length > 0 && (
-            <div className="rounded-[20px] p-5 mb-4 bg-white" style={{ border: '1.5px solid #E8F8F3' }}>
-              <h3 className="font-bold text-gray-900 mb-4">📊 Category Breakdown</h3>
+            <div className="rounded-[20px] p-5 mb-4" style={{ background: CARD }}>
+              <h3 className="font-bold text-white mb-4">📊 Category Breakdown</h3>
               <div className="space-y-4">
                 {result.categories.map(cat => (
                   <div key={cat.name}>
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm text-gray-700">{cat.emoji} {cat.name}</span>
-                      <span className="text-sm font-bold" style={{ color: '#2D9F83' }}>{cat.pct}%</span>
+                      <span className="text-sm text-white font-medium">{cat.emoji} {cat.name}</span>
+                      <span className="text-sm font-semibold" style={{ color: ACCENT }}>{cat.pct}%</span>
                     </div>
-                    <div className="h-2 rounded-full" style={{ background: '#E8F8F3' }}>
-                      <div className="h-2 rounded-full transition-all duration-700" style={{ width: `${cat.pct}%`, background: '#2D9F83' }} />
+                    <div className="h-2 rounded-full" style={{ background: CARD_LIGHT }}>
+                      <div className="h-2 rounded-full transition-all duration-700" style={{ width: `${cat.pct}%`, background: ACCENT }} />
                     </div>
                   </div>
                 ))}
@@ -135,21 +140,21 @@ export default function NutritionQuiz({ questions, onSubmit, onClose }: Props) {
 
           {/* Recommendations */}
           {result.recommendations.length > 0 && (
-            <div className="rounded-[20px] p-5 mb-6 bg-white" style={{ border: '1.5px solid #E8F8F3' }}>
-              <h3 className="font-bold text-gray-900 mb-3">💡 Recommendations</h3>
+            <div className="rounded-[20px] p-5 mb-6" style={{ background: CARD }}>
+              <h3 className="font-bold text-white mb-3">💡 Recommendations</h3>
               {result.recommendations.map((rec, i) => (
-                <div key={i} className="flex items-start gap-3 py-2.5 border-b border-[#E8F8F3] last:border-0">
-                  <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: '#E8F8F3' }}>
-                    <span className="text-xs font-bold" style={{ color: '#2D9F83' }}>→</span>
+                <div key={i} className="flex items-start gap-3 mb-3 last:mb-0">
+                  <div className="w-[22px] h-[22px] rounded-md flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: CARD_LIGHT }}>
+                    <span className="text-xs font-bold" style={{ color: ACCENT }}>→</span>
                   </div>
-                  <p className="text-sm text-gray-600">{rec}</p>
+                  <p className="text-sm text-gray-400 leading-relaxed">{rec}</p>
                 </div>
               ))}
             </div>
           )}
 
-          <button onClick={() => onClose()} className="w-full py-4 rounded-2xl text-white font-bold text-lg" style={{ background: 'linear-gradient(135deg, #2D9F83, #1B7A5A)' }}>
-            Done 🏠
+          <button onClick={() => onClose()} className="w-full py-4 rounded-2xl text-white font-semibold text-[17px]" style={{ background: 'linear-gradient(135deg, #2D9F83, #1B7A5A)' }}>
+            Done
           </button>
         </div>
       </div>

@@ -1205,19 +1205,22 @@ export default function Dashboard() {
               let token = "";
               if (authCookie) { try { token = JSON.parse(authCookie).token; } catch { token = ""; } }
               const response = await axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formatted }, { headers: { Authorization: `Bearer ${token}` } });
-              const d = response.data || {};
+              const d = response.data?.data ?? response.data ?? {};
+              const insights = (d.short_insights ?? '').replace(/<[^>]*>/g, '');
+              const parsedRecs = [...insights.matchAll(/\d+\.\s+(.+?)(?=\d+\.\s+|$)/gs)].map((m: any) => m[1].trim()).filter(Boolean);
               onResult({
                 score: d.user_score ?? d.score ?? 0,
                 maxScore: d.max_score_for_test ?? d.maxScore ?? 100,
                 label: d.label ?? '',
                 categories: d.categories ?? [],
-                recommendations: d.recommendations ?? [],
+                recommendations: parsedRecs.length > 0 ? parsedRecs : (d.recommendations ?? []),
+                assessment: d.assessment ?? d.sentiment ?? '',
               });
               const res = await axios.get("https://zenomiai.elitceler.com/api/testnames", { headers: { Authorization: `Bearer ${token}` } });
               setTests(res.data);
             } catch {
               // Still show results even if API fails
-              onResult({ score: 0, maxScore: 100, label: '', categories: [], recommendations: [] });
+              onResult({ score: 0, maxScore: 100, label: '', categories: [], recommendations: [], assessment: '' });
             }
           }}
         />
