@@ -25,9 +25,15 @@ const ReferralCard: React.FC = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (response.data && response.data.data) {
-          setReferralCode(response.data.data.referralCode || response.data.data.code || null);
-          if (typeof response.data.data.freeReferralsUsed === 'number') {
-            setFreeReferralsUsed(response.data.data.freeReferralsUsed);
+          const codes = response.data.data;
+          // data is an array of referral codes — show the latest unused one, or latest overall
+          if (Array.isArray(codes) && codes.length > 0) {
+            const unused = codes.find((c: any) => !c.isUsed);
+            const latest = unused || codes[0];
+            setReferralCode(latest.referralCode || latest.code || null);
+            setFreeReferralsUsed(codes.filter((c: any) => c.isUsed === false && !c.user?.id).length >= 0 ? codes.length : 0);
+          } else if (codes.referralCode || codes.code) {
+            setReferralCode(codes.referralCode || codes.code || null);
           }
         }
       } catch (error) {
@@ -48,15 +54,19 @@ const ReferralCard: React.FC = () => {
           token = '';
         }
       }
-      // NOTE: The payment amount should be set to 1,000 rupees in the backend for this endpoint.
       const response = await api.post('/stripe/create-doctor-checkout', { amount: 1000 }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.data && response.data.url) {
+        // Paid flow — redirect to Stripe checkout
         window.location.href = response.data.url;
+      } else if (response.data?.data?.code) {
+        // Free referral generated — show it immediately
+        setReferralCode(response.data.data.code);
+        alert(`Referral code generated: ${response.data.data.code}`);
       }
     } catch (error) {
-      alert('Failed to generate checkout.');
+      alert('Failed to generate referral code.');
     }
   };
 
