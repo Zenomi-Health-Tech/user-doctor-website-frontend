@@ -455,26 +455,19 @@ export default function Dashboard() {
       }
       // For Emotional Health test
       else if (tests.find(t => t.id === currentTestId)?.name?.toUpperCase().includes('EMOTIONAL')) {
-        const catNames = [{ name: 'Self-Awareness', emoji: '🧠' }, { name: 'Self-Regulation', emoji: '🎯' }, { name: 'Motivation', emoji: '🚀' }];
-        let totalScore = 0;
-        const categories = catNames.map((cat, ci) => {
-          let catScore = 0;
-          for (let i = 0; i < 5; i++) {
-            const qIdx = ci * 5 + i;
-            const q = questions[qIdx];
-            const optCount = q?.scaleOptions?.length || 5;
-            const ansIdx = parseInt(formattedAnswers[qIdx]?.answer) || 0;
-            catScore += (optCount - 1) - ansIdx;
-          }
-          const catMax = 5 * ((questions[ci * 5]?.scaleOptions?.length || 5) - 1);
-          totalScore += catScore;
-          const catLabel = catScore <= 8 ? 'Needs Attention' : catScore <= 16 ? 'Growing Stronger' : 'Thriving';
-          return { ...cat, score: catScore, max: catMax, label: catLabel };
-        });
-        const max = categories.reduce((s, c) => s + c.max, 0);
-        setEmotionalResults({ score: totalScore, max, categories });
         setShowQuiz(false);
-        axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formattedAnswers }, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+        try {
+          const res = await axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formattedAnswers }, { headers: { Authorization: `Bearer ${token}` } });
+          const d = res.data?.data ?? res.data ?? {};
+          const rawScore = d.user_score ?? d.score ?? 0; // higher = worse
+          const maxScore = d.max_score_for_test ?? 70;
+          const displayScore = maxScore - rawScore; // invert: higher = better for display
+          // Severity from raw score (scoring service bands)
+          const label = rawScore <= 10 ? 'Good Emotional Regulation' : rawScore <= 20 ? 'Fair Emotional Regulation' : rawScore <= 40 ? 'Mild Emotional Dysregulation' : rawScore <= 55 ? 'Moderate Emotional Dysregulation' : 'Poor Emotional Awareness';
+          setEmotionalResults({ score: displayScore, max: maxScore, categories: [] });
+        } catch {
+          setEmotionalResults({ score: 0, max: 70, categories: [] });
+        }
       }
       // For sleep test, compute score locally and show results immediately
       else if (currentTestId === SLEEP_TEST_ID) {
@@ -1653,32 +1646,21 @@ export default function Dashboard() {
             <div className="rounded-[20px] overflow-hidden mb-4" style={{ background: '#252840' }}>
               <div className="w-full py-7 flex flex-col items-center" style={{ background: 'linear-gradient(135deg, #FF8E53, #FF6B9D)' }}>
                 <div className="text-4xl mb-3">🌱</div>
-                <h1 className="text-[28px] font-bold text-white">{emotionalResults.score <= 25 ? 'Needs Attention' : emotionalResults.score <= 50 ? 'Growing Stronger' : 'Thriving'}</h1>
+                <h1 className="text-[28px] font-bold text-white">{emotionalResults.score >= 50 ? 'Good Emotional Regulation' : emotionalResults.score >= 30 ? 'Fair Emotional Regulation' : emotionalResults.score >= 15 ? 'Mild Emotional Dysregulation' : 'Needs Attention'}</h1>
               </div>
               <div className="p-5 text-center">
-                <p className="text-base font-semibold text-white mb-2">Total Score: {emotionalResults.score} / {emotionalResults.max}</p>
+                <p className="text-base font-semibold text-white mb-2">Wellness Score: {emotionalResults.score} / {emotionalResults.max}</p>
+                <div className="w-full h-2 rounded-full bg-[#1A1D2E] mb-4">
+                  <div className="h-2 rounded-full" style={{ width: `${emotionalResults.max > 0 ? (emotionalResults.score / emotionalResults.max) * 100 : 0}%`, background: 'linear-gradient(90deg, #FF6B9D, #C850C0)' }} />
+                </div>
                 <p className="text-sm text-gray-400 leading-relaxed">
-                  {emotionalResults.score <= 25
-                    ? "Your emotional well-being could use some extra care right now. Consider reaching out to a counselor or someone you trust. 💙"
-                    : emotionalResults.score <= 50
+                  {emotionalResults.score >= 50
+                    ? "Your emotional well-being is in a great place! Your self-awareness and resilience are shining through. 🌟"
+                    : emotionalResults.score >= 30
                       ? "You're making good progress with your emotional skills. Keep building on what's working for you! 🌱"
-                      : "Your emotional well-being is in a great place! Your self-awareness and resilience are shining through. 🌟"}
+                      : "Your emotional well-being could use some extra care right now. Consider reaching out to a counselor or someone you trust. 💙"}
                 </p>
               </div>
-            </div>
-            {/* Category cards in a row */}
-            <div className="grid grid-cols-3 gap-2 mb-6">
-              {emotionalResults.categories.map((cat) => (
-                <div key={cat.name} className="rounded-2xl p-3 flex flex-col items-center" style={{ background: '#252840' }}>
-                  <div className="text-2xl mb-1.5">{cat.emoji}</div>
-                  <p className="text-[11px] font-semibold text-white text-center mb-2.5">{cat.name}</p>
-                  <div className="w-full h-1.5 rounded-full bg-[#1A1D2E] mb-2">
-                    <div className="h-1.5 rounded-full" style={{ width: `${(cat.score / cat.max) * 100}%`, background: 'linear-gradient(90deg, #FF6B9D, #C850C0)' }} />
-                  </div>
-                  <p className="text-sm font-bold text-white">{cat.score}/{cat.max}</p>
-                  <p className="text-[10px] text-gray-400 mt-1">{cat.label}</p>
-                </div>
-              ))}
             </div>
             <button onClick={() => handleHomeScreen()} className="w-full py-4 rounded-2xl text-white font-bold text-lg" style={{ background: 'linear-gradient(135deg, #FF6B9D, #C850C0)' }}>
               Done 🏠
