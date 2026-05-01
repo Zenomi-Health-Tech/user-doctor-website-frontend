@@ -54,7 +54,7 @@ const ReferralCard: React.FC = () => {
           token = '';
         }
       }
-      const response = await api.post('/stripe/create-doctor-checkout', { amount: 1000 }, {
+      const response = await api.post('/stripe/create-referral-checkout', {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.data && response.data.url) {
