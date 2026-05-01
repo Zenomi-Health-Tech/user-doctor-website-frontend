@@ -1210,7 +1210,7 @@ export default function Dashboard() {
               const parsedRecs = [...insights.matchAll(/\d+\.\s+(.+?)(?=\d+\.\s+|$)/gs)].map((m: any) => m[1].trim()).filter(Boolean);
               onResult({
                 score: d.user_score ?? d.score ?? 0,
-                maxScore: d.max_score_for_test ?? d.maxScore ?? 100,
+                maxScore: d.max_score_for_test ?? d.maxScore ?? 75,
                 label: d.label ?? '',
                 categories: d.categories ?? [],
                 recommendations: parsedRecs.length > 0 ? parsedRecs : (d.recommendations ?? []),
@@ -1220,7 +1220,7 @@ export default function Dashboard() {
               setTests(res.data);
             } catch {
               // Still show results even if API fails
-              onResult({ score: 0, maxScore: 100, label: '', categories: [], recommendations: [], assessment: '' });
+              onResult({ score: 0, maxScore: 75, label: '', categories: [], recommendations: [], assessment: '' });
             }
           }}
         />
