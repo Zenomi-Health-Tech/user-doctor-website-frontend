@@ -453,21 +453,50 @@ export default function Dashboard() {
         setShowQuiz(false);
         axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formattedAnswers }, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
       }
-      // For Emotional Health test
+      // For Emotional Health test — use API response score, fallback to local calculation
       else if (tests.find(t => t.id === currentTestId)?.name?.toUpperCase().includes('EMOTIONAL')) {
         setShowQuiz(false);
+        // Local scoring fallback: 1-5 scale, higher = better wellness
+        const displayScoreMap: Record<string, number> = { 'Always': 5, 'Often': 4, 'Sometimes': 3, 'Rarely': 2, 'Never': 1 };
+        const scoreForAnswer = (ans: string) => {
+          const label = ans.split(':')[0].trim();
+          if (displayScoreMap[label] !== undefined) return displayScoreMap[label];
+          const lower = label.toLowerCase();
+          if (lower.includes('always')) return 5;
+          if (lower.includes('often')) return 4;
+          if (lower.includes('sometimes')) return 3;
+          if (lower.includes('rarely')) return 2;
+          if (lower.includes('never') || lower.includes('not at all')) return 1;
+          return 3;
+        };
+        let totalScore: number;
+        let maxScore: number;
         try {
           const res = await axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formattedAnswers }, { headers: { Authorization: `Bearer ${token}` } });
           const d = res.data?.data ?? res.data ?? {};
-          const rawScore = d.user_score ?? d.score ?? 0; // higher = worse
-          const maxScore = d.max_score_for_test ?? 70;
-          const displayScore = maxScore - rawScore; // invert: higher = better for display
-          // Severity from raw score (scoring service bands)
-          const label = rawScore <= 10 ? 'Good Emotional Regulation' : rawScore <= 20 ? 'Fair Emotional Regulation' : rawScore <= 40 ? 'Mild Emotional Dysregulation' : rawScore <= 55 ? 'Moderate Emotional Dysregulation' : 'Poor Emotional Awareness';
-          setEmotionalResults({ score: displayScore, max: maxScore, categories: [] });
+          const rawScore = d.user_score ?? d.score ?? 0;
+          maxScore = d.max_score_for_test ?? 70;
+          totalScore = maxScore - rawScore; // invert: higher = better for display
         } catch {
-          setEmotionalResults({ score: 0, max: 70, categories: [] });
+          // Fallback: calculate locally
+          totalScore = formattedAnswers.reduce((sum: number, a: any) => sum + scoreForAnswer(a.answer || ''), 0);
+          maxScore = questions.length * 5;
         }
+        const catSize = 5;
+        const cats = [
+          { name: 'Self-Awareness', emoji: '🧠', start: 0 },
+          { name: 'Self-Regulation', emoji: '🎯', start: catSize },
+          { name: 'Motivation', emoji: '🚀', start: catSize * 2 },
+        ].map(c => {
+          const slice = formattedAnswers.slice(c.start, Math.min(c.start + catSize, formattedAnswers.length));
+          const catScore = slice.reduce((s: number, a: any) => s + scoreForAnswer(a.answer || ''), 0);
+          const catMax = slice.length * 5;
+          const pct = catMax > 0 ? catScore / catMax : 0;
+          return { name: c.name, emoji: c.emoji, score: catScore, max: catMax, label: pct >= 0.7 ? 'Thriving' : pct >= 0.4 ? 'Growing' : 'Needs Attention' };
+        });
+        setEmotionalResults({ score: totalScore, max: maxScore, categories: cats });
+        // Fallback: ensure backend has the raw score for reports/stats
+        api.put('/users/update-test-score', { testId: currentTestId, score: maxScore - totalScore }).catch(() => {});
       }
       // For sleep test, compute score locally and show results immediately
       else if (currentTestId === SLEEP_TEST_ID) {
@@ -1646,22 +1675,41 @@ export default function Dashboard() {
             <div className="rounded-[20px] overflow-hidden mb-4" style={{ background: '#252840' }}>
               <div className="w-full py-7 flex flex-col items-center" style={{ background: 'linear-gradient(135deg, #FF8E53, #FF6B9D)' }}>
                 <div className="text-4xl mb-3">🌱</div>
-                <h1 className="text-[28px] font-bold text-white">{emotionalResults.score >= 50 ? 'Good Emotional Regulation' : emotionalResults.score >= 30 ? 'Fair Emotional Regulation' : emotionalResults.score >= 15 ? 'Mild Emotional Dysregulation' : 'Needs Attention'}</h1>
+                <h1 className="text-[28px] font-bold text-white">{emotionalResults.max > 0 && emotionalResults.score / emotionalResults.max >= 0.75 ? 'Thriving' : emotionalResults.max > 0 && emotionalResults.score / emotionalResults.max >= 0.5 ? 'Growing Stronger' : 'Needs Attention'}</h1>
               </div>
               <div className="p-5 text-center">
-                <p className="text-base font-semibold text-white mb-2">Wellness Score: {emotionalResults.score} / {emotionalResults.max}</p>
+                <p className="text-base font-semibold text-white mb-2">Total Score: {emotionalResults.score} / {emotionalResults.max}</p>
                 <div className="w-full h-2 rounded-full bg-[#1A1D2E] mb-4">
                   <div className="h-2 rounded-full" style={{ width: `${emotionalResults.max > 0 ? (emotionalResults.score / emotionalResults.max) * 100 : 0}%`, background: 'linear-gradient(90deg, #FF6B9D, #C850C0)' }} />
                 </div>
                 <p className="text-sm text-gray-400 leading-relaxed">
-                  {emotionalResults.score >= 50
+                  {emotionalResults.max > 0 && emotionalResults.score / emotionalResults.max >= 0.75
                     ? "Your emotional well-being is in a great place! Your self-awareness and resilience are shining through. 🌟"
-                    : emotionalResults.score >= 30
+                    : emotionalResults.max > 0 && emotionalResults.score / emotionalResults.max >= 0.5
                       ? "You're making good progress with your emotional skills. Keep building on what's working for you! 🌱"
                       : "Your emotional well-being could use some extra care right now. Consider reaching out to a counselor or someone you trust. 💙"}
                 </p>
               </div>
             </div>
+            {/* Category breakdowns */}
+            {emotionalResults.categories.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                {emotionalResults.categories.map((cat) => {
+                  const pct = cat.max > 0 ? cat.score / cat.max : 0;
+                  return (
+                    <div key={cat.name} className="rounded-2xl p-3 flex flex-col items-center" style={{ background: '#252840' }}>
+                      <div className="text-2xl mb-1">{cat.emoji}</div>
+                      <p className="text-[11px] font-semibold text-white text-center mb-2">{cat.name}</p>
+                      <div className="w-full h-1.5 rounded-full bg-[#1A1D2E] mb-2">
+                        <div className="h-1.5 rounded-full" style={{ width: `${pct * 100}%`, background: 'linear-gradient(90deg, #FF6B9D, #C850C0)' }} />
+                      </div>
+                      <p className="text-sm font-bold text-white">{cat.score}/{cat.max}</p>
+                      <p className="text-[10px] text-gray-400">{cat.label}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             <button onClick={() => handleHomeScreen()} className="w-full py-4 rounded-2xl text-white font-bold text-lg" style={{ background: 'linear-gradient(135deg, #FF6B9D, #C850C0)' }}>
               Done 🏠
             </button>

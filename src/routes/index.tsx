@@ -37,6 +37,7 @@ const SetAvailability = lazy(() => import("@/components/internal/Appointments/Se
 const SetAvailabilityUser = lazy(() => import("@/components/internal/Appointments/SetAvailabilityUser"));
 const AvailableSlotsPage = lazy(() => import("@/components/internal/Appointments/AvailableSlots"));
 const SleepTracker = lazy(() => import("@/pages/SleepTracker"));
+const DeleteAccount = lazy(() => import("@/pages/DeleteAccount"));
 
 
 export default function AppRouter() {
@@ -205,6 +206,14 @@ export default function AppRouter() {
           // }
         
         // />
+      ),
+    },
+    {
+      path: "/delete-account",
+      element: (
+        <Suspense fallback={<SuspenseLoader />}>
+          <DeleteAccount />
+        </Suspense>
       ),
     },
     {
