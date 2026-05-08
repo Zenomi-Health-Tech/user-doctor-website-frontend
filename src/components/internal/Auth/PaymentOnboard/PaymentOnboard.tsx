@@ -45,7 +45,7 @@ function PaymentScreen() {
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 shadow-lg mb-4">
             <img src="/zenomiLogo.png" alt="Zenomi" className="h-10" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
           </div>
-          <div className="text-2xl md:text-3xl font-bold text-white tracking-wide font-['Urbanist']">Zenomi</div>
+          <div className="text-2xl md:text-3xl font-bold text-white tracking-wide font-['Urbanist']">Zenomi Health</div>
         </div>
         {/* Features Card */}
         <div className="w-full max-w-md bg-gradient-to-b from-[#8B2D6C]/60 to-[#704180]/60 rounded-2xl border border-[#FFD966] p-8 flex flex-col items-center mb-8 shadow-lg">
