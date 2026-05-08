@@ -42,7 +42,9 @@ function PaymentScreen() {
       {/* Main content */}
       <div className="relative z-10 flex flex-col items-center w-full px-4">
         <div className="mt-12 mb-8 text-center">
-          <img src="/zenomiLogo.png" alt="Zenomi" className="h-12 mx-auto mb-3" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 shadow-lg mb-4">
+            <img src="/zenomiLogo.png" alt="Zenomi" className="h-10" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          </div>
           <div className="text-2xl md:text-3xl font-bold text-white tracking-wide font-['Urbanist']">Zenomi</div>
         </div>
         {/* Features Card */}
