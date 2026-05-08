@@ -45,17 +45,6 @@ function PaymentScreen() {
           <img src="/zenomiLogo.png" alt="Zenomi" className="h-12 mx-auto mb-3" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
           <div className="text-2xl md:text-3xl font-bold text-white tracking-wide font-['Urbanist']">Zenomi</div>
         </div>
-        {/* Pricing Card */}
-        <div className="w-full max-w-md bg-gradient-to-b from-[#8B2D6C]/60 to-[#704180]/60 rounded-2xl border border-[#FFD966] p-8 flex flex-col items-center mb-8 shadow-lg">
-          <div className="text-4xl md:text-5xl font-bold text-[#FFD966] mb-2">10,000 INR</div>
-          <div className="text-white text-base mb-4">One-Time Onboarding Fee</div>
-          <button
-            className="w-full py-3 rounded-full bg-gradient-to-r from-[#FFD966] to-[#EAC96B] text-[#8B2D6C] font-semibold text-lg shadow hover:opacity-90 transition mb-2"
-            onClick={handleCheckout}
-          >
-            Pay & Continue
-          </button>
-        </div>
         {/* Features Card */}
         <div className="w-full max-w-md bg-gradient-to-b from-[#8B2D6C]/60 to-[#704180]/60 rounded-2xl border border-[#FFD966] p-8 flex flex-col items-center mb-8 shadow-lg">
           <ul className="w-full flex flex-col gap-5 text-white text-lg">
