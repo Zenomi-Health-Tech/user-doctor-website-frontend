@@ -83,6 +83,12 @@ function PaymentScreen() {
           </ul>
         </div>
         {/* Footer */}
+        <button
+          className="w-full max-w-md py-4 rounded-full bg-gradient-to-r from-[#FFD966] to-[#EAC96B] text-[#8B2D6C] font-semibold text-xl shadow hover:opacity-90 transition mb-4"
+          onClick={() => window.location.href = '/'}
+        >
+          Continue to Dashboard
+        </button>
         <div className="w-full max-w-md text-center text-white text-base mt-2 mb-8">
           Have any doubts? <a href="#" className="text-[#FFD966] font-semibold hover:underline">Talk with an expert</a>
         </div>
