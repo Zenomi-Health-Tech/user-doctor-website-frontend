@@ -35,10 +35,6 @@ const LoginForm: React.FC = () => {
                             toast({ title: "Verification Pending", description: "Your profile is under review.", className: "bg-yellow-500 text-white" });
                             return;
                         }
-                        if (doc && !doc.isPaid) {
-                            navigate('/doctor/payment-onboard');
-                            return;
-                        }
                     } catch {
                         // Profile fetch failed — let them through
                     }
