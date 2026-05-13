@@ -1172,8 +1172,7 @@ export default function Dashboard() {
                     <div className="grid grid-cols-5 gap-2">
                       {(q.scaleOptions || []).map((option: string, i: number) => (
                         <button key={option} onClick={() => handleScrollableAnswer(globalIdx, option)} className={`py-3 rounded-xl text-center transition-all ${selected === option ? 'text-white' : 'text-gray-400 border border-white/10'}`} style={selected === option ? { background: 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' } : { background: '#2D3048' }}>
-                          <div className="text-lg font-bold">{i}</div>
-                          <div className="text-[10px] mt-0.5">{option}</div>
+                          <div className="text-xs px-1 leading-tight">{option}</div>
                         </button>
                       ))}
                     </div>
