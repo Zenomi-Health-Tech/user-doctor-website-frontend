@@ -1003,7 +1003,7 @@ export default function Dashboard() {
             <button onClick={() => setSelectedTest(null)} className="absolute top-0 right-0 text-gray-500 hover:text-white text-2xl">&times;</button>
             <div className="text-6xl mb-6">🧠</div>
             <h2 className="text-3xl font-extrabold mb-4 bg-gradient-to-r from-[#FF6B8A] to-[#FF8E53] bg-clip-text text-transparent">GAD-7 Assessment</h2>
-            <p className="text-white/50 text-sm mb-8 leading-relaxed">Over the last 2 weeks, how often have you been bothered by anxiety symptoms? Answer {selectedTest.question_count} quick questions.</p>
+            <p className="text-white/50 text-sm mb-8 leading-relaxed">In the past 4 weeks how have you… Answer {selectedTest.question_count} quick questions.</p>
             <div className="flex flex-wrap justify-center gap-2 mb-8">
               <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">⏱ Takes 2 mins</span>
               <span className="bg-white/10 text-white/70 px-3 py-1.5 rounded-full text-xs">📋 {selectedTest.question_count} Questions</span>
@@ -1167,7 +1167,7 @@ export default function Dashboard() {
                   <div key={q.id || idx} className="mb-3 p-4 rounded-2xl" style={{ background: '#252840' }}>
                     <div className="flex items-start gap-3 mb-4">
                       <span className="text-lg">{emoji}</span>
-                      <span className="text-white text-sm font-semibold leading-snug">{q.question}</span>
+                      <span className="text-white text-base font-semibold leading-snug">{q.question}</span>
                     </div>
                     <div className="grid grid-cols-5 gap-2">
                       {(q.scaleOptions || []).map((option: string, i: number) => (
@@ -1266,7 +1266,7 @@ export default function Dashboard() {
                 <div key={q.id || idx} className="mb-3 p-4 rounded-2xl" style={{ background: '#252840' }}>
                   <div className="flex items-start gap-3 mb-4">
                     <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: '#22C55E' }}>{idx + 1}</span>
-                    <span className="text-white text-sm font-semibold leading-snug">{q.question}</span>
+                    <span className="text-white text-base font-semibold leading-snug">{q.question}</span>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     {(q.scaleOptions || []).map((option: string, i: number) => {
@@ -1309,7 +1309,7 @@ export default function Dashboard() {
                 <div key={q.id || idx} className="mb-3 p-4 rounded-2xl" style={{ background: '#252840' }}>
                   <div className="flex items-start gap-3 mb-4">
                     <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: '#8B5CF6' }}>{idx + 1}</span>
-                    <span className="text-white text-sm font-semibold leading-snug">{q.question}</span>
+                    <span className="text-white text-base font-semibold leading-snug">{q.question}</span>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     {(q.scaleOptions || []).map((option: string, i: number) => {
@@ -1630,7 +1630,7 @@ export default function Dashboard() {
               <p className="text-sm text-gray-400 text-center">{gad7Results.description}</p>
             </div>
             <div className="rounded-2xl p-4 mb-6" style={{ background: '#252840' }}>
-              <p className="text-xs text-gray-500 text-center">⚠️ This is a screening tool, not a diagnosis. Please consult a healthcare professional for clinical evaluation.</p>
+              <p className="text-sm text-gray-500 text-center">⚠️ This is a screening tool, not a diagnosis. Please consult a healthcare professional for clinical evaluation.</p>
             </div>
             <button onClick={() => handleHomeScreen()} className="w-full py-4 rounded-2xl text-white font-bold text-lg" style={{ background: 'linear-gradient(135deg, #FF6B8A, #FF8E53)' }}>
               Done 🏠
@@ -1658,7 +1658,7 @@ export default function Dashboard() {
             </div>
             {/* Disclaimer */}
             <div className="rounded-2xl p-4 mb-6 border border-white/10">
-              <p className="text-xs text-gray-500 text-center leading-relaxed">Disclaimer: This is a screening tool, not a diagnosis. Please consult a qualified healthcare professional for clinical evaluation.</p>
+              <p className="text-sm text-gray-500 text-center leading-relaxed">Disclaimer: This is a screening tool, not a diagnosis. Please consult a qualified healthcare professional for clinical evaluation.</p>
             </div>
             <button onClick={() => handleHomeScreen()} className="w-full py-4 rounded-2xl text-white font-bold text-lg" style={{ background: 'linear-gradient(135deg, #8B5CF6, #A78BFA)' }}>
               Done 🏠
