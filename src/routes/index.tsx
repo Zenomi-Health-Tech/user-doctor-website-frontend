@@ -190,9 +190,15 @@ export default function AppRouter() {
     {
       path: "/chooserole",
       element: (
-        <Suspense fallback={<SuspenseLoader />}>
-          <ChooseRole />
-        </Suspense>
+        <ProtectedRoute
+          element={
+            <Suspense fallback={<SuspenseLoader />}>
+              <ChooseRole />
+            </Suspense>
+          }
+          isPublic
+          alreadyLoggedInRedirect="/dashboard"
+        />
       ),
     },
     {
@@ -222,6 +228,6 @@ export default function AppRouter() {
     },
   ];
 
-  const routes = useRoutes([...publicRoutes, ...privateRoutes]);
+  const routes = useRoutes([...privateRoutes, ...publicRoutes]);
   return routes;
 }
