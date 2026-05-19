@@ -113,6 +113,7 @@ export default function Dashboard() {
   const [emotionalResults, setEmotionalResults] = useState<{score: number, max: number, categories: {name: string, emoji: string, score: number, max: number, label: string}[]} | null>(null);
   const [hasSleepLog, setHasSleepLog] = useState(false);
   const [hasAppointment, setHasAppointment] = useState(false);
+  const [nextAppt, setNextAppt] = useState<any>(null);
   const [postTestLoading, setPostTestLoading] = useState(false);
 
   useEffect(() => {
@@ -233,6 +234,7 @@ export default function Dashboard() {
         const upcoming = res.data?.data?.upcoming_appointments || [];
         const previous = res.data?.data?.previous_appointments || [];
         setHasAppointment(upcoming.length > 0 || previous.length > 0);
+        if (upcoming.length > 0) setNextAppt(upcoming[0]);
       }).catch(() => {});
     }
   }, [isDoctor]);
@@ -773,6 +775,27 @@ export default function Dashboard() {
                         <span className="text-sm sm:text-lg font-semibold">Zenomi AI is processing</span>
                       </div>
                       <span className="text-xl font-bold">{processingTime}s</span>
+                    </div>
+                  </div>
+                )}
+                {/* Upcoming Appointment Card */}
+                {nextAppt && (
+                  <div className="mb-4 w-full max-w-xl mx-auto cursor-pointer" onClick={() => navigate('/appointments')}>
+                    <div className="bg-white rounded-2xl p-4 shadow border border-[#8B2D6C]/10">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-semibold text-[#8B2D6C] bg-[#8B2D6C]/10 px-2.5 py-1 rounded-full">Upcoming Appointment</span>
+                        <span className="text-xs text-gray-400">{nextAppt.date || (nextAppt.slotDate && new Date(nextAppt.slotDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }))}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-[#8B2D6C]/10 flex items-center justify-center text-[#8B2D6C] font-bold text-sm">
+                          {(nextAppt.doctorName || nextAppt.doctor_name || "Dr").split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm text-gray-900 truncate">{nextAppt.doctorName || nextAppt.doctor_name || "Doctor"}</p>
+                          <p className="text-xs text-gray-500">{nextAppt.slotTime || nextAppt.time || ""} · {nextAppt.mode || nextAppt.consultationType || "Consultation"}</p>
+                        </div>
+                        <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                      </div>
                     </div>
                   </div>
                 )}
