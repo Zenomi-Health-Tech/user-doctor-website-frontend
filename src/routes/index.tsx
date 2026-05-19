@@ -190,15 +190,9 @@ export default function AppRouter() {
     {
       path: "/chooserole",
       element: (
-        <ProtectedRoute
-          element={
-            <Suspense fallback={<SuspenseLoader />}>
-              <ChooseRole />
-            </Suspense>
-          }
-          isPublic
-          alreadyLoggedInRedirect="/dashboard"
-        />
+        <Suspense fallback={<SuspenseLoader />}>
+          <ChooseRole />
+        </Suspense>
       ),
     },
     {
