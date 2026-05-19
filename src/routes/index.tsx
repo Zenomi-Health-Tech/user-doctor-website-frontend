@@ -228,6 +228,6 @@ export default function AppRouter() {
     },
   ];
 
-  const routes = useRoutes([...privateRoutes, ...publicRoutes]);
+  const routes = useRoutes([...publicRoutes, ...privateRoutes]);
   return routes;
 }
