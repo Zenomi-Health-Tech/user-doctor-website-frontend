@@ -49,6 +49,8 @@ const Component = () => {
 
   const popupLogin = useGoogleLogin({
     flow: 'implicit',
+    ux_mode: 'redirect',
+    redirect_uri: window.location.origin + '/doctor/login',
     onSuccess: async (tokenResponse) => {
       setLoading(true);
       try {
