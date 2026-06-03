@@ -154,7 +154,7 @@ const DoctorRegistrationForm = () => {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number*</label>
                             <PhoneInput
-                                country="in" onlyCountries={['in']} onChange={handlePhoneChange}
+                                country="in" onlyCountries={['in', 'us']} onChange={handlePhoneChange}
                                 inputStyle={{ width: "100%", height: "48px", fontSize: "16px", borderRadius: "9999px", border: "2px solid transparent", backgroundColor: "#FCF8FA" }}
                                 containerStyle={{ width: "100%" }}
                                 buttonStyle={{ borderRadius: "9999px 0 0 9999px", border: "2px solid transparent", backgroundColor: "#FCF8FA" }}
