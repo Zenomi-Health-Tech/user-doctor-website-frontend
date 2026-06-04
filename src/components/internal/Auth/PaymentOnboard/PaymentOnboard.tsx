@@ -1,31 +1,4 @@
-import api from "@/utils/api";
-import Cookies from "js-cookie";
-
 function PaymentScreen() {
-  const handleCheckout = async () => {
-    try {
-      const authCookie = Cookies.get('auth');
-      let token = '';
-      if (authCookie) {
-        try {
-          token = JSON.parse(authCookie).token;
-        } catch (e) {
-          token = '';
-        }
-      }
-      const res = await api.post("/stripe/create-doctor-checkout", {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.data && res.data.url) {
-        window.location.href = res.data.url;
-      } else {
-        alert("Failed to initiate payment. Please try again.");
-      }
-    } catch (error) {
-      alert("Payment initiation failed. Please try again.");
-    }
-  };
-
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center relative font-['Poppins'] bg-gradient-to-b from-[#8B2D6C] to-[#704180] overflow-hidden">
       {/* Grid overlay */}
