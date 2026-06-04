@@ -1,6 +1,3 @@
-import api from "@/utils/api";
-import Cookies from "js-cookie";
-
 function PaymentScreen() {
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center relative font-['Poppins'] bg-gradient-to-b from-[#8B2D6C] to-[#704180] overflow-hidden">
