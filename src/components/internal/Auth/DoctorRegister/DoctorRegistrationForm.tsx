@@ -33,7 +33,7 @@ const CURRENCIES = ['₹ INR', '$ USD', '€ EUR', '£ GBP'];
 const doctorSchema = z.object({
     name: z.string().min(1, 'Name is required'),
     email: z.string().email('Invalid email address'),
-    phoneNumber: z.string().min(10, 'Phone number must be at least 10 digits'),
+    phoneNumber: z.string().min(9, 'Phone number must be at least 9 digits'),
     gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
     qualification: z.string().min(1, 'Qualification is required'),
     additionalQualifications: z.array(z.string()),
