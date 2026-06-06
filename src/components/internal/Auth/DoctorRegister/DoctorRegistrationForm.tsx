@@ -33,7 +33,7 @@ const CURRENCIES = ['₹ INR', '$ USD', '€ EUR', '£ GBP'];
 const doctorSchema = z.object({
     name: z.string().min(1, 'Name is required'),
     email: z.string().email('Invalid email address'),
-    phoneNumber: z.string().min(10, 'Phone number must be at least 10 digits'),
+    phoneNumber: z.string().regex(/^\d{10}$/, 'Phone number must be exactly 10 digits'),
     gender: z.enum(['MALE', 'FEMALE', 'OTHER']),
     qualification: z.string().min(1, 'Qualification is required'),
     additionalQualifications: z.array(z.string()),
@@ -56,7 +56,7 @@ const fieldBg = { backgroundColor: '#FCF8FA' };
 const DoctorRegistrationForm = () => {
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
-    const [countryCode, setCountryCode] = useState('+91');
+    const [countryCode, setCountryCode] = useState('+1');
     const navigate = useNavigate();
     const [step, setStep] = useState(0);
     const [qualificationInput, setQualificationInput] = useState('');
@@ -154,7 +154,7 @@ const DoctorRegistrationForm = () => {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number*</label>
                             <PhoneInput
-                                country="in" onlyCountries={['in', 'us']} onChange={handlePhoneChange}
+                                country="us" onlyCountries={['us', 'in']} onChange={handlePhoneChange}
                                 inputStyle={{ width: "100%", height: "48px", fontSize: "16px", borderRadius: "9999px", border: "2px solid transparent", backgroundColor: "#FCF8FA" }}
                                 containerStyle={{ width: "100%" }}
                                 buttonStyle={{ borderRadius: "9999px 0 0 9999px", border: "2px solid transparent", backgroundColor: "#FCF8FA" }}
