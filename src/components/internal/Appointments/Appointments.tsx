@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "@/utils/api";
-import { Calendar, Clock, ChevronLeft } from "lucide-react";
+import { Calendar, Clock, ChevronLeft, Video } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
@@ -171,6 +171,20 @@ function AppointmentTile({ appt }: { appt: UserAppointment }) {
 
   const statusIcon = status === 'COMPLETED' ? '✅' : status === 'CANCELLED' ? '❌' : '⏳';
 
+  // Check if within 30-min call window
+  const isCallActive = (() => {
+    try {
+      const t = preferredTime || preferredDate;
+      if (!t) return false;
+      const dt = new Date(t);
+      if (isNaN(dt.getTime())) return false;
+      const now = Date.now();
+      return now >= dt.getTime() && now <= dt.getTime() + 30 * 60 * 1000;
+    } catch { return false; }
+  })();
+
+  const consultationId = (appt as any).consultationId || (appt as any).consultation_id || "";
+
   return (
     <div className="mx-4 mb-4 p-4 bg-white rounded-xl border border-[#DEDEDE]" style={{ boxShadow: '2px 12px 20px 0px #E9E9E9' }}>
       {/* Row 1: Avatar + Name + Spec + Status */}
@@ -197,6 +211,16 @@ function AppointmentTile({ appt }: { appt: UserAppointment }) {
           <span className="text-xs text-[#636363] truncate">{fmtTimeRange(preferredTime)}</span>
         </div>
       </div>
+
+      {/* Join Call Button */}
+      {isCallActive && status !== 'COMPLETED' && status !== 'CANCELLED' && (
+        <a href={`https://trh360doctor.vercel.app/call?id=${consultationId}&patientId=&patientName=Patient&type=Consultation&callType=video&scheduledTime=${encodeURIComponent(preferredTime || preferredDate)}`}
+          target="_blank" rel="noopener noreferrer"
+          className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white"
+          style={{ background: 'linear-gradient(90deg, #704180, #8B2D6C)' }}>
+          <Video className="w-4 h-4" /> Join Call
+        </a>
+      )}
     </div>
   );
 }
