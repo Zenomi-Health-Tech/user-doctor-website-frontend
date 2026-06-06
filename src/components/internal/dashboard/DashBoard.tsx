@@ -1193,7 +1193,6 @@ export default function Dashboard() {
                       <span className="text-white text-base font-semibold leading-snug">{q.question}</span>
                     </div>
                     <div className="grid grid-cols-5 gap-2">
-                      {(q.scaleOptions || []).map((option: string) => (
                       {(q.scaleOptions || []).map((option: string, _i: number) => (
                         <button key={option} onClick={() => handleScrollableAnswer(globalIdx, option)} className={`py-3 rounded-xl text-center transition-all ${selected === option ? 'text-white' : 'text-gray-400 border border-white/10'}`} style={selected === option ? { background: 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' } : { background: '#2D3048' }}>
                           <div className="text-xs px-1 leading-tight">{option}</div>
@@ -1293,7 +1292,7 @@ export default function Dashboard() {
                     <span className="text-white text-base font-semibold leading-snug">{q.question}</span>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
-                    {(q.scaleOptions || []).map((option: string, _i: number) => {
+                    {(q.scaleOptions || []).map((option: string, i: number) => {
                       const emojis = ['😌', '😐', '😟', '😰'];
                       const selectedBgs = ['linear-gradient(135deg, #22C55E, #16A34A)', 'linear-gradient(135deg, #EAB308, #CA8A04)', 'linear-gradient(135deg, #F97316, #EA580C)', 'linear-gradient(135deg, #EF4444, #DC2626)'];
                       return (
@@ -1336,7 +1335,7 @@ export default function Dashboard() {
                     <span className="text-white text-base font-semibold leading-snug">{q.question}</span>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
-                    {(q.scaleOptions || []).map((option: string, _i: number) => {
+                    {(q.scaleOptions || []).map((option: string, i: number) => {
                       const emojis = ['😌', '😐', '😟', '😰'];
                       return (
                         <button key={option} onClick={() => handleScrollableAnswer(idx, option)} className={`min-h-[72px] h-full flex flex-col items-center justify-center rounded-xl text-center transition-all ${selected === option ? 'text-white' : 'text-gray-400 border border-white/10'}`} style={selected === option ? { background: 'linear-gradient(135deg, #8B5CF6, #A78BFA)' } : { background: '#2D3048' }}>
@@ -1380,7 +1379,7 @@ export default function Dashboard() {
                     <div key={q.id || globalIdx} className="mb-3 p-4 rounded-2xl" style={{ background: '#252840' }}>
                       <p className="text-white text-sm font-semibold mb-3">{q.question}</p>
                       <div className="grid grid-cols-5 gap-2">
-                        {(q.scaleOptions || []).map((option: string, _i: number) => (
+                        {(q.scaleOptions || []).map((option: string, i: number) => (
                           <button key={option} onClick={() => handleScrollableAnswer(globalIdx, option)} className={`min-h-[72px] h-full flex flex-col items-center justify-center rounded-xl text-center transition-all ${selected === option ? 'text-white' : 'text-gray-400 border border-white/10'}`} style={selected === option ? { background: 'linear-gradient(135deg, #FF6B8A, #E040FB)' } : { background: '#2D3048' }}>
                             <div className="text-lg">{emojis[i] || '❓'}</div>
                             <div className="text-[10px] mt-0.5 px-1 leading-tight">{option}</div>
