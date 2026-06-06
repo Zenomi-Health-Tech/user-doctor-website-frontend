@@ -86,18 +86,19 @@ const DoctorRegistrationForm = () => {
         setLoading(true);
         try {
             const formData = new FormData();
-            formData.append('name', data.name);
-            formData.append('email', data.email);
-            formData.append('phoneNumber', data.phoneNumber);
+            formData.append('name', data.name.trim());
+            formData.append('email', data.email.trim());
+            formData.append('phoneNumber', data.phoneNumber.trim());
             formData.append('countryCode', countryCode);
             formData.append('gender', data.gender);
             formData.append('qualification', data.qualification);
-            formData.append('additionalQualifications', JSON.stringify(data.additionalQualifications));
+            formData.append('additionalQualifications', data.additionalQualifications?.length > 0 ? JSON.stringify(data.additionalQualifications) : '[]');
             formData.append('specialization', data.specialization);
-            formData.append('medicalLicenseNumber', data.medicalLicenseNumber);
-            formData.append('experience', data.experience);
-            formData.append('consultationFee', data.consultationFee);
-            formData.append('currency', selectedCurrency);
+            formData.append('medicalLicenseNumber', data.medicalLicenseNumber.trim());
+            formData.append('experience', String(data.experience));
+            formData.append('consultationFee', String(data.consultationFee));
+            const currencyCode = selectedCurrency.split(' ')[1];
+            formData.append('currency', currencyCode);
             if (data.doctorPhoto) formData.append('doctorPhoto', data.doctorPhoto);
             if (data.medicalLicense) formData.append('medicalLicense', data.medicalLicense);
 
@@ -109,7 +110,9 @@ const DoctorRegistrationForm = () => {
             toast({ title: "Success", description: "Registration successful!", variant: "default", className: "bg-green-500 text-white" });
             if (response.status === 201) navigate('/doctor/login');
         } catch (error: any) {
-            toast({ title: "Error", description: error.response?.data?.message || 'Registration failed', variant: "destructive" });
+            const errorMsg = error.response?.data?.message || error.response?.data?.error || 'Registration failed';
+            console.error('Registration error:', error.response?.data);
+            toast({ title: "Error", description: errorMsg, variant: "destructive" });
         } finally {
             setLoading(false);
         }
