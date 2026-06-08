@@ -40,6 +40,7 @@ const doctorSchema = z.object({
     specialization: z.string().min(1, 'Specialization is required'),
     medicalLicenseNumber: z.string().min(1, 'Medical license number is required'),
     experience: z.string().min(1, 'Experience is required'),
+    workLocation: z.string().min(1, 'Work location is required'),
     consultationFee: z.string().min(1, 'Consultation fee is required'),
     doctorPhoto: z.any().optional(),
     medicalLicense: z.any().optional(),
@@ -122,6 +123,7 @@ const DoctorRegistrationForm = () => {
             formData.append('specialization', data.specialization);
             formData.append('medicalLicenseNumber', data.medicalLicenseNumber.trim());
             formData.append('experience', String(data.experience));
+            formData.append('workLocation', data.workLocation.trim());
             formData.append('consultationFee', String(data.consultationFee));
             const currencyCode = selectedCurrency.split(' ')[1];
             formData.append('currency', currencyCode);
@@ -147,7 +149,7 @@ const DoctorRegistrationForm = () => {
     const handleNext = async () => {
         let valid = false;
         if (step === 0) valid = await trigger(['name', 'email', 'phoneNumber', 'gender']);
-        else if (step === 1) valid = await trigger(['qualification', 'specialization', 'experience', 'medicalLicenseNumber']);
+        else if (step === 1) valid = await trigger(['qualification', 'specialization', 'experience', 'medicalLicenseNumber', 'workLocation']);
         else if (step === 2) valid = await trigger(['consultationFee']);
         if (valid) setStep(s => s + 1);
     };
@@ -301,6 +303,11 @@ const DoctorRegistrationForm = () => {
                             <label className="block text-sm font-medium text-gray-700 mb-1">Experience (Years)*</label>
                             <input {...register('experience')} type="number" placeholder="Enter your years of experience" className={inputClass} style={fieldBg} max={99} />
                             {errors.experience && <p className="text-red-500 text-sm mt-1">{errors.experience.message}</p>}
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Work Location*</label>
+                            <input {...register('workLocation')} type="text" placeholder="Enter your clinic/hospital address" className={getInputClass(!!errors.workLocation)} style={fieldBg} />
+                            <ErrorMessage message={errors.workLocation?.message} />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Medical License Document*</label>
