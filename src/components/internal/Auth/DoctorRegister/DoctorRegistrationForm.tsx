@@ -52,6 +52,11 @@ const steps = ['Personal Information', 'Professional Information', 'Practice & F
 const selectClass = "w-full p-3 rounded-full border-2 border-transparent focus:outline-none focus:border-[#704180] appearance-none transition-colors";
 const inputClass = "w-full p-3 rounded-full border-2 border-transparent focus:outline-none focus:border-[#704180] transition-colors";
 const fieldBg = { backgroundColor: '#FCF8FA' };
+const getInputClass = (hasError: boolean) => `${inputClass} ${hasError ? 'border-2 border-red-500' : ''}`;
+const getSelectClass = (hasError: boolean) => `${selectClass} ${hasError ? 'border-2 border-red-500' : ''}`;
+
+const ErrorMessage = ({ message }: { message?: string }) =>
+    message ? <p className="text-red-600 text-sm mt-2 font-semibold bg-red-50 p-2.5 rounded-lg border border-red-200">{message}</p> : null;
 
 const DoctorRegistrationForm = () => {
     const [loading, setLoading] = useState(false);
@@ -81,18 +86,19 @@ const DoctorRegistrationForm = () => {
         setLoading(true);
         try {
             const formData = new FormData();
-            formData.append('name', data.name);
-            formData.append('email', data.email);
-            formData.append('phoneNumber', data.phoneNumber);
+            formData.append('name', data.name.trim());
+            formData.append('email', data.email.trim());
+            formData.append('phoneNumber', data.phoneNumber.trim());
             formData.append('countryCode', countryCode);
             formData.append('gender', data.gender);
             formData.append('qualification', data.qualification);
-            formData.append('additionalQualifications', JSON.stringify(data.additionalQualifications));
+            formData.append('additionalQualifications', data.additionalQualifications?.length > 0 ? JSON.stringify(data.additionalQualifications) : '[]');
             formData.append('specialization', data.specialization);
-            formData.append('medicalLicenseNumber', data.medicalLicenseNumber);
-            formData.append('experience', data.experience);
-            formData.append('consultationFee', data.consultationFee);
-            formData.append('currency', selectedCurrency);
+            formData.append('medicalLicenseNumber', data.medicalLicenseNumber.trim());
+            formData.append('experience', String(data.experience));
+            formData.append('consultationFee', String(data.consultationFee));
+            const currencyCode = selectedCurrency.split(' ')[1];
+            formData.append('currency', currencyCode);
             if (data.doctorPhoto) formData.append('doctorPhoto', data.doctorPhoto);
             if (data.medicalLicense) formData.append('medicalLicense', data.medicalLicense);
 
@@ -104,7 +110,9 @@ const DoctorRegistrationForm = () => {
             toast({ title: "Success", description: "Registration successful!", variant: "default", className: "bg-green-500 text-white" });
             if (response.status === 201) navigate('/doctor/login');
         } catch (error: any) {
-            toast({ title: "Error", description: error.response?.data?.message || 'Registration failed', variant: "destructive" });
+            const errorMsg = error.response?.data?.message || error.response?.data?.error || 'Registration failed';
+            console.error('Registration error:', error.response?.data);
+            toast({ title: "Error", description: errorMsg, variant: "destructive" });
         } finally {
             setLoading(false);
         }
@@ -143,32 +151,32 @@ const DoctorRegistrationForm = () => {
                     <div className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Name*</label>
-                            <input {...register('name')} type="text" placeholder="Enter your name" className={inputClass} style={fieldBg} />
-                            {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+                            <input {...register('name')} type="text" placeholder="Enter your name" className={getInputClass(!!errors.name)} style={fieldBg} />
+                            <ErrorMessage message={errors.name?.message} />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Email*</label>
-                            <input {...register('email')} type="email" placeholder="Enter your email" className={inputClass} style={fieldBg} />
-                            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
+                            <input {...register('email')} type="email" placeholder="Enter your email" className={getInputClass(!!errors.email)} style={fieldBg} />
+                            <ErrorMessage message={errors.email?.message} />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number*</label>
                             <PhoneInput
                                 country="us" onlyCountries={['us', 'in']} onChange={handlePhoneChange}
-                                inputStyle={{ width: "100%", height: "48px", fontSize: "16px", borderRadius: "9999px", border: "2px solid transparent", backgroundColor: "#FCF8FA" }}
+                                inputStyle={{ width: "100%", height: "48px", fontSize: "16px", borderRadius: "9999px", border: errors.phoneNumber ? "2px solid #ef4444" : "2px solid transparent", backgroundColor: "#FCF8FA" }}
                                 containerStyle={{ width: "100%" }}
-                                buttonStyle={{ borderRadius: "9999px 0 0 9999px", border: "2px solid transparent", backgroundColor: "#FCF8FA" }}
+                                buttonStyle={{ borderRadius: "9999px 0 0 9999px", border: errors.phoneNumber ? "2px solid #ef4444" : "2px solid transparent", backgroundColor: "#FCF8FA" }}
                             />
-                            {errors.phoneNumber && <p className="text-red-500 text-sm mt-1">{errors.phoneNumber.message}</p>}
+                            <ErrorMessage message={errors.phoneNumber?.message} />
                         </div>
                         <div>
-                            <select {...register('gender')} className={selectClass} style={fieldBg}>
+                            <select {...register('gender')} className={getSelectClass(!!errors.gender)} style={fieldBg}>
                                 <option value="">Select your gender*</option>
                                 <option value="MALE">Male</option>
                                 <option value="FEMALE">Female</option>
                                 <option value="OTHER">Other</option>
                             </select>
-                            {errors.gender && <p className="text-red-500 text-sm mt-1">{errors.gender.message}</p>}
+                            <ErrorMessage message={errors.gender?.message} />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Doctor Photo*</label>
