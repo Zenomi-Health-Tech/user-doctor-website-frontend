@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -75,6 +75,25 @@ const DoctorRegistrationForm = () => {
         shouldUnregister: false,
         defaultValues: { additionalQualifications: [] },
     });
+
+    // Auto-fill form with Google Sign-in data
+    useEffect(() => {
+        try {
+            const googleDataStr = sessionStorage.getItem('googleUserData');
+            if (googleDataStr) {
+                const googleData = JSON.parse(googleDataStr);
+                if (googleData.email) {
+                    setValue('email', googleData.email);
+                }
+                if (googleData.name) {
+                    setValue('name', googleData.name);
+                }
+                sessionStorage.removeItem('googleUserData');
+            }
+        } catch (error) {
+            console.log('Error loading Google user data');
+        }
+    }, [setValue]);
 
     const handlePhoneChange = (value: string, country: any) => {
         if (!value || !country) return;

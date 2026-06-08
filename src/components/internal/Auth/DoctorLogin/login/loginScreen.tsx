@@ -24,7 +24,7 @@ const Component = () => {
     }
   }, [termsAccepted]);
 
-  const handleSignIn = async (idToken: string) => {
+  const handleSignIn = async (idToken: string, userData?: any) => {
     setLoading(true);
     try {
       const res = await axios.post("https://zenomi.elitceler.com/api/v1/doctors/google-signin", { idToken });
@@ -38,6 +38,10 @@ const Component = () => {
       }
     } catch (error: any) {
       if (error.response?.status === 404) {
+        // Store Google user data for registration form auto-fill
+        if (userData) {
+          sessionStorage.setItem('googleUserData', JSON.stringify(userData));
+        }
         window.location.href = "/doctor/register";
       } else {
         toast({ title: "Error", description: error.response?.data?.message || "Sign-in failed", variant: "destructive" });
@@ -52,7 +56,27 @@ const Component = () => {
     onSuccess: async (tokenResponse) => {
       setLoading(true);
       try {
-        await handleSignIn(tokenResponse.access_token);
+        // Decode JWT to get user data
+        const base64Url = tokenResponse.access_token.split('.')[1];
+        let userData = {};
+        try {
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join(''));
+          userData = JSON.parse(jsonPayload);
+        } catch (e) {
+          // If decoding fails, fetch user info from Google API
+          try {
+            const response = await fetch('https://www.googleapis.com/oauth2/v1/userinfo', {
+              headers: { 'Authorization': `Bearer ${tokenResponse.access_token}` }
+            });
+            userData = await response.json();
+          } catch (err) {
+            console.log('Could not fetch user info');
+          }
+        }
+        await handleSignIn(tokenResponse.access_token, userData);
       } catch {
         toast({ title: "Error", description: "Sign-in failed. Please try again.", variant: "destructive" });
         setLoading(false);
@@ -93,7 +117,24 @@ const Component = () => {
           <>
             <div className="w-full flex justify-center" onMouseEnter={() => clearTimeout(timerRef.current)}>
               <GoogleLogin
-                onSuccess={(resp) => { clearTimeout(timerRef.current); if (resp.credential) handleSignIn(resp.credential); }}
+                onSuccess={(resp) => {
+                  clearTimeout(timerRef.current);
+                  if (resp.credential) {
+                    // Decode JWT to extract user data
+                    const base64Url = resp.credential.split('.')[1];
+                    let userData = {};
+                    try {
+                      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                      const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                      }).join(''));
+                      userData = JSON.parse(jsonPayload);
+                    } catch (e) {
+                      console.log('Could not decode JWT');
+                    }
+                    handleSignIn(resp.credential, userData);
+                  }
+                }}
                 onError={() => setShowFallback(true)}
                 size="large"
                 width="300"
