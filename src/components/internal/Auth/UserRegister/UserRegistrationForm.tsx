@@ -48,7 +48,9 @@ const UserRegistrationForm = () => {
             return;
         }
 
-        const phoneNumber = value.replace(country.dialCode, "");
+        const phoneNumber = value.startsWith(country.dialCode)
+            ? value.slice(country.dialCode.length)
+            : value;
         const formattedCountryCode = `+${country.dialCode}`;
         setCountryCode(formattedCountryCode);
         setValue("phoneNumber", phoneNumber);

@@ -28,7 +28,7 @@ const SPECIALIZATIONS = [
     'Art / Music / Dance Therapy', 'Sexology & Relationship Counseling', 'Other',
 ];
 
-const CURRENCIES = ['₹ INR', '$ USD', '€ EUR', '£ GBP'];
+const CURRENCIES = ['$ USD', '₹ INR', '€ EUR', '£ GBP'];
 
 const doctorSchema = z.object({
     name: z.string().min(1, 'Name is required'),
@@ -49,11 +49,11 @@ type DoctorFormData = z.infer<typeof doctorSchema>;
 
 const steps = ['Personal Information', 'Professional Information', 'Practice & Fees'];
 
-const selectClass = "w-full p-3 rounded-full border-2 border-transparent focus:outline-none focus:border-[#704180] appearance-none transition-colors";
-const inputClass = "w-full p-3 rounded-full border-2 border-transparent focus:outline-none focus:border-[#704180] transition-colors";
-const fieldBg = { backgroundColor: '#FCF8FA' };
-const getInputClass = (hasError: boolean) => `${inputClass} ${hasError ? 'border-2 border-red-500' : ''}`;
-const getSelectClass = (hasError: boolean) => `${selectClass} ${hasError ? 'border-2 border-red-500' : ''}`;
+const selectClass = "w-full p-3.5 rounded-lg border-2 border-[#e5dff3] focus:outline-none focus:border-[#704180] focus:ring-1 focus:ring-[#704180] appearance-none transition-all duration-200";
+const inputClass = "w-full p-3.5 rounded-lg border-2 border-[#e5dff3] focus:outline-none focus:border-[#704180] focus:ring-1 focus:ring-[#704180] transition-all duration-200";
+const fieldBg = { backgroundColor: '#faf8fe' };
+const getInputClass = (hasError: boolean) => `${inputClass} ${hasError ? 'border-2 border-red-500 focus:border-red-500' : ''}`;
+const getSelectClass = (hasError: boolean) => `${selectClass} ${hasError ? 'border-2 border-red-500 focus:border-red-500' : ''}`;
 
 const ErrorMessage = ({ message }: { message?: string }) =>
     message ? <p className="text-red-600 text-sm mt-2 font-semibold bg-red-50 p-2.5 rounded-lg border border-red-200">{message}</p> : null;
@@ -65,7 +65,7 @@ const DoctorRegistrationForm = () => {
     const navigate = useNavigate();
     const [step, setStep] = useState(0);
     const [qualificationInput, setQualificationInput] = useState('');
-    const [selectedCurrency, setSelectedCurrency] = useState('₹ INR');
+    const [selectedCurrency, setSelectedCurrency] = useState('$ USD');
 
     const {
         register, handleSubmit, setValue, getValues, trigger, control,
@@ -76,10 +76,17 @@ const DoctorRegistrationForm = () => {
         defaultValues: { additionalQualifications: [] },
     });
 
-    const handlePhoneChange = (value: string, country: { dialCode?: string }) => {
-        if (!country.dialCode) return;
-        setCountryCode(`+${country.dialCode}`);
-        setValue("phoneNumber", value.replace(country.dialCode, ""));
+    const handlePhoneChange = (value: string, country: any) => {
+        if (!value || !country) return;
+        const dialCode = country.dialCode || '';
+        if (dialCode) {
+            setCountryCode(`+${dialCode}`);
+            // Remove country code from the beginning of the value
+            const phoneWithoutCode = value.replace(new RegExp(`^${dialCode}`), '');
+            setValue("phoneNumber", phoneWithoutCode.trim());
+        } else {
+            setValue("phoneNumber", value);
+        }
     };
 
     const onSubmit = async (data: DoctorFormData) => {
@@ -145,7 +152,7 @@ const DoctorRegistrationForm = () => {
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-4 font-['Poppins']">
+            <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-5 font-['Poppins']">
                 {/* Step 1: Personal Information */}
                 {step === 0 && (
                     <div className="space-y-4">
@@ -162,16 +169,49 @@ const DoctorRegistrationForm = () => {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number*</label>
                             <PhoneInput
-                                country="us" onlyCountries={['us', 'in']} onChange={handlePhoneChange}
-                                inputStyle={{ width: "100%", height: "48px", fontSize: "16px", borderRadius: "9999px", border: errors.phoneNumber ? "2px solid #ef4444" : "2px solid transparent", backgroundColor: "#FCF8FA" }}
-                                containerStyle={{ width: "100%" }}
-                                buttonStyle={{ borderRadius: "9999px 0 0 9999px", border: errors.phoneNumber ? "2px solid #ef4444" : "2px solid transparent", backgroundColor: "#FCF8FA" }}
+                                country="us"
+                                onlyCountries={['us', 'in']}
+                                onChange={handlePhoneChange}
+                                enableAreaCodes={false}
+                                disableDropdown={false}
+                                inputStyle={{
+                                    width: "100%",
+                                    height: "44px",
+                                    fontSize: "16px",
+                                    border: errors.phoneNumber ? "2px solid #ef4444" : "2px solid #e5dff3",
+                                    backgroundColor: "#faf8fe",
+                                    borderRadius: "0 8px 8px 0",
+                                    outline: "none",
+                                    fontFamily: "Poppins, sans-serif"
+                                }}
+                                containerStyle={{
+                                    width: "100%"
+                                }}
+                                buttonStyle={{
+                                    backgroundColor: "#faf8fe",
+                                    border: errors.phoneNumber ? "2px solid #ef4444" : "2px solid #e5dff3",
+                                    borderRadius: "8px 0 0 8px",
+                                    cursor: "pointer",
+                                    outline: "none"
+                                }}
+                                dropdownStyle={{
+                                    backgroundColor: "#faf8fe",
+                                    border: "2px solid #e5dff3",
+                                    borderRadius: "8px"
+                                }}
+                                preferredCountries={['us', 'in']}
+                                isValid={(value) => {
+                                    if (value?.match(/[a-zA-Z]+/)) {
+                                        return false;
+                                    }
+                                    return true;
+                                }}
                             />
                             <ErrorMessage message={errors.phoneNumber?.message} />
                         </div>
                         <div>
                             <select {...register('gender')} className={getSelectClass(!!errors.gender)} style={fieldBg}>
-                                <option value="">Select your gender*</option>
+                                <option value="" disabled>Select your gender*</option>
                                 <option value="MALE">Male</option>
                                 <option value="FEMALE">Female</option>
                                 <option value="OTHER">Other</option>
@@ -181,7 +221,7 @@ const DoctorRegistrationForm = () => {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Doctor Photo*</label>
                             <Controller control={control} name="doctorPhoto" render={({ field }) => (
-                                <input type="file" accept="image/*" onChange={e => field.onChange(e.target.files?.[0] || null)} className="w-full p-2 border-2 border-transparent rounded-full" style={{ backgroundColor: '#FCF8FA' }} />
+                                <input type="file" accept="image/*" onChange={e => field.onChange(e.target.files?.[0] || null)} className="w-full p-3.5 border-2 border-[#e5dff3] rounded-lg transition-all duration-200 cursor-pointer focus:outline-none focus:border-[#704180] focus:ring-1 focus:ring-[#704180]" style={{ backgroundColor: '#faf8fe' }} />
                             )} />
                         </div>
                     </div>
@@ -246,7 +286,7 @@ const DoctorRegistrationForm = () => {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Medical License Document*</label>
                             <Controller control={control} name="medicalLicense" render={({ field }) => (
-                                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => field.onChange(e.target.files?.[0] || null)} className="w-full p-2 border-2 border-transparent rounded-full" style={{ backgroundColor: '#FCF8FA' }} />
+                                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => field.onChange(e.target.files?.[0] || null)} className="w-full p-3.5 border-2 border-[#e5dff3] rounded-lg transition-all duration-200 cursor-pointer focus:outline-none focus:border-[#704180] focus:ring-1 focus:ring-[#704180]" style={{ backgroundColor: '#faf8fe' }} />
                             )} />
                         </div>
                     </div>
@@ -261,8 +301,8 @@ const DoctorRegistrationForm = () => {
                                 <select
                                     value={selectedCurrency}
                                     onChange={e => setSelectedCurrency(e.target.value)}
-                                    className="p-3 rounded-full border-2 border-transparent focus:outline-none focus:border-[#704180] text-sm font-semibold text-[#704180] min-w-[100px] appearance-none transition-colors"
-                                    style={{ backgroundColor: '#FCF8FA' }}
+                                    className="p-3.5 rounded-lg border-2 border-[#e5dff3] focus:outline-none focus:border-[#704180] focus:ring-1 focus:ring-[#704180] text-sm font-semibold text-[#704180] min-w-[110px] appearance-none transition-all duration-200"
+                                    style={{ backgroundColor: '#faf8fe' }}
                                 >
                                     {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
                                 </select>
