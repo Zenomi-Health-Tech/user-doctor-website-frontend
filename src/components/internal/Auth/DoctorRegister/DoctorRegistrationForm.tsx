@@ -62,6 +62,7 @@ const DoctorRegistrationForm = () => {
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
     const [countryCode, setCountryCode] = useState('+1');
+    const [phoneValue, setPhoneValue] = useState('');
     const navigate = useNavigate();
     const [step, setStep] = useState(0);
     const [qualificationInput, setQualificationInput] = useState('');
@@ -95,16 +96,18 @@ const DoctorRegistrationForm = () => {
         }
     }, [setValue]);
 
-    const handlePhoneChange = (value: string, country: any) => {
+    const handlePhoneChange = (value: string, country: any, _e: any, _formatted: string, fieldOnChange?: (v: string) => void) => {
         if (!value || !country) return;
-        const dialCode = country.dialCode || '';
+        const dialCode = (country.dialCode || '') as string;
+        setPhoneValue(value);
         if (dialCode) {
             setCountryCode(`+${dialCode}`);
-            // Remove country code from the beginning of the value
-            const phoneWithoutCode = value.replace(new RegExp(`^${dialCode}`), '');
-            setValue("phoneNumber", phoneWithoutCode.trim());
+            const national = value.slice(dialCode.length);
+            const setter = fieldOnChange ?? ((v: string) => setValue("phoneNumber", v));
+            setter(national);
         } else {
-            setValue("phoneNumber", value);
+            const setter = fieldOnChange ?? ((v: string) => setValue("phoneNumber", v));
+            setter(value);
         }
     };
 
@@ -187,44 +190,47 @@ const DoctorRegistrationForm = () => {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number*</label>
-                            <PhoneInput
-                                country="us"
-                                onlyCountries={['us', 'in']}
-                                onChange={handlePhoneChange}
-                                enableAreaCodes={false}
-                                disableDropdown={false}
-                                inputStyle={{
-                                    width: "100%",
-                                    height: "44px",
-                                    fontSize: "16px",
-                                    border: errors.phoneNumber ? "2px solid #ef4444" : "2px solid #e5dff3",
-                                    backgroundColor: "#faf8fe",
-                                    borderRadius: "0 8px 8px 0",
-                                    outline: "none",
-                                    fontFamily: "Poppins, sans-serif"
-                                }}
-                                containerStyle={{
-                                    width: "100%"
-                                }}
-                                buttonStyle={{
-                                    backgroundColor: "#faf8fe",
-                                    border: errors.phoneNumber ? "2px solid #ef4444" : "2px solid #e5dff3",
-                                    borderRadius: "8px 0 0 8px",
-                                    cursor: "pointer",
-                                    outline: "none"
-                                }}
-                                dropdownStyle={{
-                                    backgroundColor: "#faf8fe",
-                                    border: "2px solid #e5dff3",
-                                    borderRadius: "8px"
-                                }}
-                                preferredCountries={['us', 'in']}
-                                isValid={(value) => {
-                                    if (value?.match(/[a-zA-Z]+/)) {
-                                        return false;
-                                    }
-                                    return true;
-                                }}
+                            <Controller
+                                control={control}
+                                name="phoneNumber"
+                                defaultValue=""
+                                render={({ field }) => (
+                                    <PhoneInput
+                                        country="us"
+                                        onlyCountries={['us', 'in']}
+                                        preferredCountries={['us', 'in']}
+                                        value={phoneValue}
+                                        onChange={(value, country, e, formatted) =>
+                                            handlePhoneChange(value, country, e, formatted, field.onChange)
+                                        }
+                                        enableAreaCodes={false}
+                                        disableDropdown={false}
+                                        inputStyle={{
+                                            width: "100%",
+                                            height: "44px",
+                                            fontSize: "16px",
+                                            border: errors.phoneNumber ? "2px solid #ef4444" : "2px solid #e5dff3",
+                                            backgroundColor: "#faf8fe",
+                                            borderRadius: "0 8px 8px 0",
+                                            outline: "none",
+                                            fontFamily: "Poppins, sans-serif"
+                                        }}
+                                        containerStyle={{ width: "100%" }}
+                                        buttonStyle={{
+                                            backgroundColor: "#faf8fe",
+                                            border: errors.phoneNumber ? "2px solid #ef4444" : "2px solid #e5dff3",
+                                            borderRadius: "8px 0 0 8px",
+                                            cursor: "pointer",
+                                            outline: "none"
+                                        }}
+                                        dropdownStyle={{
+                                            backgroundColor: "#faf8fe",
+                                            border: "2px solid #e5dff3",
+                                            borderRadius: "8px"
+                                        }}
+                                        isValid={(value) => !value?.match(/[a-zA-Z]+/)}
+                                    />
+                                )}
                             />
                             <ErrorMessage message={errors.phoneNumber?.message} />
                         </div>
