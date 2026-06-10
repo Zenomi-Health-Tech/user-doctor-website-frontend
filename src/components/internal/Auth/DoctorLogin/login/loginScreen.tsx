@@ -7,6 +7,13 @@ import { setAuthCookies } from "@/utils/cookies";
 import Cookies from "js-cookie";
 import zenomiLogo from "@/assets/zenomiLogo.png";
 import TermsDialog from "@/components/internal/Auth/TermsDialog";
+import MFAVerify from "@/components/internal/Auth/MFAVerify";
+
+interface PendingLogin {
+  token: string;
+  doctorId: string;
+  email: string;
+}
 
 const Component = () => {
   const { toast } = useToast();
@@ -15,6 +22,7 @@ const Component = () => {
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
+  const [pendingLogin, setPendingLogin] = useState<PendingLogin | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
@@ -29,8 +37,11 @@ const Component = () => {
     try {
       const res = await axios.post("https://zenomi.elitceler.com/api/v1/doctors/google-signin", { idToken });
       const token = res.data?.data?.token || res.data?.token;
-      const doctorId = res.data?.data?.doctor?.id || res.data?.data?.id;
-      if (token) {
+      const doctorId = res.data?.data?.doctor?.id || res.data?.data?.id || "";
+      const email = res.data?.data?.doctor?.email || userData?.email || "";
+      if (token && email) {
+        setPendingLogin({ token, doctorId, email });
+      } else if (token) {
         setAuthCookies({ token });
         if (doctorId) Cookies.set("userId", doctorId, { expires: 7 });
         login(token);
@@ -38,10 +49,7 @@ const Component = () => {
       }
     } catch (error: any) {
       if (error.response?.status === 404) {
-        // Store Google user data for registration form auto-fill
-        if (userData) {
-          sessionStorage.setItem('googleUserData', JSON.stringify(userData));
-        }
+        if (userData) sessionStorage.setItem("googleUserData", JSON.stringify(userData));
         window.location.href = "/doctor/register";
       } else {
         toast({ title: "Error", description: error.response?.data?.message || "Sign-in failed", variant: "destructive" });
@@ -51,31 +59,26 @@ const Component = () => {
     }
   };
 
+  const completeDoctorLogin = () => {
+    if (!pendingLogin) return;
+    setAuthCookies({ token: pendingLogin.token });
+    if (pendingLogin.doctorId) Cookies.set("userId", pendingLogin.doctorId, { expires: 7 });
+    login(pendingLogin.token);
+    window.location.href = "/dashboard";
+  };
+
   const popupLogin = useGoogleLogin({
-    flow: 'implicit',
+    flow: "implicit",
     onSuccess: async (tokenResponse) => {
       setLoading(true);
       try {
-        // Decode JWT to get user data
-        const base64Url = tokenResponse.access_token.split('.')[1];
         let userData = {};
         try {
-          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-          const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-          }).join(''));
-          userData = JSON.parse(jsonPayload);
-        } catch (e) {
-          // If decoding fails, fetch user info from Google API
-          try {
-            const response = await fetch('https://www.googleapis.com/oauth2/v1/userinfo', {
-              headers: { 'Authorization': `Bearer ${tokenResponse.access_token}` }
-            });
-            userData = await response.json();
-          } catch (err) {
-            console.log('Could not fetch user info');
-          }
-        }
+          const response = await fetch("https://www.googleapis.com/oauth2/v1/userinfo", {
+            headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+          });
+          userData = await response.json();
+        } catch {}
         await handleSignIn(tokenResponse.access_token, userData);
       } catch {
         toast({ title: "Error", description: "Sign-in failed. Please try again.", variant: "destructive" });
@@ -87,11 +90,22 @@ const Component = () => {
     },
   });
 
+  if (pendingLogin) {
+    return (
+      <MFAVerify
+        email={pendingLogin.email}
+        role="DOCTOR"
+        accentColor="#704180"
+        onVerified={completeDoctorLogin}
+      />
+    );
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#f8f6fa] to-[#ede7f3] px-4">
       <div className="w-full max-w-sm bg-white rounded-3xl shadow-xl p-8 sm:p-10 flex flex-col items-center">
         <img src={zenomiLogo} alt="Zenomi" className="h-10 mb-6" />
-        <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ background: 'linear-gradient(135deg, #e8eaf6, #ede7f6)' }}>
+        <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ background: "linear-gradient(135deg, #e8eaf6, #ede7f6)" }}>
           <svg className="w-7 h-7 text-[#704180]" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19 14.5" />
           </svg>
@@ -120,18 +134,15 @@ const Component = () => {
                 onSuccess={(resp) => {
                   clearTimeout(timerRef.current);
                   if (resp.credential) {
-                    // Decode JWT to extract user data
-                    const base64Url = resp.credential.split('.')[1];
                     let userData = {};
                     try {
-                      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                      const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => {
-                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                      }).join(''));
+                      const base64Url = resp.credential.split(".")[1];
+                      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+                      const jsonPayload = decodeURIComponent(
+                        atob(base64).split("").map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)).join("")
+                      );
                       userData = JSON.parse(jsonPayload);
-                    } catch (e) {
-                      console.log('Could not decode JWT');
-                    }
+                    } catch {}
                     handleSignIn(resp.credential, userData);
                   }
                 }}
@@ -167,7 +178,7 @@ const Component = () => {
           </>
         )}
 
-        <button onClick={() => window.location.href = '/chooserole'} className="text-xs text-[#704180] mt-6 font-medium font-['Poppins'] hover:underline">
+        <button onClick={() => (window.location.href = "/chooserole")} className="text-xs text-[#704180] mt-6 font-medium font-['Poppins'] hover:underline">
           ← Not a doctor? Choose a different role
         </button>
         <p className="text-xs text-gray-400 mt-4 text-center font-['Poppins']">

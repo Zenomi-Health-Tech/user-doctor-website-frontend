@@ -137,7 +137,7 @@ const DoctorRegistrationForm = () => {
                 { headers: { 'Content-Type': 'multipart/form-data' } }
             );
             toast({ title: "Success", description: "Registration successful!", variant: "default", className: "bg-green-500 text-white" });
-            if (response.status === 201) navigate('/doctor/login');
+            if (response.status === 201) navigate('/doctor/pending');
         } catch (error: any) {
             const errorMsg = error.response?.data?.message || error.response?.data?.error || 'Registration failed';
             console.error('Registration error:', error.response?.data);
