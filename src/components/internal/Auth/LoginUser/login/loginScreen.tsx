@@ -7,6 +7,13 @@ import { setAuthCookies } from "@/utils/cookies";
 import Cookies from "js-cookie";
 import zenomiLogo from "@/assets/zenomiLogo.png";
 import TermsDialog from "@/components/internal/Auth/TermsDialog";
+import MFAVerify from "@/components/internal/Auth/MFAVerify";
+
+interface PendingLogin {
+  token: string;
+  userId: string;
+  email: string;
+}
 
 const Component = () => {
   const { toast } = useToast();
@@ -15,6 +22,7 @@ const Component = () => {
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
+  const [pendingLogin, setPendingLogin] = useState<PendingLogin | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
@@ -24,13 +32,16 @@ const Component = () => {
     }
   }, [termsAccepted]);
 
-  const handleSignIn = async (idToken: string) => {
+  const handleSignIn = async (idToken: string, userData?: any) => {
     setLoading(true);
     try {
       const res = await axios.post("https://zenomi.elitceler.com/api/v1/users/google-signin", { idToken });
       const token = res.data?.data?.token || res.data?.token;
-      const userId = res.data?.data?.user?.id || res.data?.data?.id;
-      if (token) {
+      const userId = res.data?.data?.user?.id || res.data?.data?.id || "";
+      const email = res.data?.data?.user?.email || userData?.email || "";
+      if (token && email) {
+        setPendingLogin({ token, userId, email });
+      } else if (token) {
         setAuthCookies({ token });
         if (userId) Cookies.set("userId", userId, { expires: 7 });
         login(token);
@@ -47,12 +58,27 @@ const Component = () => {
     }
   };
 
+  const completeUserLogin = () => {
+    if (!pendingLogin) return;
+    setAuthCookies({ token: pendingLogin.token });
+    if (pendingLogin.userId) Cookies.set("userId", pendingLogin.userId, { expires: 7 });
+    login(pendingLogin.token);
+    window.location.href = "/dashboard";
+  };
+
   const popupLogin = useGoogleLogin({
-    flow: 'implicit',
+    flow: "implicit",
     onSuccess: async (tokenResponse) => {
       setLoading(true);
       try {
-        await handleSignIn(tokenResponse.access_token);
+        let userData = {};
+        try {
+          const response = await fetch("https://www.googleapis.com/oauth2/v1/userinfo", {
+            headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+          });
+          userData = await response.json();
+        } catch {}
+        await handleSignIn(tokenResponse.access_token, userData);
       } catch {
         toast({ title: "Error", description: "Sign-in failed. Please try again.", variant: "destructive" });
         setLoading(false);
@@ -63,11 +89,22 @@ const Component = () => {
     },
   });
 
+  if (pendingLogin) {
+    return (
+      <MFAVerify
+        email={pendingLogin.email}
+        role="USER"
+        accentColor="#8B2D6C"
+        onVerified={completeUserLogin}
+      />
+    );
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#f8f6fa] to-[#ede7f3] px-4">
       <div className="w-full max-w-sm bg-white rounded-3xl shadow-xl p-8 sm:p-10 flex flex-col items-center">
         <img src={zenomiLogo} alt="Zenomi" className="h-10 mb-6" />
-        <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ background: 'linear-gradient(135deg, #fce4ec, #f3e8f9)' }}>
+        <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ background: "linear-gradient(135deg, #fce4ec, #f3e8f9)" }}>
           <svg className="w-7 h-7 text-[#8B2D6C]" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
           </svg>
@@ -93,7 +130,21 @@ const Component = () => {
           <>
             <div className="w-full flex justify-center" onMouseEnter={() => clearTimeout(timerRef.current)}>
               <GoogleLogin
-                onSuccess={(resp) => { clearTimeout(timerRef.current); if (resp.credential) handleSignIn(resp.credential); }}
+                onSuccess={(resp) => {
+                  clearTimeout(timerRef.current);
+                  if (resp.credential) {
+                    let userData = {};
+                    try {
+                      const base64Url = resp.credential.split(".")[1];
+                      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+                      const jsonPayload = decodeURIComponent(
+                        atob(base64).split("").map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)).join("")
+                      );
+                      userData = JSON.parse(jsonPayload);
+                    } catch {}
+                    handleSignIn(resp.credential, userData);
+                  }
+                }}
                 onError={() => setShowFallback(true)}
                 size="large"
                 width="300"
@@ -126,7 +177,7 @@ const Component = () => {
           </>
         )}
 
-        <button onClick={() => window.location.href = '/chooserole'} className="text-xs text-[#8B2D6C] mt-6 font-medium font-['Poppins'] hover:underline">
+        <button onClick={() => (window.location.href = "/chooserole")} className="text-xs text-[#8B2D6C] mt-6 font-medium font-['Poppins'] hover:underline">
           ← Not a user? Choose a different role
         </button>
         <p className="text-xs text-gray-400 mt-4 text-center font-['Poppins']">

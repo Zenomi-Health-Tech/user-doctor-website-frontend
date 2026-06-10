@@ -38,6 +38,7 @@ const SetAvailabilityUser = lazy(() => import("@/components/internal/Appointment
 const AvailableSlotsPage = lazy(() => import("@/components/internal/Appointments/AvailableSlots"));
 const SleepTracker = lazy(() => import("@/pages/SleepTracker"));
 const DeleteAccount = lazy(() => import("@/pages/DeleteAccount"));
+const PendingApproval = lazy(() => import("@/components/internal/Auth/PendingApproval"));
 
 
 export default function AppRouter() {
@@ -111,10 +112,6 @@ export default function AppRouter() {
           element: <SleepTracker />,
         },
         {
-          path: "/sleep-tracker",
-          element: <ProtectedRoute element={<SleepTracker />} />,
-        },
-        {
           path: "/profile",
           element: <Profile />,
         },
@@ -147,6 +144,14 @@ export default function AppRouter() {
       element: (
         <Suspense fallback={<SuspenseLoader />}>
           <RegisterScreen />
+        </Suspense>
+      ),
+    },
+    {
+      path: "/doctor/pending",
+      element: (
+        <Suspense fallback={<SuspenseLoader />}>
+          <PendingApproval />
         </Suspense>
       ),
     },
