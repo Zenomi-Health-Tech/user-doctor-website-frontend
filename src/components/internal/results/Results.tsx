@@ -240,45 +240,125 @@ export default function Results() {
   );
 }
 
-// ── Animated Bar Chart ──
-function AnimatedBarChart({ data, animated }: { data: { title: string; value: number }[]; animated: boolean }) {
-  const chartH = 220;
+// ── Wellness Bar Chart — matches app WellnessBarChart exactly ──
+const WELLNESS_KEYS = ['Sleep', 'Nutrition', 'Emotional'];
+const ANXIETY_KEYS  = ['GAD-7', 'PHQ-9'];
+
+function wellnessColor(v: number) {
+  if (v >= 70) return '#00C48C';
+  if (v >= 50) return '#F5A623';
+  return '#FF5C5C';
+}
+function wellnessLabel(v: number) {
+  if (v >= 70) return 'Thriving';
+  if (v >= 50) return 'Fair';
+  return 'Needs care';
+}
+function severityColor(v: number) {
+  if (v <= 20) return '#00C48C';
+  if (v <= 45) return '#F5A623';
+  if (v <= 70) return '#FF8C00';
+  return '#FF5C5C';
+}
+function severityLabel(v: number) {
+  if (v <= 20) return 'Minimal';
+  if (v <= 45) return 'Mild';
+  if (v <= 70) return 'Moderate';
+  return 'Severe';
+}
+function findKey(raw: string, keys: string[]) {
+  const n = raw.toLowerCase().replace(/-/g,'').replace(/_/g,'');
+  return keys.find(k => k.toLowerCase().replace(/-/g,'').replace(/_/g,'') === n
+    || raw.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(raw.toLowerCase()));
+}
+
+function BarSection({ title, note, legend, entries, inverted, animated }:
+  { title: string; note: string; legend: {label:string; color:string}[];
+    entries: {key:string; value:number}[]; inverted: boolean; animated: boolean }) {
+  const BAR_H = 140;
   return (
-    <div>
-      <div className="flex">
-        <div className="flex flex-col justify-between pr-2 text-[10px] text-black font-normal w-10 text-right" style={{ height: chartH }}>
-          {[100, 75, 50, 25, 0].map(v => <span key={v}>{v.toFixed(1)}</span>)}
-        </div>
-        <div className="flex-1 relative">
-          <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-            {[0, 1, 2, 3, 4].map(i => <div key={i} className="border-b border-blue-200/30" />)}
-          </div>
-          <div className="flex items-end gap-1.5 sm:gap-2 px-1 relative z-10" style={{ height: chartH }}>
-            {data.map((bar, i) => {
-              const pct = Math.max((bar.value / 100), 0.01);
-              return (
-                <div key={bar.title} className="flex-1 flex justify-center items-end" style={{ height: '100%' }}>
-                  <div className="w-full max-w-[18px] sm:max-w-[22px] rounded-t-full transition-all ease-out"
-                    style={{
-                      height: animated ? `${pct * 100}%` : '1px',
-                      background: 'linear-gradient(to bottom, #704180, #8B2D6C)',
-                      transitionDuration: `${500 + i * 100}ms`,
-                    }}
-                  />
-                </div>
-              );
-            })}
-          </div>
-          <div className="border-t border-[#A3A3A3]" />
-        </div>
+    <div className="mb-5">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-sm font-bold text-black">{title}</span>
+        <span className="text-[11px] text-gray-400">{note}</span>
       </div>
-      <div className="flex ml-10 mt-2">
-        {data.map(bar => (
-          <div key={bar.title} className="flex-1 text-center text-[9px] sm:text-[10px] text-black leading-tight px-0.5">
-            {bar.title.replace('Assessment', '').trim().split(' ').map((word, wi) => <span key={wi}>{word}<br/></span>)}
+      <div className="flex flex-wrap gap-x-3 gap-y-1 mb-3">
+        {legend.map(l => (
+          <div key={l.label} className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full" style={{ background: l.color }} />
+            <span className="text-[11px] text-gray-500">{l.label}</span>
           </div>
         ))}
       </div>
+      {/* Chart card — white with shadow like app */}
+      <div className="rounded-2xl p-4" style={{ background: 'white', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+        <div className="flex" style={{ height: BAR_H + 24 }}>
+          {/* Y-axis */}
+          <div className="flex flex-col justify-between pr-2 text-[10px] text-gray-400 text-right" style={{ width: 36, height: BAR_H }}>
+            {['100%','75%','50%','25%','0%'].map(l => <span key={l}>{l}</span>)}
+          </div>
+          {/* Bars */}
+          <div className="flex-1 relative" style={{ height: BAR_H }}>
+            {/* Grid lines */}
+            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+              {[0,1,2,3,4].map(i => <div key={i} className="border-b" style={{ borderColor:'rgba(0,0,0,0.07)' }} />)}
+            </div>
+            <div className="absolute inset-0 flex items-end justify-around px-1">
+              {entries.map((e, i) => {
+                const v = Math.max(e.value, 0);
+                const color = inverted ? severityColor(v) : wellnessColor(v);
+                const lbl   = inverted ? severityLabel(v)  : wellnessLabel(v);
+                const barPx = Math.max((v / 100) * BAR_H, 4);
+                return (
+                  <div key={e.key} className="flex flex-col items-center justify-end" style={{ width: 48 }}>
+                    <span className="text-[9px] font-bold mb-1 leading-none" style={{ color }}>{lbl}</span>
+                    <div className="rounded-t-lg transition-all ease-out"
+                      style={{
+                        width: 36, height: animated ? barPx : 2,
+                        background: color,
+                        boxShadow: `0 2px 4px ${color}44`,
+                        transitionDuration: `${600 + i * 120}ms`,
+                      }} />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        {/* Metric name labels */}
+        <div className="flex justify-around mt-2 pl-10">
+          {entries.map(e => (
+            <div key={e.key} className="text-center text-[10px] font-semibold text-gray-600 leading-tight" style={{ width: 48 }}>
+              {(e.key === 'Emotional' ? 'Emotional\nWellness' : e.key).split('\n').map((w, wi) => <span key={wi}>{w}<br/></span>)}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AnimatedBarChart({ data, animated }: { data: { title: string; value: number }[]; animated: boolean }) {
+  const wellnessEntries = WELLNESS_KEYS
+    .map(k => { const d = data.find(x => findKey(x.title, [k])); return { key: k, value: d?.value ?? 0 }; })
+    .filter(e => e.value > 0);
+  const anxietyEntries  = ANXIETY_KEYS
+    .map(k => { const d = data.find(x => findKey(x.title, [k])); return { key: k, value: d?.value ?? 0 }; })
+    .filter(e => e.value > 0);
+
+  return (
+    <div>
+      {wellnessEntries.length > 0 && (
+        <BarSection title="Wellness Scores" note="Higher = healthier"
+          legend={[{label:'Thriving',color:'#00C48C'},{label:'Fair',color:'#F5A623'},{label:'Needs care',color:'#FF5C5C'}]}
+          entries={wellnessEntries} inverted={false} animated={animated} />
+      )}
+      {anxietyEntries.length > 0 && (
+        <BarSection title="Depression & Anxiety" note="Higher = more severe"
+          legend={[{label:'Minimal',color:'#00C48C'},{label:'Mild',color:'#F5A623'},{label:'Moderate',color:'#FF8C00'},{label:'Severe',color:'#FF5C5C'}]}
+          entries={anxietyEntries} inverted={true} animated={animated} />
+      )}
     </div>
   );
 }
