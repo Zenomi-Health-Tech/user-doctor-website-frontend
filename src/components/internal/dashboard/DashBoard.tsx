@@ -111,6 +111,7 @@ export default function Dashboard() {
   const [gad7Results, setGad7Results] = useState<{score: number, max: number, label: string, description: string} | null>(null);
   const [phq9Results, setPhq9Results] = useState<{score: number, max: number, label: string, description: string} | null>(null);
   const [emotionalResults, setEmotionalResults] = useState<{score: number, max: number, categories: {name: string, emoji: string, score: number, max: number, label: string}[]} | null>(null);
+  const [mindfulnessResults, setMindfulnessResults] = useState<{score: number, max: number, categories: {emoji: string, name: string, score: number, max: number, label: string}[]} | null>(null);
   const [hasSleepLog, setHasSleepLog] = useState(false);
   const [hasAppointment, setHasAppointment] = useState(false);
   const [nextAppt, setNextAppt] = useState<any>(null);
@@ -359,6 +360,7 @@ export default function Dashboard() {
     setGad7Results(null);
     setPhq9Results(null);
     setEmotionalResults(null);
+    setMindfulnessResults(null);
     setPostTestLoading(true);
 
     // Poll until next test unlocks or max 15 seconds
@@ -397,7 +399,8 @@ export default function Dashboard() {
         token = "";
       }
     }
-    const hasCustomResults = currentTestId === SLEEP_TEST_ID || currentTestId === GAD7_TEST_ID || currentTestId === PHQ9_TEST_ID || (tests.find(t => t.id === currentTestId)?.name?.toUpperCase().includes('EMOTIONAL'));
+    const isMindfulnessQuiz = tests.find(t => t.id === currentTestId)?.name?.toUpperCase().includes('MINDFUL') ?? false;
+    const hasCustomResults = currentTestId === SLEEP_TEST_ID || currentTestId === GAD7_TEST_ID || currentTestId === PHQ9_TEST_ID || (tests.find(t => t.id === currentTestId)?.name?.toUpperCase().includes('EMOTIONAL')) || isMindfulnessQuiz;
     if (!hasCustomResults) setShowProcessing(true);
     setShowQuiz(false);
     try {
@@ -500,6 +503,43 @@ export default function Dashboard() {
         // Fallback: ensure backend has the raw score for reports/stats
         api.put('/users/update-test-score', { testId: currentTestId, score: maxScore - totalScore }).catch(() => {});
       }
+      // For Mindfulness test — compute locally, same scoring as Emotional (1-5 scale, higher = better)
+      else if (isMindfulnessQuiz) {
+        setShowQuiz(false);
+        const scoreForAnswer = (ans: string) => {
+          const label = ans.split(':')[0].trim().toLowerCase();
+          if (label.includes('always') || label.includes('very often')) return 5;
+          if (label.includes('often') || label.includes('usually')) return 4;
+          if (label.includes('sometimes')) return 3;
+          if (label.includes('rarely') || label.includes('seldom')) return 2;
+          return 1;
+        };
+        let totalScore = 0;
+        let maxScore = answers.length * 5 || 50;
+        try {
+          const res = await axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formattedAnswers }, { headers: { Authorization: `Bearer ${token}` } });
+          const d = res.data?.data ?? res.data ?? {};
+          if (d.user_score) { totalScore = d.user_score; maxScore = d.max_score_for_test ?? maxScore; }
+          else totalScore = answers.reduce((s: number, a: any) => s + scoreForAnswer(a.answer || ''), 0);
+        } catch {
+          totalScore = answers.reduce((s: number, a: any) => s + scoreForAnswer(a.answer || ''), 0);
+        }
+        // 3 categories: Present Awareness (0-4), Non-Judgment (4-7), Focus & Clarity (7-end)
+        const catDefs = [
+          { emoji: '🎯', name: 'Present Awareness', start: 0, end: 4 },
+          { emoji: '🌿', name: 'Non-Judgment', start: 4, end: 7 },
+          { emoji: '🔍', name: 'Focus & Clarity', start: 7, end: answers.length },
+        ];
+        const cats = catDefs.map(c => {
+          const slice = answers.slice(c.start, c.end);
+          const catScore = slice.reduce((s: number, a: any) => s + scoreForAnswer(a.answer || ''), 0);
+          const catMax = slice.length * 5;
+          const pct = catMax > 0 ? catScore / catMax : 0;
+          return { emoji: c.emoji, name: c.name, score: catScore, max: catMax, label: pct >= 0.7 ? 'Strong' : pct >= 0.4 ? 'Growing' : 'Needs Practice' };
+        });
+        setMindfulnessResults({ score: totalScore, max: maxScore, categories: cats });
+        if (totalScore > 0) api.put('/users/update-test-score', { testId: currentTestId, score: totalScore }).catch(() => {});
+      }
       // For sleep test, compute score locally and show results immediately
       else if (currentTestId === SLEEP_TEST_ID) {
         // Score = index of selected option in scale (matches app logic — no hardcoded map needed)
@@ -539,7 +579,7 @@ export default function Dashboard() {
       // Find the test name for the just-completed test
       const completedTest = tests.find(t => t.id === currentTestId);
       setLastCompletedTestName(completedTest?.name || null);
-      if (currentTestId !== SLEEP_TEST_ID && currentTestId !== GAD7_TEST_ID && currentTestId !== PHQ9_TEST_ID && !tests.find(t => t.id === currentTestId)?.name?.toUpperCase().includes('EMOTIONAL')) {
+      if (currentTestId !== SLEEP_TEST_ID && currentTestId !== GAD7_TEST_ID && currentTestId !== PHQ9_TEST_ID && !tests.find(t => t.id === currentTestId)?.name?.toUpperCase().includes('EMOTIONAL') && !isMindfulnessQuiz) {
         setShowCompletionDialog(true);
       }
       // Re-fetch tests after submission to update completed count
@@ -1753,6 +1793,70 @@ export default function Dashboard() {
               </div>
             )}
             <button onClick={() => handleHomeScreen()} className="w-full py-4 rounded-2xl text-white font-bold text-lg" style={{ background: 'linear-gradient(135deg, #FF6B9D, #C850C0)' }}>
+              Done 🏠
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Mindfulness Results Screen — matches app MindfulnessCompletedScreen */}
+      {mindfulnessResults && (
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: '#1A1D2E' }}>
+          <div className="max-w-lg mx-auto px-5 py-6 pb-24">
+            {/* Main score card */}
+            <div className="rounded-[20px] overflow-hidden mb-4" style={{ background: '#252840' }}>
+              {/* Gradient header — colour changes with level */}
+              {(() => {
+                const pct = mindfulnessResults.max > 0 ? mindfulnessResults.score / mindfulnessResults.max : 0;
+                const level = pct >= 0.75 ? 'Highly Mindful' : pct >= 0.5 ? 'Moderately Mindful' : pct >= 0.3 ? 'Developing Awareness' : 'Beginning Your Journey';
+                const desc = pct >= 0.75
+                  ? "You have a strong mindfulness practice! You're well-attuned to the present moment and manage thoughts with clarity. 🌟"
+                  : pct >= 0.5
+                    ? 'You have a good foundation of mindfulness. With consistent practice, your awareness will continue to grow. 🌱'
+                    : pct >= 0.3
+                      ? 'You\'re building your mindfulness skills. Small daily practices like breathing exercises can make a big difference. 🧘'
+                      : 'This is the start of your mindfulness journey. Even a few minutes of daily awareness practice can transform your well-being. 💙';
+                const grad = pct >= 0.75 ? '#43C6AC, #11998E' : pct >= 0.5 ? '#6DD5FA, #2980B9' : pct >= 0.3 ? '#FFC371, #FF5F6D' : '#DA4453, #89216B';
+                return (
+                  <>
+                    <div className="w-full py-8 flex flex-col items-center" style={{ background: `linear-gradient(135deg, ${grad})` }}>
+                      <div className="text-5xl mb-3">🧘</div>
+                      <span className="text-5xl font-bold text-white leading-none">{mindfulnessResults.score}</span>
+                      <p className="text-sm text-white/70 mt-1">out of {mindfulnessResults.max}</p>
+                      <p className="text-xl font-bold text-white mt-3 text-center px-4">{level}</p>
+                    </div>
+                    <div className="p-5">
+                      <div className="w-full h-2 rounded-full mb-4" style={{ background: '#1A1D2E' }}>
+                        <div className="h-2 rounded-full transition-all duration-700" style={{ width: `${pct * 100}%`, background: `linear-gradient(90deg, ${grad})` }} />
+                      </div>
+                      <p className="text-sm text-gray-400 text-center leading-relaxed font-medium">{desc}</p>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+
+            {/* Category breakdown — Present Awareness, Non-Judgment, Focus & Clarity */}
+            {mindfulnessResults.categories.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mb-6">
+                {mindfulnessResults.categories.map(cat => {
+                  const pct = cat.max > 0 ? cat.score / cat.max : 0;
+                  return (
+                    <div key={cat.name} className="rounded-2xl p-3 flex flex-col items-center" style={{ background: '#252840' }}>
+                      <div className="text-2xl mb-1">{cat.emoji}</div>
+                      <p className="text-[10px] font-semibold text-white text-center mb-2 leading-tight">{cat.name}</p>
+                      <div className="w-full h-1.5 rounded-full mb-2" style={{ background: '#1A1D2E' }}>
+                        <div className="h-1.5 rounded-full" style={{ width: `${pct * 100}%`, background: 'linear-gradient(90deg, #43C6AC, #191654)' }} />
+                      </div>
+                      <p className="text-sm font-bold text-white">{cat.score}/{cat.max}</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5">{cat.label}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <button onClick={() => handleHomeScreen()} className="w-full py-4 rounded-2xl text-white font-bold text-lg" style={{ background: 'linear-gradient(135deg, #43C6AC, #191654)' }}>
               Done 🏠
             </button>
           </div>
