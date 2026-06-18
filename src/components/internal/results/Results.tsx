@@ -120,30 +120,37 @@ export default function Results() {
           </div>
         )}
 
-        {/* Overall wellness + tests completed */}
-        <div className="px-2.5 sm:px-0">
-          {barData.length > 0 && (() => {
-            const avg = Math.round(barData.reduce((s, d) => s + d.value, 0) / barData.length);
-            return (
-              <div className="flex items-center gap-4 mb-5 p-4 rounded-2xl" style={{ background: '#F6F2F7' }}>
-                <div className="relative flex-shrink-0" style={{ width: 64, height: 64 }}>
-                  <svg width="64" height="64" viewBox="0 0 64 64">
-                    <circle cx="32" cy="32" r="26" stroke="#E5E0EA" strokeWidth="6" fill="none" />
-                    <circle cx="32" cy="32" r="26" stroke="#704180" strokeWidth="6" fill="none"
-                      strokeDasharray={2 * Math.PI * 26}
-                      strokeDashoffset={2 * Math.PI * 26 * (1 - avg / 100)}
-                      strokeLinecap="round" transform="rotate(-90 32 32)" />
-                    <text x="50%" y="50%" textAnchor="middle" dy=".35em" fontSize="13" fill="#704180" fontWeight="bold">{avg}</text>
+        {/* Overall Wellness card — matches app: purple gradient, large ring left, text right */}
+        {barData.length > 0 && (() => {
+          const avg = Math.round(barData.reduce((s, d) => s + d.value, 0) / barData.length);
+          const r = 46; const circ = 2 * Math.PI * r;
+          return (
+            <div className="px-2.5 sm:px-0 mb-5">
+              <div className="rounded-2xl p-5 flex items-center gap-5" style={{ background: 'linear-gradient(135deg, #704180, #8B2D6C)' }}>
+                {/* Circular progress ring — 120×120 matching app */}
+                <div className="relative flex-shrink-0" style={{ width: 120, height: 120 }}>
+                  <svg width="120" height="120" viewBox="0 0 120 120">
+                    <circle cx="60" cy="60" r={r} stroke="rgba(255,255,255,0.2)" strokeWidth="8" fill="none" />
+                    <circle cx="60" cy="60" r={r} stroke="white" strokeWidth="8" fill="none"
+                      strokeDasharray={circ}
+                      strokeDashoffset={circ * (1 - avg / 100)}
+                      strokeLinecap="round" transform="rotate(-90 60 60)"
+                      style={{ transition: 'stroke-dashoffset 1s ease-out' }} />
+                    <text x="50%" y="50%" textAnchor="middle" dy=".35em" fontSize="22" fill="white" fontWeight="bold">{avg}</text>
                   </svg>
                 </div>
-                <div>
-                  <p className="text-xs text-[#808080] font-medium uppercase tracking-wide">Overall Wellness</p>
-                  <p className="text-lg font-bold text-black mt-0.5">{avg}%</p>
-                  <p className="text-xs text-[#808080]">Normalized across all 5 scales</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white/70 text-[11px] font-semibold tracking-wider uppercase mb-1">Overall Wellness</p>
+                  <p className="text-white text-2xl font-bold font-['Urbanist']">{avg}%</p>
+                  <p className="text-white/70 text-xs mt-1">Normalized across all 5 scales</p>
                 </div>
               </div>
-            );
-          })()}
+            </div>
+          );
+        })()}
+
+        {/* Tests completed */}
+        <div className="px-2.5 sm:px-0">
           <p className="text-sm text-[#6C7278]">{selected?.testsCompleted ?? 0} of 5 tests completed</p>
           <div className="flex gap-2 mt-2.5 mb-[30px]">
             {[0, 1, 2, 3, 4].map(i => (
@@ -178,10 +185,10 @@ export default function Results() {
                   window.open(selected.reportView, '_blank');
                 }
               }}
-              className="flex items-center justify-center gap-2 w-full py-3 rounded-full text-white font-medium text-base hover:opacity-90 transition"
-              style={{ background: '#704180' }}
+              className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl text-white font-bold text-base hover:opacity-90 transition"
+              style={{ background: 'linear-gradient(135deg, #704180, #8B2D6C)' }}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
               Short Report
             </button>
           ) : (selected?.testsCompleted ?? 0) > 0 && (
