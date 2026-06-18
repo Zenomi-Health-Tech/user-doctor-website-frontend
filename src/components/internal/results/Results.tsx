@@ -100,17 +100,51 @@ export default function Results() {
           </select>
         </div>
 
-        {/* Report content */}
-        <div className="px-2.5 sm:px-0">
-          <h2 className="text-lg font-bold text-black">Your Wellness Report</h2>
-          {selected?.updatedAt && (
-            <p className="text-xs text-[#808080] font-medium mt-1">
-              Last Updated: {new Date(selected.updatedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
-          )}
+        {/* Cycle summary card — matches app's gradient card in StatisticsScreen */}
+        {selected && (
+          <div className="px-2.5 sm:px-0 mb-5">
+            <div className="rounded-2xl p-5 flex items-center justify-between" style={{ background: 'linear-gradient(135deg, #704180, #8B2D6C)' }}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                </div>
+                <div>
+                  <p className="text-white font-semibold text-sm">{selected.cycle ? `Assessment ${selected.cycle}` : 'Assessment Cycle'}</p>
+                  {selected.updatedAt && <p className="text-white/70 text-xs mt-0.5">{new Date(selected.updatedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}</p>}
+                </div>
+              </div>
+              <div className="px-3 py-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.25)' }}>
+                <span className="text-white font-semibold text-sm">{selected.testsCompleted ?? 0}/5</span>
+              </div>
+            </div>
+          </div>
+        )}
 
-          {/* Tests completed */}
-          <p className="text-sm text-[#6C7278] mt-6">{selected?.testsCompleted ?? 0} of 5 tests completed</p>
+        {/* Overall wellness + tests completed */}
+        <div className="px-2.5 sm:px-0">
+          {barData.length > 0 && (() => {
+            const avg = Math.round(barData.reduce((s, d) => s + d.value, 0) / barData.length);
+            return (
+              <div className="flex items-center gap-4 mb-5 p-4 rounded-2xl" style={{ background: '#F6F2F7' }}>
+                <div className="relative flex-shrink-0" style={{ width: 64, height: 64 }}>
+                  <svg width="64" height="64" viewBox="0 0 64 64">
+                    <circle cx="32" cy="32" r="26" stroke="#E5E0EA" strokeWidth="6" fill="none" />
+                    <circle cx="32" cy="32" r="26" stroke="#704180" strokeWidth="6" fill="none"
+                      strokeDasharray={2 * Math.PI * 26}
+                      strokeDashoffset={2 * Math.PI * 26 * (1 - avg / 100)}
+                      strokeLinecap="round" transform="rotate(-90 32 32)" />
+                    <text x="50%" y="50%" textAnchor="middle" dy=".35em" fontSize="13" fill="#704180" fontWeight="bold">{avg}</text>
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-xs text-[#808080] font-medium uppercase tracking-wide">Overall Wellness</p>
+                  <p className="text-lg font-bold text-black mt-0.5">{avg}%</p>
+                  <p className="text-xs text-[#808080]">Normalized across all 5 scales</p>
+                </div>
+              </div>
+            );
+          })()}
+          <p className="text-sm text-[#6C7278]">{selected?.testsCompleted ?? 0} of 5 tests completed</p>
           <div className="flex gap-2 mt-2.5 mb-[30px]">
             {[0, 1, 2, 3, 4].map(i => (
               <CheckCircle key={i} className={`w-7 h-7 sm:w-8 sm:h-8 ${(selected?.testsCompleted ?? 0) > i ? 'text-green-500' : 'text-gray-300'}`} />
