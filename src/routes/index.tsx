@@ -37,6 +37,7 @@ const SetAvailability = lazy(() => import("@/components/internal/Appointments/Se
 const SetAvailabilityUser = lazy(() => import("@/components/internal/Appointments/SetAvailabilityUser"));
 const AvailableSlotsPage = lazy(() => import("@/components/internal/Appointments/AvailableSlots"));
 const SleepTracker = lazy(() => import("@/pages/SleepTracker"));
+const MindfulnessPage = lazy(() => import("@/pages/Mindfulness"));
 const DeleteAccount = lazy(() => import("@/pages/DeleteAccount"));
 const PendingApproval = lazy(() => import("@/components/internal/Auth/PendingApproval"));
 
@@ -110,6 +111,10 @@ export default function AppRouter() {
         {
           path: "/sleep-tracker",
           element: <SleepTracker />,
+        },
+        {
+          path: "/mindfulness",
+          element: <MindfulnessPage />,
         },
         {
           path: "/profile",
