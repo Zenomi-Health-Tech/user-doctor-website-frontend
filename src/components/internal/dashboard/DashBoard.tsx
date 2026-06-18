@@ -254,15 +254,6 @@ export default function Dashboard() {
     if (!selectedTest) return;
     setLoadingQuestions(true);
     try {
-      const authCookie = Cookies.get("auth");
-      let token = "";
-      if (authCookie) {
-        try {
-          token = JSON.parse(authCookie).token;
-        } catch (e) {
-          token = "";
-        }
-      }
       // Use main backend — returns proper text scale options ("Not at all", "Several days", ...)
       // Scoring service returns numeric "0","1","2","3" which breaks display and scoring
       const res = await api.get(`/users/questions/${selectedTest.id}`);
