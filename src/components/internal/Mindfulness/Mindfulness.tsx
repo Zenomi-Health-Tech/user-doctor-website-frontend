@@ -428,6 +428,31 @@ export default function Mindfulness() {
 
   return (
     <div className="flex flex-col min-h-screen" style={{ background: BG }}>
+      {/* Dark sidebar — same as Sleep Tracker */}
+      <style>{`
+        body { background: ${BG} !important; }
+        .flex-1.overflow-auto { background: ${BG} !important; }
+        header { background: ${BG} !important; border-color: rgba(255,255,255,0.1) !important; }
+        header * { color: white !important; }
+        :root {
+          --sidebar-background: 230 20% 10%;
+          --sidebar-foreground: 0 0% 85%;
+          --sidebar-border: 0 0% 20%;
+          --sidebar-accent: 230 20% 15%;
+          --sidebar-accent-foreground: 0 0% 90%;
+          --sidebar-primary: 270 50% 45%;
+          --sidebar-primary-foreground: 0 0% 100%;
+        }
+        aside, [data-sidebar] { background: ${BG} !important; }
+        aside [class*="bg-white"], [data-sidebar] [class*="bg-white"] { background: ${BG} !important; color: rgba(255,255,255,0.7) !important; }
+        aside *, [data-sidebar] * { color: rgba(255,255,255,0.7) !important; }
+        aside a:hover, aside button:hover, [data-sidebar] a:hover, [data-sidebar] button:hover { background: rgba(255,255,255,0.08) !important; }
+        aside [data-active="true"], [data-sidebar] [data-active="true"] { background: rgba(255,255,255,0.12) !important; color: white !important; }
+        aside hr, aside [role="separator"], [data-sidebar] hr, [data-sidebar] [role="separator"] { display: none !important; }
+        aside .border-t, aside .border-gray-200 { border-color: rgba(255,255,255,0.1) !important; }
+        [data-sidebar="sidebar"] { border-right: 1px solid rgba(255,255,255,0.1) !important; }
+        [data-sidebar="rail"]::after { background: rgba(255,255,255,0.1) !important; opacity: 1 !important; }
+      `}</style>
       {/* Top bar */}
       <div className="flex-shrink-0 px-4 pt-4 pb-3" style={{ background: '#14152A' }}>
         <div className="flex items-center gap-3 mb-4">
