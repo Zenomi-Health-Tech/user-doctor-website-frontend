@@ -100,8 +100,8 @@ export default function Dashboard() {
   const NUTRITION_TEST_ID = 'cmb7mnl8x0001qelpyyqkwk31';
   const isSleepQuiz = currentTestId === SLEEP_TEST_ID;
   const isNutritionQuiz = currentTestId === NUTRITION_TEST_ID;
-  const GAD7_TEST_ID = 'cmb7mnlch0002qelp5tpv8v09';
-  const PHQ9_TEST_ID = 'cmb7mnlfq0003qelptwtfniai';
+  const GAD7_TEST_ID = 'cmb7mnlfq0003qelptwtfniai';
+  const PHQ9_TEST_ID = 'cmb7mnlch0002qelp5tpv8v09';
   const isGad7Quiz = currentTestId === GAD7_TEST_ID;
   const isPhq9Quiz = currentTestId === PHQ9_TEST_ID;
   const isEmotionalQuiz = currentTestId ? tests.find(t => t.id === currentTestId)?.name?.toUpperCase().includes('EMOTIONAL') ?? false : false;
@@ -133,13 +133,20 @@ export default function Dashboard() {
         console.log("Token:", token);
 
         if (isDoctor) {
-          console.log("Attempting to fetch doctor analytics...");
+          // Gate: redirect to pending if doctor not yet approved
+          try {
+            const profileRes = await api.get("/doctors/profile", { headers: { Authorization: `Bearer ${token}` } });
+            const doc = profileRes.data?.data;
+            if (doc && doc.profileStatus !== 'APPROVED') {
+              navigate('/doctor/pending');
+              return;
+            }
+          } catch { /* profile fetch failed — allow through */ }
+
           try {
             const res = await api.get("/doctors/analytics/home", {
               headers: { Authorization: `Bearer ${token}` },
             });
-            console.log("Doctor analytics response:", res);
-            console.log("Response data:", res.data);
             setDoctorAnalytics(res.data.data);
           } catch (error) {
             console.error("Error fetching doctor analytics:", error);
@@ -256,13 +263,9 @@ export default function Dashboard() {
           token = "";
         }
       }
-      const res = await axios.get(
-        `https://zenomiai.elitceler.com/api/questions/${selectedTest.id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      console.log(res.data, "res of questions");
+      // Use main backend — returns proper text scale options ("Not at all", "Several days", ...)
+      // Scoring service returns numeric "0","1","2","3" which breaks display and scoring
+      const res = await api.get(`/users/questions/${selectedTest.id}`);
 
       if (res.data && Array.isArray(res.data)) {
         setQuestions(res.data.filter((q: any) => q.questionStatus === 'ACTIVE'));
@@ -417,17 +420,12 @@ export default function Dashboard() {
         const q = questions[idx];
         if (q && q.questionType === "SCALE" && typeof a.answer === "string") {
           if (isPHQorGAD && Array.isArray(q.scaleOptions)) {
-            // For PHQ and GAD, use the index of the selected option (compare full string)
-            const selectedIdx = q.scaleOptions.findIndex((opt: string) => opt === a.answer);
-            if (selectedIdx === -1) {
-              alert('Please answer all questions before submitting.');
-              throw new Error('Invalid answer for PHQ/GAD: ' + a.answer);
-            }
-            return { question: a.question, answer: String(selectedIdx) };
+            // Send option text + question_scale — matches app format exactly
+            return { question: a.question, answer: a.answer, question_scale: q.scaleOptions.join(',') };
           } else {
-            // For all other SCALE quizzes, submit only the label before the colon
+            // For all other SCALE quizzes, send label + question_scale
             const label = a.answer.split(":")[0];
-            return { question: a.question, answer: label };
+            return { question: a.question, answer: label, question_scale: q.scaleOptions?.join(',') || '' };
           }
         }
         return { question: a.question, answer: a.answer };
@@ -435,24 +433,35 @@ export default function Dashboard() {
 
       // For GAD-7 test, compute score locally and show results immediately
       if (currentTestId === GAD7_TEST_ID) {
+        // Score = index of selected option in scale (matches app logic exactly)
         let total = 0;
-        formattedAnswers.forEach((a: any) => { total += parseInt(a.answer) || 0; });
+        answers.forEach((a, idx) => {
+          const q = questions[idx];
+          const optIdx = q?.scaleOptions?.indexOf(a.answer) ?? -1;
+          if (optIdx >= 0) total += optIdx;
+        });
         const max = 21;
         const label = total <= 4 ? 'Minimal Anxiety' : total <= 9 ? 'Mild Anxiety' : total <= 14 ? 'Moderate Anxiety' : 'Severe Anxiety';
         const description = total <= 4 ? 'Your anxiety levels appear minimal. Keep maintaining healthy habits!' : total <= 9 ? 'You may be experiencing mild anxiety. Consider relaxation techniques.' : total <= 14 ? 'Moderate anxiety detected. Consider speaking with a professional.' : 'Your responses suggest severe anxiety. Please consult a healthcare provider.';
         setGad7Results({ score: total, max, label, description });
         setShowQuiz(false);
+        if (total > 0) api.put('/users/update-test-score', { testId: currentTestId, score: total }).catch(() => {});
         axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formattedAnswers }, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
       }
       // For PHQ-9 test, compute score locally and show results immediately
       else if (currentTestId === PHQ9_TEST_ID) {
         let total = 0;
-        formattedAnswers.forEach((a: any) => { total += parseInt(a.answer) || 0; });
+        answers.forEach((a, idx) => {
+          const q = questions[idx];
+          const optIdx = q?.scaleOptions?.indexOf(a.answer) ?? -1;
+          if (optIdx >= 0) total += optIdx;
+        });
         const max = 27;
         const label = total <= 4 ? 'Minimal Depression' : total <= 9 ? 'Mild Depression' : total <= 14 ? 'Moderate Depression' : total <= 19 ? 'Moderately Severe' : 'Severe Depression';
         const description = total <= 4 ? 'Your responses suggest minimal depression. Keep up the good work!' : total <= 9 ? 'Mild depression indicated. Self-care and monitoring recommended.' : total <= 14 ? 'Moderate depression detected. Consider professional support.' : total <= 19 ? 'Moderately severe depression. Professional consultation recommended.' : 'Severe depression indicated. Please seek professional help promptly.';
         setPhq9Results({ score: total, max, label, description });
         setShowQuiz(false);
+        if (total > 0) api.put('/users/update-test-score', { testId: currentTestId, score: total }).catch(() => {});
         axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formattedAnswers }, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
       }
       // For Emotional Health test — use API response score, fallback to local calculation
@@ -502,24 +511,31 @@ export default function Dashboard() {
       }
       // For sleep test, compute score locally and show results immediately
       else if (currentTestId === SLEEP_TEST_ID) {
-        const scaleMap: Record<string, number> = { 'None': 0, 'Rarely': 1, 'Moderate': 2, 'Severe': 3, 'Very Severe': 4 };
+        // Score = index of selected option in scale (matches app logic — no hardcoded map needed)
         let total = 0;
-        formattedAnswers.forEach((a: any) => { total += scaleMap[a.answer] || 0; });
+        answers.forEach((a, idx) => {
+          const q = questions[idx];
+          const optIdx = q?.scaleOptions?.indexOf(a.answer) ?? -1;
+          if (optIdx >= 0) total += optIdx;
+        });
         setSleepResults({ score: total, max: questions.length * 4, assessment: '', sentiment: '' });
         setShowQuiz(false);
-        // Fire API in background
+        if (total > 0) api.put('/users/update-test-score', { testId: currentTestId, score: total }).catch(() => {});
+        // Fire API in background — update score if API returns a better value
         axios.post(
           `https://zenomiai.elitceler.com/api/score-test/${currentTestId}`,
           { answers: formattedAnswers },
           { headers: { Authorization: `Bearer ${token}` } }
         ).then(res => {
           if (res.data) {
+            const apiScore = res.data.user_score ?? total;
             setSleepResults({
-              score: res.data.user_score ?? total,
+              score: apiScore,
               max: res.data.max_score_for_test ?? questions.length * 4,
               assessment: res.data.assessment ?? '',
               sentiment: res.data.sentiment ?? '',
             });
+            if (apiScore > 0) api.put('/users/update-test-score', { testId: currentTestId, score: apiScore }).catch(() => {});
           }
         }).catch(() => {});
       } else {
@@ -1252,8 +1268,10 @@ export default function Dashboard() {
               const d = response.data?.data ?? response.data ?? {};
               const insights = (d.short_insights ?? '').replace(/<[^>]*>/g, '');
               const parsedRecs = [...insights.matchAll(/\d+\.\s+(.+?)(?=\d+\.\s+|$)/gs)].map((m: any) => m[1].trim()).filter(Boolean);
+              const nutritionScore = d.user_score ?? d.score ?? 0;
+              if (nutritionScore > 0) api.put('/users/update-test-score', { testId: currentTestId, score: nutritionScore }).catch(() => {});
               onResult({
-                score: d.user_score ?? d.score ?? 0,
+                score: nutritionScore,
                 maxScore: d.max_score_for_test ?? d.maxScore ?? 75,
                 label: d.label ?? '',
                 categories: d.categories ?? [],

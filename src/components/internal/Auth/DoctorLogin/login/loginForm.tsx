@@ -32,7 +32,7 @@ const LoginForm: React.FC = () => {
                         });
                         const doc = profileRes.data?.data;
                         if (doc && doc.profileStatus !== 'APPROVED') {
-                            toast({ title: "Verification Pending", description: "Your profile is under review.", className: "bg-yellow-500 text-white" });
+                            navigate('/doctor/pending');
                             return;
                         }
                     } catch {
