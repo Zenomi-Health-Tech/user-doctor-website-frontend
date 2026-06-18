@@ -941,6 +941,24 @@ export default function Dashboard() {
                     ))}
                   </div>
                 )}
+                {/* Short Report Card — matches app _buildShortReportCard, shown when all tests done */}
+                {completedCount === tests.length && tests.length > 0 && (
+                <button
+                  className="w-full flex items-center gap-3.5 px-5 py-4 rounded-2xl mt-4 text-left hover:opacity-90 transition"
+                  style={{ background: 'linear-gradient(135deg, #704180, #8B2D6C)', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+                  onClick={() => navigate('/results')}
+                >
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.15)' }}>
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-bold text-base font-['Urbanist']">Short Report</p>
+                    <p className="text-white/70 text-xs mt-0.5">View your wellness summary</p>
+                  </div>
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="white" strokeOpacity="0.7" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                </button>
+                )}
+
                 {/* Zenomi Learn Courses Card - only when all tests done */}
                 {completedCount === tests.length && tests.length > 0 && (
                 <div className="rounded-[20px] overflow-hidden mt-4 w-full" style={{ background: 'linear-gradient(135deg, #704180, #8B2D6C)' }}>
