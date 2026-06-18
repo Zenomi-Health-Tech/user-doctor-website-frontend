@@ -47,75 +47,106 @@ const WIND_DOWN = [
   { title:'Nighttime Reflection',           desc:'Three soft prompts to close the day with kindness.',        dur:'6 min' },
 ];
 
-// ─── Breathing Orb ─────────────────────────────────────────
+// ─── Breathing Orb (matches app MindBreathingOrb) ──────────
+// Auto-cycles 4-7-8 by default; selecting an exercise overrides timing.
 function BreathingOrb({ phases, labels }: { phases: number[]; labels: string[] }) {
-  const [phase, setPhase] = useState(0);
-  const [scale, setScale] = useState(1);
-  const [running, setRunning] = useState(false);
-  const [countdown, setCountdown] = useState(0);
+  const [phaseLabel, setPhaseLabel] = useState('Inhale');
+  const [scale, setScale] = useState(0.85);
+  const [glow, setGlow] = useState(0.4);
+  const [countdown, setCountdown] = useState(phases[0] || 4);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const cycleRef = useRef(false);
 
-  const stop = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    setRunning(false); setPhase(0); setScale(1); setCountdown(0);
-  };
+  // Orbiting dot positions (5 dots)
+  const dots = Array.from({ length: 5 }, (_, i) => {
+    const angle = (i / 5) * 2 * Math.PI;
+    const r = 130 * scale;
+    return { x: 130 + r * Math.cos(angle), y: 130 + r * Math.sin(angle) };
+  });
 
-  const start = () => {
-    setRunning(true);
-    let p = 0; let t = phases[0];
-    setPhase(0); setCountdown(phases[0]);
-    setScale(p === 0 ? 1.45 : p === 2 ? 0.75 : 1.1);
-    timerRef.current = setInterval(() => {
-      t--;
-      setCountdown(t);
-      if (t <= 0) {
-        p = (p + 1) % 4;
-        while (phases[p] === 0) p = (p + 1) % 4;
-        t = phases[p];
-        setPhase(p);
+  const runCycle = () => {
+    cycleRef.current = true;
+    let pi = 0;
+    const nextPhase = () => {
+      if (!cycleRef.current) return;
+      while (phases[pi] === 0) pi = (pi + 1) % 4;
+      const dur = phases[pi];
+      setPhaseLabel(labels[pi] || '');
+      setCountdown(dur);
+      setScale(pi === 0 ? 1.15 : pi === 2 ? 0.85 : 1.0);
+      let t = dur;
+      timerRef.current = setInterval(() => {
+        t--;
         setCountdown(t);
-        setScale(p === 0 ? 1.45 : p === 2 ? 0.75 : 1.1);
-      }
-    }, 1000);
+        if (t <= 0) {
+          clearInterval(timerRef.current!);
+          pi = (pi + 1) % 4;
+          if (cycleRef.current) nextPhase();
+        }
+      }, 1000);
+    };
+    nextPhase();
   };
 
-  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+  // Glow pulse independent of breathing
+  useEffect(() => {
+    let g = 0.4; let dir = 1;
+    const id = setInterval(() => {
+      g += dir * 0.02;
+      if (g >= 0.8 || g <= 0.4) dir *= -1;
+      setGlow(g);
+    }, 50);
+    return () => clearInterval(id);
+  }, []);
 
-  const phaseLabel = labels[phase] || '';
+  useEffect(() => {
+    runCycle();
+    return () => { cycleRef.current = false; if (timerRef.current) clearInterval(timerRef.current); };
+  }, [phases.join(',')]);
+
+  const dur = `${phaseLabel.includes('Inhale') ? (phases[0] || 4) : phaseLabel === 'Hold' ? (phases[1] || 7) : (phases[2] || 8)}s`;
 
   return (
-    <div className="flex flex-col items-center py-8">
-      <div className="relative flex items-center justify-center" style={{ width: 200, height: 200 }}>
-        {/* Outer glow ring */}
-        <div className="absolute rounded-full" style={{
-          width: `${scale * 100}%`, height: `${scale * 100}%`,
-          background: `radial-gradient(circle, rgba(67,198,172,0.15) 0%, transparent 70%)`,
-          transition: `all ${phase === 0 ? phases[0] : phase === 2 ? phases[2] : 0.5}s ease-in-out`,
+    <div className="flex flex-col items-center py-6">
+      <div className="relative" style={{ width: 260, height: 260 }}>
+        {/* Outermost glow */}
+        <div className="absolute rounded-full pointer-events-none" style={{
+          width: `${scale * 200}px`, height: `${scale * 200}px`,
+          left: `${130 - scale * 100}px`, top: `${130 - scale * 100}px`,
+          background: `rgba(149,117,205,${glow * 0.25})`,
+          transition: `all ${dur} ease-in-out`,
         }} />
-        {/* Main orb */}
-        <div className="rounded-full flex flex-col items-center justify-center cursor-pointer select-none"
-          onClick={running ? stop : start}
-          style={{
-            width: `${scale * 68}%`, height: `${scale * 68}%`,
-            background: `radial-gradient(circle at 35% 35%, ${TEAL}, #1A7A8A)`,
-            boxShadow: `0 0 ${scale * 40}px rgba(67,198,172,0.5)`,
-            transition: `all ${phase === 0 ? phases[0] : phase === 2 ? phases[2] : 0.5}s ease-in-out`,
-          }}>
-          {running ? (
-            <>
-              <span className="text-white text-3xl font-bold leading-none">{countdown}</span>
-              <span className="text-white text-xs mt-1 opacity-80">{phaseLabel}</span>
-            </>
-          ) : (
-            <span className="text-white text-sm font-semibold">Tap to start</span>
-          )}
+        {/* Outer pulse ring */}
+        <div className="absolute rounded-full pointer-events-none" style={{
+          width: `${scale * 170}px`, height: `${scale * 170}px`,
+          left: `${130 - scale * 85}px`, top: `${130 - scale * 85}px`,
+          background: 'rgba(179,157,219,0.35)',
+          boxShadow: `0 0 30px 10px rgba(149,117,205,${glow * 0.5})`,
+          transition: `all ${dur} ease-in-out`,
+        }} />
+        {/* Middle ring */}
+        <div className="absolute rounded-full pointer-events-none" style={{
+          width: `${scale * 148}px`, height: `${scale * 148}px`,
+          left: `${130 - scale * 74}px`, top: `${130 - scale * 74}px`,
+          background: 'rgba(149,117,205,0.5)',
+          transition: `all ${dur} ease-in-out`,
+        }} />
+        {/* Inner core */}
+        <div className="absolute rounded-full flex flex-col items-center justify-center" style={{
+          width: 110, height: 110, left: 75, top: 75,
+          background: 'radial-gradient(circle at 35% 35%, #CE93D8, #9575CD)',
+          boxShadow: '0 0 20px rgba(123,94,167,0.6)',
+        }}>
+          <span className="text-white font-semibold text-sm tracking-wide">{phaseLabel || 'Inhale'}</span>
+          <span className="text-white/70 text-xs mt-0.5">{countdown}s</span>
         </div>
+        {/* Orbiting dots */}
+        <svg className="absolute inset-0 pointer-events-none" width="260" height="260">
+          {dots.map((d, i) => (
+            <circle key={i} cx={d.x} cy={d.y} r="3" fill="rgba(255,255,255,0.6)" />
+          ))}
+        </svg>
       </div>
-      {running && (
-        <button onClick={stop} className="mt-4 text-xs px-4 py-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }}>
-          Stop
-        </button>
-      )}
     </div>
   );
 }
@@ -188,7 +219,7 @@ function TodayTab({ onNavigate }: { onNavigate: (t: number) => void }) {
         </div>
         <div className="flex gap-3 pb-2 overflow-x-auto lg:grid lg:grid-cols-3 lg:overflow-visible" style={{scrollbarWidth:'none'}}>
           {picks.map((p,i)=>(
-            <button key={i} onClick={()=>onNavigate(p.tab)} className="flex-shrink-0 w-44 sm:w-48 lg:w-auto rounded-2xl p-4 text-left hover:opacity-90 transition-opacity" style={{background:`linear-gradient(135deg,${p.c[0]},${p.c[1]})`,minHeight:170}}>
+            <button key={i} onClick={()=>onNavigate(p.tab)} className="flex-shrink-0 w-44 sm:w-48 lg:w-auto rounded-2xl p-4 text-left hover:opacity-90 transition-opacity" style={{background:`linear-gradient(135deg,${p.c[0]},${p.c[1]})`,minHeight:170,boxShadow:`0 4px 12px rgba(0,0,0,0.3)`}}>
               <div className="flex justify-between items-start">
                 <span className="text-[9px] font-bold tracking-wider px-2 py-1 rounded" style={{background:'rgba(255,255,255,0.15)',color:'rgba(255,255,255,0.7)'}}>{p.tag}</span>
                 <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs" style={{background:'rgba(255,255,255,0.15)'}}>▶</div>
@@ -268,38 +299,27 @@ function MicroTab() {
 
 // ─── Tab: Breathing ────────────────────────────────────────
 function BreathingTab() {
-  const [active, setActive] = useState<number|null>(null);
+  const [active, setActive] = useState(1); // default 4-7-8 like app
 
   return (
     <div className="overflow-y-auto" style={{flex:1}}>
-      <div className="px-5 pt-6 pb-0" style={{background:'linear-gradient(135deg,#1A3A4A 0%,#1E2A50 50%,#14152A 100%)'}}>
+      <div className="px-5 pt-6 pb-2" style={{background:'linear-gradient(135deg,#1A3A4A 0%,#1E2A50 50%,#14152A 100%)'}}>
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-4" style={{background:'rgba(255,255,255,0.12)'}}>
           <span className="text-sm">💨</span><span className="text-white text-xs">Breathwork</span>
         </div>
         <h2 className="text-2xl font-bold text-white" style={{fontFamily:'Georgia,serif'}}>Breathe in. <span className="italic">Soften.</span> Breathe out.</h2>
-        <p className="text-sm leading-relaxed mt-2 mb-5 max-w-md" style={{color:'rgba(255,255,255,0.6)'}}>The fastest way to change how you feel is to change how you breathe. Follow the orb — your body will do the rest.</p>
-        {active !== null && (
-          <button onClick={()=>setActive(null)} className="mb-2 text-xs px-4 py-2 rounded-full" style={{background:GOLD,color:'white',fontWeight:600}}>
-            ✕ Stop session
-          </button>
-        )}
-        {active !== null ? (
-          <BreathingOrb phases={BREATHING[active].phases} labels={BREATHING[active].labels} />
-        ) : (
-          <div className="flex items-center justify-center py-8">
-            <div className="rounded-full flex items-center justify-center" style={{width:120,height:120,background:`radial-gradient(circle at 35% 35%,${TEAL},#1A7A8A)`,boxShadow:`0 0 40px rgba(67,198,172,0.4)`}}>
-              <span className="text-white text-sm font-semibold text-center px-4 leading-tight">Pick an exercise below</span>
-            </div>
-          </div>
-        )}
+        <p className="text-sm leading-relaxed mt-2 mb-4 max-w-md" style={{color:'rgba(255,255,255,0.6)'}}>The fastest way to change how you feel is to change how you breathe. Follow the orb — your body will do the rest.</p>
+        {/* Orb always visible, auto-cycling — matches app */}
+        <BreathingOrb phases={BREATHING[active].phases} labels={BREATHING[active].labels} />
+        <p className="text-center text-sm font-medium mb-4" style={{color:'rgba(255,255,255,0.5)'}}>{BREATHING[active].title} · {BREATHING[active].rhythm}</p>
       </div>
-      <div className="px-5 pt-6 pb-4">
+      <div className="px-5 pt-4 pb-4">
         <p className="text-xs font-medium tracking-widest mb-1" style={{color:'rgba(255,255,255,0.4)'}}>LIBRARY</p>
         <h3 className="text-lg font-bold text-white mb-4">Find your rhythm</h3>
         <div className="space-y-3">
           {BREATHING.map((e,i)=>(
-            <button key={i} onClick={()=>setActive(active===i?null:i)} className="w-full text-left rounded-2xl p-4 flex items-center gap-3 transition-all"
-              style={{background:active===i?'#252760':CARD,border:active===i?`1px solid ${TEAL}`:'1px solid transparent'}}>
+            <button key={i} onClick={()=>setActive(i)} className="w-full text-left rounded-2xl p-4 flex items-center gap-3 transition-all"
+              style={{background:active===i?'#252760':CARD,border:active===i?`1px solid #9575CD`:'1px solid transparent'}}>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-white font-semibold text-sm">{e.title}</span>
@@ -308,8 +328,8 @@ function BreathingTab() {
                 <p className="text-xs leading-relaxed" style={{color:'rgba(255,255,255,0.55)'}}>{e.desc}</p>
                 <p className="text-xs mt-2 font-medium" style={{color:GOLD}}>{e.rhythm}</p>
               </div>
-              <div className="w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center" style={{background:active===i?TEAL:GOLD}}>
-                <span className="text-white text-lg">{active===i?'■':'▶'}</span>
+              <div className="w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center" style={{background:active===i?'#9575CD':GOLD}}>
+                <span className="text-white text-base">{active===i?'●':'▶'}</span>
               </div>
             </button>
           ))}
