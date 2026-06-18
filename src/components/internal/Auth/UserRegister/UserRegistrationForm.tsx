@@ -24,7 +24,7 @@ type UserFormData = z.infer<typeof userSchema>;
 const UserRegistrationForm = () => {
     const [loading, setLoading] = useState(false);
     const { toast } = useToast();
-    const [countryCode, setCountryCode] = useState('+91');
+    const [countryCode, setCountryCode] = useState('+1');
     const navigate = useNavigate();
     const [referralCodeDigits, setReferralCodeDigits] = useState("");
 
@@ -144,8 +144,8 @@ const UserRegistrationForm = () => {
                 <div>
                     <label className="block text-sm font-medium text-gray-600 mb-1">Phone Number*</label>
                     <PhoneInput
-                        country="in"
-                        onlyCountries={['in']}
+                        country="us"
+                        onlyCountries={['in', 'us']}
                         onChange={handlePhoneChange}
                         inputStyle={{
                             width: "100%",
