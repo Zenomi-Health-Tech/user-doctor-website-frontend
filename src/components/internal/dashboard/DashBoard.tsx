@@ -1551,8 +1551,8 @@ export default function Dashboard() {
       )}
 
       {showCompletionDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #704180, #8B2D6C)' }}>
-          <div className="w-full max-w-lg px-6 flex flex-col items-center text-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: 'linear-gradient(135deg, #704180, #8B2D6C)' }}>
+          <div className="w-full max-w-lg flex flex-col items-center text-center">
             <svg className="w-20 h-20 text-white mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             <h2 className="text-2xl font-bold mb-3 text-white">
               You've Completed the {lastCompletedTestName || 'Test'}!
@@ -1560,6 +1560,17 @@ export default function Dashboard() {
             <p className="text-white/80 text-base mb-8">
               Your results are ready and personalized just for you.
             </p>
+            {/* View Report — only when all 5 tests done (matches app behaviour) */}
+            {completedCount === tests.length && tests.length > 0 && (
+              <button
+                className="w-full py-4 rounded-full bg-white font-bold text-lg mb-4 flex items-center justify-center gap-2"
+                style={{ color: '#704180' }}
+                onClick={() => { setShowCompletionDialog(false); navigate('/results'); }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                View Report
+              </button>
+            )}
             <button
               className="w-full py-4 rounded-full bg-white text-[#704180] font-bold text-lg mb-4"
               onClick={() => handleHomeScreen()}
