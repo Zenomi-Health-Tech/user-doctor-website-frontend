@@ -440,7 +440,7 @@ export default function Dashboard() {
         setGad7Results({ score: total, max, label, description });
         setShowQuiz(false);
         if (total > 0) api.put('/users/update-test-score', { testId: currentTestId, score: total }).catch(() => {});
-        axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formattedAnswers }, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+        try { await axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formattedAnswers }, { headers: { Authorization: `Bearer ${token}` } }); } catch (e) { console.error('GAD-7 scoring service failed:', e); }
       }
       // For PHQ-9 test, compute score locally and show results immediately
       else if (currentTestId === PHQ9_TEST_ID) {
@@ -456,7 +456,7 @@ export default function Dashboard() {
         setPhq9Results({ score: total, max, label, description });
         setShowQuiz(false);
         if (total > 0) api.put('/users/update-test-score', { testId: currentTestId, score: total }).catch(() => {});
-        axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formattedAnswers }, { headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+        try { await axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formattedAnswers }, { headers: { Authorization: `Bearer ${token}` } }); } catch (e) { console.error('PHQ-9 scoring service failed:', e); }
       }
       // For Emotional Health test — use API response score, fallback to local calculation
       else if (tests.find(t => t.id === currentTestId)?.name?.toUpperCase().includes('EMOTIONAL')) {
@@ -552,12 +552,13 @@ export default function Dashboard() {
         setSleepResults({ score: total, max: questions.length * 4, assessment: '', sentiment: '' });
         setShowQuiz(false);
         if (total > 0) api.put('/users/update-test-score', { testId: currentTestId, score: total }).catch(() => {});
-        // Fire API in background — update score if API returns a better value
-        axios.post(
-          `https://zenomiai.elitceler.com/api/score-test/${currentTestId}`,
-          { answers: formattedAnswers },
-          { headers: { Authorization: `Bearer ${token}` } }
-        ).then(res => {
+        // Await API to ensure S3 JSON is saved for the report — update display score from API response
+        try {
+          const res = await axios.post(
+            `https://zenomiai.elitceler.com/api/score-test/${currentTestId}`,
+            { answers: formattedAnswers },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
           if (res.data) {
             const apiScore = res.data.user_score ?? total;
             setSleepResults({
@@ -568,7 +569,7 @@ export default function Dashboard() {
             });
             if (apiScore > 0) api.put('/users/update-test-score', { testId: currentTestId, score: apiScore }).catch(() => {});
           }
-        }).catch(() => {});
+        } catch (e) { console.error('Sleep scoring service failed:', e); }
       } else {
         await axios.post(
           `https://zenomiai.elitceler.com/api/score-test/${currentTestId}`,
@@ -1258,11 +1259,15 @@ export default function Dashboard() {
                       <span className="text-white text-base font-semibold leading-snug">{q.question}</span>
                     </div>
                     <div className="grid grid-cols-5 gap-2">
-                      {(q.scaleOptions || []).map((option: string, _i: number) => (
-                        <button key={option} onClick={() => handleScrollableAnswer(globalIdx, option)} className={`py-3 rounded-xl text-center transition-all ${selected === option ? 'text-white' : 'text-gray-400 border border-white/10'}`} style={selected === option ? { background: 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' } : { background: '#2D3048' }}>
-                          <div className="text-xs px-1 leading-tight">{option}</div>
-                        </button>
-                      ))}
+                      {(() => {
+                        const sleepEmojis = ['😴', '🙂', '😐', '😟', '😰'];
+                        return (q.scaleOptions || []).map((option: string, i: number) => (
+                          <button key={option} onClick={() => handleScrollableAnswer(globalIdx, option)} className={`py-3 rounded-xl text-center transition-all ${selected === option ? 'text-white' : 'text-gray-400 border border-white/10'}`} style={selected === option ? { background: 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' } : { background: '#2D3048' }}>
+                            <div className="text-lg">{sleepEmojis[i] || '❓'}</div>
+                            <div className="text-xs px-1 leading-tight mt-0.5">{option}</div>
+                          </button>
+                        ));
+                      })()}
                     </div>
                   </div>
                 );
