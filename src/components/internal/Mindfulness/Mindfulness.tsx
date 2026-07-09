@@ -8,38 +8,52 @@ const CARD = '#1E2040';
 const GOLD = '#E5A030';
 const TEAL = '#43C6AC';
 
+// ─── Playable track (subset of app's AudioTrack fields) ────
+type PlayableTrack = {
+  title: string;
+  audio?: string; // filename under /public/audio, e.g. 'calm_before_exam.mp3'
+  isLooping?: boolean;
+};
+
 // ─── Data ──────────────────────────────────────────────────
 const MICRO_SESSIONS = [
-  { label: 'RESET', title: 'Calm Before Exam',     sub: 'Steady the racing thoughts before you walk in.', dur: '2 min', c: ['#3BA8B0','#2D7D82'] },
-  { label: 'RESET', title: 'Stop Overthinking',    sub: 'Cut the loop with a gentle attention reset.',   dur: '3 min', c: ['#7B5EA7','#9575CD'] },
-  { label: 'RESET', title: 'Reset After Fight',    sub: 'Soften the chest, drop the shoulders, breathe.', dur: '3 min', c: ['#D35F3E','#E57350'] },
-  { label: 'RESET', title: 'Sleep in 2 Minutes',  sub: 'A tiny ritual to slide into sleep.',             dur: '2 min', c: ['#2D6A4F','#3D8B67'] },
-  { label: 'RESET', title: 'Panic Reset',          sub: 'Ground in 5 senses. You are safe right now.',   dur: '1 min', c: ['#D35F3E','#BF4F30'] },
-  { label: 'RESET', title: 'Social Anxiety Reset', sub: 'Walk in with steadier breath and softer eyes.', dur: '2 min', c: ['#3F51B5','#5C7BE0'] },
+  { label: 'RESET', title: 'Calm Before Exam',     sub: 'Steady the racing thoughts before you walk in.', dur: '2 min', c: ['#3BA8B0','#2D7D82'], audio: 'calm_before_exam.mp3' },
+  { label: 'RESET', title: 'Stop Overthinking',    sub: 'Cut the loop with a gentle attention reset.',   dur: '3 min', c: ['#7B5EA7','#9575CD'], audio: 'stop_overthinking.mp3' },
+  { label: 'RESET', title: 'Reset After Fight',    sub: 'Soften the chest, drop the shoulders, breathe.', dur: '3 min', c: ['#D35F3E','#E57350'], audio: 'reset_after_fight.mp3' },
+  { label: 'RESET', title: 'Sleep in 2 Minutes',  sub: 'A tiny ritual to slide into sleep.',             dur: '2 min', c: ['#2D6A4F','#3D8B67'], audio: undefined },
+  { label: 'RESET', title: 'Panic Reset',          sub: 'Ground in 5 senses. You are safe right now.',   dur: '1 min', c: ['#D35F3E','#BF4F30'], audio: 'panic_reset.mp3' },
+  { label: 'RESET', title: 'Social Anxiety Reset', sub: 'Walk in with steadier breath and softer eyes.', dur: '2 min', c: ['#3F51B5','#5C7BE0'], audio: 'social_anxiety_reset.mp3' },
 ];
 const FEELING_MAP: Record<string, number[]> = {
   Anxious:[0,4], Tired:[3,1], Restless:[0,2], Sad:[1,2], Overwhelmed:[1,4], Foggy:[1,0], Tense:[2,5],
 };
 
 const BREATHING = [
-  { title:'Box Breathing',          dur:'4 MIN', desc:'Soldier-tested focus and calm. Inhale, hold, exhale, hold.',              rhythm:'4 · 4 · 4 · 4',       phases:[4,4,4,4],   labels:['Inhale','Hold','Exhale','Hold'] },
-  { title:'4-7-8 Breathing',        dur:'5 MIN', desc:"Dr. Weil's classic. Falls asleep fast, drops anxiety even faster.",       rhythm:'4 · 7 · 8',            phases:[4,7,8,0],   labels:['Inhale','Hold','Exhale',''] },
-  { title:'Physiological Sigh',     dur:'1 MIN', desc:'Stanford-backed instant down-regulator. One minute, real shift.',         rhythm:'2 inhales · long exhale',phases:[2,0,8,0],  labels:['Inhale','Inhale 2','Exhale',''] },
-  { title:'Resonance Breathing',    dur:'6 MIN', desc:'Heart and breath sync. Six breaths a minute, deep coherence.',            rhythm:'5.5 · 5.5',            phases:[5,0,5,0],   labels:['Inhale','','Exhale',''] },
-  { title:'Deep Belly Breathing',   dur:'5 MIN', desc:'Re-teaches the body to breathe low, full and free.',                      rhythm:'Slow · diaphragmatic',  phases:[5,0,6,0],   labels:['Inhale','','Exhale',''] },
+  { title:'Box Breathing',          dur:'4 MIN', desc:'Soldier-tested focus and calm. Inhale, hold, exhale, hold.',              rhythm:'4 · 4 · 4 · 4',       phases:[4,4,4,4],   labels:['Inhale','Hold','Exhale','Hold'], audio:'box_breathing.mp3' },
+  { title:'4-7-8 Breathing',        dur:'5 MIN', desc:"Dr. Weil's classic. Falls asleep fast, drops anxiety even faster.",       rhythm:'4 · 7 · 8',            phases:[4,7,8,0],   labels:['Inhale','Hold','Exhale',''], audio:'breathing_478.mp3' },
+  { title:'Physiological Sigh',     dur:'1 MIN', desc:'Stanford-backed instant down-regulator. One minute, real shift.',         rhythm:'2 inhales · long exhale',phases:[2,0,8,0],  labels:['Inhale','Inhale 2','Exhale',''], audio:'physiological_sigh.mp3' },
+  { title:'Resonance Breathing',    dur:'6 MIN', desc:'Heart and breath sync. Six breaths a minute, deep coherence.',            rhythm:'5.5 · 5.5',            phases:[5,0,5,0],   labels:['Inhale','','Exhale',''], audio:'resonance_breathing.mp3' },
+  { title:'Deep Belly Breathing',   dur:'5 MIN', desc:'Re-teaches the body to breathe low, full and free.',                      rhythm:'Slow · diaphragmatic',  phases:[5,0,6,0],   labels:['Inhale','','Exhale',''], audio:'deep_belly_breathing.mp3' },
 ];
 
 const SLEEP_STORIES = [
-  { title:'Drift Over the Sea',       dur:'22 min', c:['#1A3A6C','#0D2137'] },
-  { title:'The Quiet Cabin',          dur:'28 min', c:['#1A2E4A','#0D1B2A'] },
-  { title:'Lantern Walk in Kyoto',    dur:'26 min', c:['#1E1A40','#0F0D25'] },
-  { title:'Old Train, Soft Window',   dur:'30 min', c:['#1A2040','#101525'] },
+  { title:'Drift Over the Sea',       dur:'22 min', c:['#1A3A6C','#0D2137'], audio:'drift_over_the_sea.mp3' },
+  { title:'The Quiet Cabin',          dur:'28 min', c:['#1A2E4A','#0D1B2A'], audio:'the_quiet_cabin.mp3' },
+  { title:'Lantern Walk in Kyoto',    dur:'26 min', c:['#1E1A40','#0F0D25'], audio:'lantern_walk_kyoto.mp3' },
+  { title:'Old Train, Soft Window',   dur:'30 min', c:['#1A2040','#101525'], audio:'old_train_soft_window.mp3' },
 ];
+// Mirrors app's `soundscapes` list in lib/modules/mindfulness/models/audio_track.dart
 const SOUNDSCAPES = [
-  { title:'Rain on Window',  sub:'Loops · timer ready', icon:'🌧️', c:['#2A9D8F','#1E6D65'] },
-  { title:'Brown Noise',     sub:'Loops · timer ready', icon:'🌊', c:['#8B6057','#5D3F38'] },
-  { title:'Calming Music',   sub:'Loops · timer ready', icon:'🎵', c:['#7B5EA7','#5B3F7F'] },
-  { title:'Forest at Night', sub:'Loops · timer ready', icon:'🌿', c:['#2D6A4F','#1A4030'] },
+  { title:'Rain Window Drift',   sub:'Fades out automatically', icon:'🌧️', c:['#2A9D8F','#1E6D65'], audio:'rain_window_drift.mp3', isLooping:true },
+  { title:'Earthy Drift',        sub:'Fades out automatically', icon:'🍂', c:['#8B6057','#5D3F38'], audio:'earthy_drift.mp3', isLooping:true },
+  { title:'Sandalwood Drift',    sub:'Fades out automatically', icon:'🕯️', c:['#7B5EA7','#5B3F7F'], audio:'sandalwood_drift.mp3', isLooping:true },
+  { title:'Cedar Drift',         sub:'Fades out automatically', icon:'🌲', c:['#2D6A4F','#1A4030'], audio:'cedar_drift.mp3', isLooping:true },
+  { title:'Earthtone Drift',     sub:'Fades out automatically', icon:'🍁', c:['#6B4C2A','#3D2A15'], audio:'earthtone_drift.mp3', isLooping:true },
+  { title:'Deep Focus',          sub:'Fades out automatically', icon:'🎯', c:['#1A3050','#0D1A2E'], audio:'deep_focus.mp3', isLooping:true },
+  { title:'Rain on Moss',        sub:'Fades out automatically', icon:'🌿', c:['#2D5A27','#1A3518'], audio:'rain_on_moss.mp3', isLooping:true },
+  { title:'Soft Rain Loom',      sub:'Fades out automatically', icon:'🌦️', c:['#334A6B','#1A2840'], audio:'soft_rain_loom.mp3', isLooping:true },
+  { title:'Still Water Fade',    sub:'Fades out automatically', icon:'🌊', c:['#2A4A6B','#162A40'], audio:'still_water_fade.mp3', isLooping:true },
+  { title:'Shaking Dawn Pulse',  sub:'Fades out automatically', icon:'🌅', c:['#4A3060','#251535'], audio:'shaking_dawn_pulse.mp3', isLooping:true },
 ];
 const WIND_DOWN = [
   { title:'Quiet Your Thoughts',             desc:"Gentle guidance to release the day's mental noise.",       dur:'8 min' },
@@ -151,6 +165,91 @@ function BreathingOrb({ phases, labels }: { phases: number[]; labels: string[] }
   );
 }
 
+// ─── Player Bar (bottom-docked, mirrors app's AudioPlayerScreen) ──
+function PlayerBar({ playlist, index, onIndexChange, onClose }: {
+  playlist: PlayableTrack[];
+  index: number;
+  onIndexChange: (i: number) => void;
+  onClose: () => void;
+}) {
+  const track = playlist[index];
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playing, setPlaying] = useState(true);
+  const [time, setTime] = useState(0);
+  const [dur, setDur] = useState(0);
+
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a || !track?.audio) return;
+    a.src = `/audio/${track.audio}`;
+    a.loop = !!track.isLooping;
+    a.currentTime = 0;
+    setTime(0);
+    a.play().catch(() => {});
+    setPlaying(true);
+  }, [track]);
+
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    const onTime = () => setTime(a.currentTime);
+    const onMeta = () => setDur(a.duration || 0);
+    const onEnd = () => {
+      if (!track.isLooping && index < playlist.length - 1) onIndexChange(index + 1);
+      else setPlaying(false);
+    };
+    a.addEventListener('timeupdate', onTime);
+    a.addEventListener('loadedmetadata', onMeta);
+    a.addEventListener('ended', onEnd);
+    return () => {
+      a.removeEventListener('timeupdate', onTime);
+      a.removeEventListener('loadedmetadata', onMeta);
+      a.removeEventListener('ended', onEnd);
+    };
+  }, [track, index, playlist.length, onIndexChange]);
+
+  if (!track) return null;
+
+  const toggle = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (playing) { a.pause(); setPlaying(false); } else { a.play().catch(() => {}); setPlaying(true); }
+  };
+  const seek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const a = audioRef.current;
+    if (!a) return;
+    const t = Number(e.target.value);
+    a.currentTime = t;
+    setTime(t);
+  };
+  const fmt = (s: number) => {
+    if (!isFinite(s)) return '0:00';
+    const m = Math.floor(s / 60);
+    const ss = Math.floor(s % 60).toString().padStart(2, '0');
+    return `${m}:${ss}`;
+  };
+
+  return (
+    <div className="flex-shrink-0 px-4 py-3 flex items-center gap-3" style={{ background: '#1E2040', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+      <audio ref={audioRef} />
+      <button onClick={() => index > 0 && onIndexChange(index - 1)} disabled={index <= 0} className="text-white/60 disabled:opacity-30 text-lg px-1">⏮</button>
+      <button onClick={toggle} className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: GOLD }}>
+        <span className="text-white text-base">{playing ? '⏸' : '▶'}</span>
+      </button>
+      <button onClick={() => index < playlist.length - 1 && onIndexChange(index + 1)} disabled={index >= playlist.length - 1} className="text-white/60 disabled:opacity-30 text-lg px-1">⏭</button>
+      <div className="flex-1 min-w-0">
+        <p className="text-white text-sm font-semibold truncate">{track.title}</p>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] w-8" style={{ color: 'rgba(255,255,255,0.4)' }}>{fmt(time)}</span>
+          <input type="range" min={0} max={dur || 0} value={Math.min(time, dur || 0)} onChange={seek} className="flex-1" style={{ height: 4, accentColor: GOLD }} />
+          <span className="text-[10px] w-8" style={{ color: 'rgba(255,255,255,0.4)' }}>{fmt(dur)}</span>
+        </div>
+      </div>
+      <button onClick={onClose} className="text-lg px-1" style={{ color: 'rgba(255,255,255,0.5)' }}>✕</button>
+    </div>
+  );
+}
+
 // ─── Tab: Today ────────────────────────────────────────────
 function TodayTab({ onNavigate }: { onNavigate: (t: number) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -255,7 +354,7 @@ function TodayTab({ onNavigate }: { onNavigate: (t: number) => void }) {
 }
 
 // ─── Tab: Micro ────────────────────────────────────────────
-function MicroTab() {
+function MicroTab({ onPlay }: { onPlay: (playlist: PlayableTrack[], index: number) => void }) {
   const [feeling, setFeeling] = useState<string|null>(null);
   const sessions = feeling ? (FEELING_MAP[feeling]??[]).map(i=>MICRO_SESSIONS[i]) : MICRO_SESSIONS;
 
@@ -279,15 +378,17 @@ function MicroTab() {
       </div>
       <div className="p-4 grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {sessions.map((s,i)=>(
-          <button key={i} className="text-left rounded-2xl p-3.5 hover:opacity-90 transition-opacity" style={{background:`linear-gradient(135deg,${s.c[0]},${s.c[1]})`,minHeight:150}}>
+          <button key={i} onClick={()=>s.audio && onPlay(sessions, i)} disabled={!s.audio}
+            className="text-left rounded-2xl p-3.5 hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{background:`linear-gradient(135deg,${s.c[0]},${s.c[1]})`,minHeight:150}}>
             <div className="flex justify-between items-start">
               <span className="text-[9px] font-bold tracking-wider px-2 py-1 rounded" style={{background:'rgba(0,0,0,0.3)',color:'white'}}>{s.label}</span>
-              <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs" style={{background:'rgba(0,0,0,0.3)'}}>▶</div>
+              <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs" style={{background:'rgba(0,0,0,0.3)'}}>{s.audio ? '▶' : '…'}</div>
             </div>
             <div className="mt-6">
               <p className="text-white font-bold text-sm leading-tight">{s.title}</p>
               <p className="text-xs mt-1.5 leading-snug" style={{color:'rgba(255,255,255,0.7)'}}>{s.sub}</p>
-              <p className="text-xs mt-2 font-medium" style={{color:'rgba(255,255,255,0.7)'}}>{s.dur}</p>
+              <p className="text-xs mt-2 font-medium" style={{color:'rgba(255,255,255,0.7)'}}>{s.audio ? s.dur : 'Coming soon'}</p>
             </div>
           </button>
         ))}
@@ -298,7 +399,7 @@ function MicroTab() {
 }
 
 // ─── Tab: Breathing ────────────────────────────────────────
-function BreathingTab() {
+function BreathingTab({ onPlay }: { onPlay: (playlist: PlayableTrack[], index: number) => void }) {
   const [active, setActive] = useState(1); // default 4-7-8 like app
 
   return (
@@ -318,7 +419,7 @@ function BreathingTab() {
         <h3 className="text-lg font-bold text-white mb-4">Find your rhythm</h3>
         <div className="space-y-3">
           {BREATHING.map((e,i)=>(
-            <button key={i} onClick={()=>setActive(i)} className="w-full text-left rounded-2xl p-4 flex items-center gap-3 transition-all"
+            <button key={i} onClick={()=>{ setActive(i); onPlay(BREATHING, i); }} className="w-full text-left rounded-2xl p-4 flex items-center gap-3 transition-all"
               style={{background:active===i?'#252760':CARD,border:active===i?`1px solid #9575CD`:'1px solid transparent'}}>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
@@ -341,7 +442,7 @@ function BreathingTab() {
 }
 
 // ─── Tab: Sleep ────────────────────────────────────────────
-function SleepTab() {
+function SleepTab({ onPlay }: { onPlay: (playlist: PlayableTrack[], index: number) => void }) {
   return (
     <div className="overflow-y-auto" style={{flex:1}}>
       <div className="px-5 pt-6 pb-7 relative overflow-hidden" style={{background:'linear-gradient(180deg,#141830 0%,#0D1020 50%,#14152A 100%)'}}>
@@ -367,7 +468,7 @@ function SleepTab() {
         </div>
         <div className="flex gap-3 pb-2 overflow-x-auto lg:grid lg:grid-cols-4 lg:overflow-visible" style={{scrollbarWidth:'none'}}>
           {SLEEP_STORIES.map((s,i)=>(
-            <button key={i} className="flex-shrink-0 w-40 lg:w-auto rounded-2xl p-3 text-left hover:opacity-90 transition-opacity"
+            <button key={i} onClick={()=>onPlay(SLEEP_STORIES, i)} className="flex-shrink-0 w-40 lg:w-auto rounded-2xl p-3 text-left hover:opacity-90 transition-opacity"
               style={{background:`linear-gradient(180deg,${s.c[0]},${s.c[1]})`,minHeight:180}}>
               <div className="flex justify-between items-start mb-auto">
                 <span className="text-[8px] font-bold tracking-wider px-2 py-1 rounded" style={{background:'rgba(0,0,0,0.4)',color:'white'}}>SLEEP STORY</span>
@@ -388,7 +489,7 @@ function SleepTab() {
         <h3 className="text-base font-bold text-white mb-4">Soundscapes</h3>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {SOUNDSCAPES.map((s,i)=>(
-            <button key={i} className="text-left rounded-2xl p-4 hover:opacity-90 transition-opacity" style={{background:`linear-gradient(135deg,${s.c[0]},${s.c[1]})`,minHeight:100}}>
+            <button key={i} onClick={()=>onPlay(SOUNDSCAPES, i)} className="text-left rounded-2xl p-4 hover:opacity-90 transition-opacity" style={{background:`linear-gradient(135deg,${s.c[0]},${s.c[1]})`,minHeight:100}}>
               <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl mb-3" style={{background:'rgba(255,255,255,0.15)'}}>{s.icon}</div>
               <p className="text-white font-semibold text-sm">{s.title}</p>
               <p className="text-xs mt-1" style={{color:'rgba(255,255,255,0.6)'}}>{s.sub}</p>
@@ -425,6 +526,8 @@ const TABS = ['Today', 'Micro', 'Breathing', 'Sleep'];
 export default function Mindfulness() {
   const [tab, setTab] = useState(0);
   const navigate = useNavigate();
+  const [nowPlaying, setNowPlaying] = useState<{ playlist: PlayableTrack[]; index: number } | null>(null);
+  const play = (playlist: PlayableTrack[], index: number) => setNowPlaying({ playlist, index });
 
   return (
     <div className="flex flex-col min-h-screen" style={{ background: BG }}>
@@ -487,10 +590,19 @@ export default function Mindfulness() {
       {/* Tab content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {tab === 0 && <TodayTab onNavigate={setTab} />}
-        {tab === 1 && <MicroTab />}
-        {tab === 2 && <BreathingTab />}
-        {tab === 3 && <SleepTab />}
+        {tab === 1 && <MicroTab onPlay={play} />}
+        {tab === 2 && <BreathingTab onPlay={play} />}
+        {tab === 3 && <SleepTab onPlay={play} />}
       </div>
+
+      {nowPlaying && (
+        <PlayerBar
+          playlist={nowPlaying.playlist}
+          index={nowPlaying.index}
+          onIndexChange={(i) => setNowPlaying((np) => (np ? { ...np, index: i } : null))}
+          onClose={() => setNowPlaying(null)}
+        />
+      )}
 
       <style>{`
         @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
