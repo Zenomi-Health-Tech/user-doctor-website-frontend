@@ -21,12 +21,11 @@ const MICRO_SESSIONS = [
   { label: 'RESET', title: 'Calm Before Exam',     sub: 'Steady the racing thoughts before you walk in.', dur: '2 min', c: ['#3BA8B0','#2D7D82'], audio: 'calm_before_exam.mp3' },
   { label: 'RESET', title: 'Stop Overthinking',    sub: 'Cut the loop with a gentle attention reset.',   dur: '3 min', c: ['#7B5EA7','#9575CD'], audio: 'stop_overthinking.mp3' },
   { label: 'RESET', title: 'Reset After Fight',    sub: 'Soften the chest, drop the shoulders, breathe.', dur: '3 min', c: ['#D35F3E','#E57350'], audio: 'reset_after_fight.mp3' },
-  { label: 'RESET', title: 'Sleep in 2 Minutes',  sub: 'A tiny ritual to slide into sleep.',             dur: '2 min', c: ['#2D6A4F','#3D8B67'], audio: undefined },
   { label: 'RESET', title: 'Panic Reset',          sub: 'Ground in 5 senses. You are safe right now.',   dur: '1 min', c: ['#D35F3E','#BF4F30'], audio: 'panic_reset.mp3' },
   { label: 'RESET', title: 'Social Anxiety Reset', sub: 'Walk in with steadier breath and softer eyes.', dur: '2 min', c: ['#3F51B5','#5C7BE0'], audio: 'social_anxiety_reset.mp3' },
 ];
 const FEELING_MAP: Record<string, number[]> = {
-  Anxious:[0,4], Tired:[3,1], Restless:[0,2], Sad:[1,2], Overwhelmed:[1,4], Foggy:[1,0], Tense:[2,5],
+  Anxious:[0,3], Tired:[1], Restless:[0,2], Sad:[1,2], Overwhelmed:[1,3], Foggy:[1,0], Tense:[2,4],
 };
 
 const BREATHING = [
