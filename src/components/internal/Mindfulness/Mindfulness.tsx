@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTests } from '@/hooks/useTests';
 
 // ─── Colours ───────────────────────────────────────────────
 const BG = '#14152A';
@@ -253,6 +254,11 @@ function PlayerBar({ playlist, index, onIndexChange, onClose }: {
 // ─── Tab: Today ────────────────────────────────────────────
 function TodayTab({ onNavigate }: { onNavigate: (t: number) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const navigate = useNavigate();
+  const { tests } = useTests();
+  const mindfulnessTest = tests.find(t => t.name?.toLowerCase().includes('mindful'));
+  const testCompleted = mindfulnessTest?.testStatus === 'COMPLETED';
+  const testLocked = mindfulnessTest?.testStatus === 'LOCKED';
   const g = () => { const h = new Date().getHours(); return h < 12 ? "Good morning — let's start calm" : h < 17 ? 'Good afternoon — take a breath' : "Good evening — let's soften the day"; };
 
   useEffect(() => {
@@ -269,11 +275,6 @@ function TodayTab({ onNavigate }: { onNavigate: (t: number) => void }) {
     draw(); return () => cancelAnimationFrame(raf);
   }, []);
 
-  const picks = [
-    { tag:'TODAY',   title:'Calm Before Exam',  sub:'3 min · Micro',     emoji:'🧘', tab:1, c:['#4A4080','#2A2050'] },
-    { tag:'DAILY',   title:'4-7-8 Breathing',   sub:'5 min · Breathwork', emoji:'🌊', tab:2, c:['#2D5A6B','#1A3A4A'] },
-    { tag:'TONIGHT', title:'Drift Over the Sea', sub:'22 min · Sleep',    emoji:'🌙', tab:3, c:['#1A2A4A','#0D1A30'] },
-  ];
   const explore = [
     { icon:'✨', title:'Micro Mindfulness',  desc:'60–180 sec resets for exams, panic, overthinking.',   c:['#E8956D','#D4516A'], tab:1 },
     { icon:'💨', title:'Breathing Exercises', desc:'Box, 4-7-8, physiological sigh — guided visually.',  c:[TEAL,'#1A7A8A'],      tab:2 },
@@ -307,31 +308,33 @@ function TodayTab({ onNavigate }: { onNavigate: (t: number) => void }) {
         </div>
       </div>
 
-      {/* Handpicked */}
-      <div className="px-5 pt-6">
-        <div className="flex items-end justify-between mb-4">
-          <div>
-            <p className="text-xs font-medium tracking-widest mb-1" style={{color:'rgba(255,255,255,0.4)'}}>FOR YOU · TODAY</p>
-            <h2 className="text-lg font-bold text-white">Hand-picked for tonight</h2>
-          </div>
-          <span className="text-xs hidden sm:block" style={{color:'rgba(255,255,255,0.4)'}}>⏱ 30 min total</span>
+      {/* Assessment card — matches app _buildAssessmentCard */}
+      {mindfulnessTest && (
+        <div className="px-5 pt-6">
+          <button
+            onClick={() => { if (!testCompleted && !testLocked) navigate('/dashboard'); }}
+            disabled={testCompleted || testLocked}
+            className="w-full text-left rounded-2xl p-4 flex items-center gap-3.5 disabled:cursor-default"
+            style={{
+              background: 'rgba(255,255,255,0.07)',
+              border: `1px solid ${testCompleted ? 'rgba(67,198,172,0.5)' : 'rgba(255,255,255,0.1)'}`,
+            }}
+          >
+            <div className="w-11 h-11 flex-shrink-0 rounded-xl flex items-center justify-center text-xl" style={{
+              background: testCompleted ? 'linear-gradient(135deg,#43C6AC,#704180)' : 'rgba(255,255,255,0.1)',
+            }}>
+              {testCompleted ? '✅' : testLocked ? '🔒' : '🧘'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-bold text-sm truncate">{mindfulnessTest.name}</p>
+              <p className="text-xs mt-0.5" style={{ color: testCompleted ? TEAL : 'rgba(255,255,255,0.4)' }}>
+                {testCompleted ? 'Assessment complete — great work!' : testLocked ? 'Complete previous tests to unlock' : 'Take your mindfulness assessment'}
+              </p>
+            </div>
+            {!testCompleted && !testLocked && <ChevronRight className="w-3.5 h-3.5 flex-shrink-0" style={{ color: TEAL }} />}
+          </button>
         </div>
-        <div className="flex gap-3 pb-2 overflow-x-auto lg:grid lg:grid-cols-3 lg:overflow-visible" style={{scrollbarWidth:'none'}}>
-          {picks.map((p,i)=>(
-            <button key={i} onClick={()=>onNavigate(p.tab)} className="flex-shrink-0 w-44 sm:w-48 lg:w-auto rounded-2xl p-4 text-left hover:opacity-90 transition-opacity" style={{background:`linear-gradient(135deg,${p.c[0]},${p.c[1]})`,minHeight:170,boxShadow:`0 4px 12px rgba(0,0,0,0.3)`}}>
-              <div className="flex justify-between items-start">
-                <span className="text-[9px] font-bold tracking-wider px-2 py-1 rounded" style={{background:'rgba(255,255,255,0.15)',color:'rgba(255,255,255,0.7)'}}>{p.tag}</span>
-                <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs" style={{background:'rgba(255,255,255,0.15)'}}>▶</div>
-              </div>
-              <div className="mt-7">
-                <div className="text-2xl mb-2">{p.emoji}</div>
-                <p className="text-white font-bold text-sm">{p.title}</p>
-                <p className="text-xs mt-1" style={{color:'rgba(255,255,255,0.55)'}}>{p.sub}</p>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Explore */}
       <div className="px-5 py-7">
