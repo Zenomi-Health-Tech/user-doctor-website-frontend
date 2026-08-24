@@ -439,7 +439,7 @@ export default function Dashboard() {
         const description = total <= 4 ? 'Your anxiety levels appear minimal. Keep maintaining healthy habits!' : total <= 9 ? 'You may be experiencing mild anxiety. Consider relaxation techniques.' : total <= 14 ? 'Moderate anxiety detected. Consider speaking with a professional.' : 'Your responses suggest severe anxiety. Please consult a healthcare provider.';
         setGad7Results({ score: total, max, label, description });
         setShowQuiz(false);
-        if (total > 0) api.put('/users/update-test-score', { testId: currentTestId, score: total }).catch(() => {});
+        await api.put('/users/update-test-score', { testId: currentTestId, score: total }).catch((e) => console.error('Failed to update test score:', e));
         try { await axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formattedAnswers }, { headers: { Authorization: `Bearer ${token}` } }); } catch (e) { console.error('GAD-7 scoring service failed:', e); }
       }
       // For PHQ-9 test, compute score locally and show results immediately
@@ -455,7 +455,7 @@ export default function Dashboard() {
         const description = total <= 4 ? 'Your responses suggest minimal depression. Keep up the good work!' : total <= 9 ? 'Mild depression indicated. Self-care and monitoring recommended.' : total <= 14 ? 'Moderate depression detected. Consider professional support.' : total <= 19 ? 'Moderately severe depression. Professional consultation recommended.' : 'Severe depression indicated. Please seek professional help promptly.';
         setPhq9Results({ score: total, max, label, description });
         setShowQuiz(false);
-        if (total > 0) api.put('/users/update-test-score', { testId: currentTestId, score: total }).catch(() => {});
+        await api.put('/users/update-test-score', { testId: currentTestId, score: total }).catch((e) => console.error('Failed to update test score:', e));
         try { await axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formattedAnswers }, { headers: { Authorization: `Bearer ${token}` } }); } catch (e) { console.error('PHQ-9 scoring service failed:', e); }
       }
       // For Emotional Health test — use API response score, fallback to local calculation
@@ -501,7 +501,7 @@ export default function Dashboard() {
         });
         setEmotionalResults({ score: totalScore, max: maxScore, categories: cats });
         // Fallback: ensure backend has the raw score for reports/stats
-        api.put('/users/update-test-score', { testId: currentTestId, score: maxScore - totalScore }).catch(() => {});
+        await api.put('/users/update-test-score', { testId: currentTestId, score: maxScore - totalScore }).catch((e) => console.error('Failed to update test score:', e));
       }
       // For Mindfulness test — compute locally, same scoring as Emotional (1-5 scale, higher = better)
       else if (isMindfulnessQuiz) {
@@ -538,7 +538,7 @@ export default function Dashboard() {
           return { emoji: c.emoji, name: c.name, score: catScore, max: catMax, label: pct >= 0.7 ? 'Strong' : pct >= 0.4 ? 'Growing' : 'Needs Practice' };
         });
         setMindfulnessResults({ score: totalScore, max: maxScore, categories: cats });
-        if (totalScore > 0) api.put('/users/update-test-score', { testId: currentTestId, score: totalScore }).catch(() => {});
+        await api.put('/users/update-test-score', { testId: currentTestId, score: totalScore }).catch((e) => console.error('Failed to update test score:', e));
       }
       // For sleep test, compute score locally and show results immediately
       else if (currentTestId === SLEEP_TEST_ID) {
@@ -551,7 +551,7 @@ export default function Dashboard() {
         });
         setSleepResults({ score: total, max: questions.length * 4, assessment: '', sentiment: '' });
         setShowQuiz(false);
-        if (total > 0) api.put('/users/update-test-score', { testId: currentTestId, score: total }).catch(() => {});
+        await api.put('/users/update-test-score', { testId: currentTestId, score: total }).catch((e) => console.error('Failed to update test score:', e));
         // Await API to ensure S3 JSON is saved for the report — update display score from API response
         try {
           const res = await axios.post(
@@ -567,7 +567,7 @@ export default function Dashboard() {
               assessment: res.data.assessment ?? '',
               sentiment: res.data.sentiment ?? '',
             });
-            if (apiScore > 0) api.put('/users/update-test-score', { testId: currentTestId, score: apiScore }).catch(() => {});
+            await api.put('/users/update-test-score', { testId: currentTestId, score: apiScore }).catch((e) => console.error('Failed to update test score:', e));
           }
         } catch (e) { console.error('Sleep scoring service failed:', e); }
       } else {
@@ -1264,7 +1264,7 @@ export default function Dashboard() {
                         return (q.scaleOptions || []).map((option: string, i: number) => (
                           <button key={option} onClick={() => handleScrollableAnswer(globalIdx, option)} className={`py-3 rounded-xl text-center transition-all ${selected === option ? 'text-white' : 'text-gray-400 border border-white/10'}`} style={selected === option ? { background: 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' } : { background: '#2D3048' }}>
                             <div className="text-lg">{sleepEmojis[i] || '❓'}</div>
-                            <div className="text-xs px-1 leading-tight mt-0.5">{option}</div>
+                            <div className="text-xs px-1 leading-tight mt-0.5">{option.replace(/-\d+$/, '')}</div>
                           </button>
                         ));
                       })()}
@@ -1323,7 +1323,7 @@ export default function Dashboard() {
               const insights = (d.short_insights ?? '').replace(/<[^>]*>/g, '');
               const parsedRecs = [...insights.matchAll(/\d+\.\s+(.+?)(?=\d+\.\s+|$)/gs)].map((m: any) => m[1].trim()).filter(Boolean);
               const nutritionScore = d.user_score ?? d.score ?? 0;
-              if (nutritionScore > 0) api.put('/users/update-test-score', { testId: currentTestId, score: nutritionScore }).catch(() => {});
+              await api.put('/users/update-test-score', { testId: currentTestId, score: nutritionScore }).catch((e) => console.error('Failed to update test score:', e));
               onResult({
                 score: nutritionScore,
                 maxScore: d.max_score_for_test ?? d.maxScore ?? 75,
