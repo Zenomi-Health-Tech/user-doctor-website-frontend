@@ -116,6 +116,7 @@ export default function Dashboard() {
   const [hasAppointment, setHasAppointment] = useState(false);
   const [nextAppt, setNextAppt] = useState<any>(null);
   const [postTestLoading, setPostTestLoading] = useState(false);
+  const [isFinalTestLoading, setIsFinalTestLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -160,12 +161,11 @@ export default function Dashboard() {
             }
           }
         } else {
-          const res = await axios.get(
-            "https://zenomiai.elitceler.com/api/testnames",
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
+          // Same host/DB as the write (update-test-score) - the scoring
+          // service's /testnames is a separate service and can lag behind
+          // a just-completed write, causing a just-finished test to look
+          // unlocked/incomplete and get retaken (duplicate submissions).
+          const res = await api.get("/users/test-status");
           console.log("API Response:", res.data);
 
           if (Array.isArray(res.data)) {
@@ -368,11 +368,15 @@ export default function Dashboard() {
     let token = "";
     if (authCookie) { try { token = JSON.parse(authCookie).token; } catch { token = ""; } }
     const prevCompleted = tests.filter(t => t.testStatus === "COMPLETED").length;
+    // If completing this test brings the count to all tests, the user is
+    // waiting on their report being generated, not a "next test" - show
+    // the right message instead of implying another test is coming.
+    setIsFinalTestLoading(tests.length > 0 && prevCompleted + 1 >= tests.length);
 
     for (let i = 0; i < 10; i++) {
       await new Promise(r => setTimeout(r, 1500));
       try {
-        const res = await axios.get("https://zenomiai.elitceler.com/api/testnames", { headers: { Authorization: `Bearer ${token}` } });
+        const res = await api.get("/users/test-status");
         if (Array.isArray(res.data)) {
           const newCompleted = res.data.filter((t: any) => t.testStatus === "COMPLETED").length;
           if (newCompleted > prevCompleted || newCompleted === res.data.length) {
@@ -583,13 +587,10 @@ export default function Dashboard() {
       if (currentTestId !== SLEEP_TEST_ID && currentTestId !== GAD7_TEST_ID && currentTestId !== PHQ9_TEST_ID && !tests.find(t => t.id === currentTestId)?.name?.toUpperCase().includes('EMOTIONAL') && !isMindfulnessQuiz) {
         setShowCompletionDialog(true);
       }
-      // Re-fetch tests after submission to update completed count
-      const res = await axios.get(
-        "https://zenomiai.elitceler.com/api/testnames",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      // Re-fetch tests after submission to update completed count - same
+      // host/DB as the write above, not the scoring service (see note in
+      // fetchData's initial load for why).
+      const res = await api.get("/users/test-status");
       setTests(res.data);
       setCurrentTestId(null);
       setShowProcessing(false); // Hide processing card when API returns
@@ -644,7 +645,7 @@ export default function Dashboard() {
   // }, []);
 
   if (loading) return <LottieLoader text="Loading your dashboard..." />;
-  if (postTestLoading) return <LottieLoader text="Preparing your next test..." />;
+  if (postTestLoading) return <LottieLoader text={isFinalTestLoading ? "Your report is being generated..." : "Preparing your next test..."} />;
 
   // Ensure tests is an array before proceeding
   if (!Array.isArray(tests) && !isDoctor) {
@@ -1332,7 +1333,7 @@ export default function Dashboard() {
                 recommendations: parsedRecs.length > 0 ? parsedRecs : (d.recommendations ?? []),
                 assessment: d.assessment ?? d.sentiment ?? '',
               });
-              const res = await axios.get("https://zenomiai.elitceler.com/api/testnames", { headers: { Authorization: `Bearer ${token}` } });
+              const res = await api.get("/users/test-status");
               setTests(res.data);
             } catch {
               // Still show results even if API fails
