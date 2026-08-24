@@ -43,7 +43,7 @@ const LoginForm: React.FC = () => {
             } catch (err: any) {
                 const status = err.response?.status;
                 if (status === 404) {
-                    toast({ title: "New Doctor", description: "Please register first.", className: "bg-blue-500 text-white" });
+                    toast({ title: "New Clinician", description: "Please register first.", className: "bg-blue-500 text-white" });
                     navigate('/doctor/register');
                 } else if (status === 403) {
                     toast({ title: "Verification Pending", description: "Your account is under review.", className: "bg-yellow-500 text-white" });

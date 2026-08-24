@@ -34,7 +34,7 @@ const ChooseRole = () => {
             Smarter health,<br />powered by AI.
           </h2>
           <p className="text-white/60 text-sm leading-relaxed max-w-xs mb-10">
-            Your Zenomi Health AI companion for wellness assessments, sleep tracking and doctor consultations, all in one place.
+            Your Zenomi Health AI companion for wellness assessments, sleep tracking and clinician consultations, all in one place.
           </p>
           <div className="flex flex-col gap-3 text-left max-w-xs">
             <div className="flex items-center gap-3">
@@ -51,7 +51,7 @@ const ChooseRole = () => {
             </div>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0"><span className="text-sm">👨‍⚕️</span></div>
-              <p className="text-white/80 text-sm">Doctor consultations & referrals</p>
+              <p className="text-white/80 text-sm">Clinician consultations & referrals</p>
             </div>
           </div>
         </div>
@@ -106,12 +106,12 @@ const ChooseRole = () => {
               onClick={() => handleRole("/doctor/login")}
               className="w-full mt-5 mx-5 p-[7px] rounded-full border border-[#8B2D6C] flex items-center justify-between active:scale-[0.97] transition-transform"
             >
-              <img src={doctorAvatar} alt="Doctor" className="w-12 h-12 flex-shrink-0" />
+              <img src={doctorAvatar} alt="Clinician" className="w-12 h-12 flex-shrink-0" />
               <span
                 className="text-black text-lg font-normal flex-1 text-center"
                 style={{ lineHeight: "2.11", letterSpacing: "-0.18px" }}
               >
-                Continue as Doctor
+                Continue as Clinician
               </span>
             </button>
           </div>
@@ -171,7 +171,7 @@ const ChooseRole = () => {
                     </svg>
                   </div>
                   <div className="text-left flex-1">
-                    <p className="text-gray-900 font-bold text-base">I'm a Doctor</p>
+                    <p className="text-gray-900 font-bold text-base">I'm a Clinician</p>
                     <p className="text-gray-400 text-xs mt-0.5">Manage patients, referrals & appointments</p>
                   </div>
                   <svg className="w-5 h-5 text-gray-300 group-hover:text-[#8B2D6C] group-hover:translate-x-1 transition-all duration-300 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">

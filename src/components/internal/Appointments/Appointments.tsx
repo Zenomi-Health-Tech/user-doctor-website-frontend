@@ -140,7 +140,7 @@ function AppointmentList({ appointments, loading, isUpcoming }: { appointments: 
           {isUpcoming ? 'No Upcoming Appointments' : 'No Completed Appointments'}
         </p>
         <p className="text-[13px] text-[#808080] text-center">
-          {isUpcoming ? 'Book a slot with your doctor to get started.' : 'Your completed appointments will appear here.'}
+          {isUpcoming ? 'Book a slot with your clinician to get started.' : 'Your completed appointments will appear here.'}
         </p>
       </div>
     );
@@ -281,7 +281,7 @@ function BookSlotTab() {
       <div className="flex flex-col items-center justify-center py-20 px-8">
         <Calendar className="w-14 h-14 text-[#8B2D6C]/30 mb-4" />
         <p className="text-base font-semibold text-black mb-2">No Open Slots</p>
-        <p className="text-[13px] text-[#808080] text-center">Your doctor hasn't opened any slots yet.</p>
+        <p className="text-[13px] text-[#808080] text-center">Your clinician hasn't opened any slots yet.</p>
       </div>
     );
   }

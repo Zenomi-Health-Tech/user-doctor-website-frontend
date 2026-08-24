@@ -9,11 +9,11 @@ import {
 } from "@/components/ui/dialog";
 
 const DOCTOR_TERMS = `1. Introduction
-These Terms & Conditions govern the use of the Zenomi Health platform ("Platform") by registered medical professionals ("Doctor"). By accessing or using the Platform, the Doctor agrees to comply with and be bound by these Terms.
+These Terms & Conditions govern the use of the Zenomi Health platform ("Platform") by registered medical professionals ("Clinician"). By accessing or using the Platform, the Clinician agrees to comply with and be bound by these Terms.
 
 2. Clinical Responsibility
 2.1 The Platform is designed to support, not replace, professional medical judgment.
-2.2 The Doctor retains full and sole responsibility for all clinical decisions, including diagnosis, treatment plans, prescriptions, and patient management.
+2.2 The Clinician retains full and sole responsibility for all clinical decisions, including diagnosis, treatment plans, prescriptions, and patient management.
 2.3 Zenomi Health shall not be held liable for any clinical outcomes arising from consultations conducted via or supported by the Platform.
 
 3. No Guaranteed Outcomes
@@ -22,7 +22,7 @@ These Terms & Conditions govern the use of the Zenomi Health platform ("Platform
 3.3 Patient improvement, recovery, or treatment success depends solely on clinical judgment, patient adherence, and external factors beyond the Platform's control.
 
 4. Referral Usage Policy
-4.1 Any referral system provided by Zenomi Health is strictly for the registered Doctor's use.
+4.1 Any referral system provided by Zenomi Health is strictly for the registered Clinician's use.
 4.2 Referrals are non-transferable and may not be shared, sold, or reassigned without explicit authorization.
 4.3 Any misuse, manipulation, or fraudulent use of referral mechanisms may result in suspension or permanent termination of Platform access.
 
@@ -34,17 +34,17 @@ These Terms & Conditions govern the use of the Zenomi Health platform ("Platform
 5.2 The Platform does not:
   • Prescribe medication or treatment
   • Override or interfere with clinical decisions
-  • Participate in or influence direct doctor-patient consultations
-5.3 All interactions between Doctor and patient remain independent of Zenomi Health's control or liability.
+  • Participate in or influence direct clinician-patient consultations
+5.3 All interactions between Clinician and patient remain independent of Zenomi Health's control or liability.
 
 6. Professional Conduct
-6.1 The Doctor agrees to adhere to all applicable medical laws, ethical guidelines, and professional standards while using the Platform.
-6.2 The Doctor must ensure patient confidentiality, data protection, and informed consent in all interactions.
+6.1 The Clinician agrees to adhere to all applicable medical laws, ethical guidelines, and professional standards while using the Platform.
+6.2 The Clinician must ensure patient confidentiality, data protection, and informed consent in all interactions.
 6.3 Any misuse of the Platform for unethical, illegal, or non-medical purposes may result in immediate suspension.
 
 7. Limitation of Liability
 7.1 Zenomi Health shall not be liable for:
-  • Clinical decisions made by the Doctor
+  • Clinical decisions made by the Clinician
   • Patient outcomes or dissatisfaction
   • Misinterpretation or misuse of Platform-generated insights
 7.2 The Platform is provided on an "as-is" and "as-available" basis without warranties of any kind.
@@ -59,7 +59,7 @@ These Terms & Conditions govern the use of the Zenomi Health platform ("Platform
 Zenomi Health reserves the right to update or modify these Terms at any time. Continued use of the Platform constitutes acceptance of the revised Terms.
 
 10. Acceptance
-By using the Zenomi Health Platform, the Doctor acknowledges that they have read, understood, and agreed to these Terms & Conditions.`;
+By using the Zenomi Health Platform, the Clinician acknowledges that they have read, understood, and agreed to these Terms & Conditions.`;
 
 const PATIENT_TERMS = `1. Nature of Service
 Zenomi is a digital wellness and mental health support platform that provides assessments, insights, and guided programs.
@@ -68,7 +68,7 @@ It is not a medical, psychiatric, or diagnostic service.
 2. No Medical Advice or Treatment
 Zenomi does not provide medical advice, diagnosis, or treatment.
 The content, reports, and recommendations are for informational and self-improvement purposes only.
-Use of the platform does not create a doctor–patient or therapist–client relationship.
+Use of the platform does not create a clinician–patient or therapist–client relationship.
 
 3. No Guaranteed Outcomes
 Zenomi does not guarantee specific results, outcomes, or improvements.
@@ -88,7 +88,7 @@ You agree that:
 5. Health & Medical Disclaimer
 Zenomi is not a substitute for professional medical or psychological care.
 You are strongly advised to:
-  • Continue consulting your doctor, psychologist, or licensed healthcare provider
+  • Continue consulting your clinician, psychologist, or licensed healthcare provider
   • Seek professional advice before making significant health or lifestyle changes
 
 6. Emergency & Crisis Limitation
@@ -145,7 +145,7 @@ export default function TermsDialog({ open, onAccept, onDecline, type }: TermsDi
           <DialogHeader>
             <DialogTitle className="text-white text-xl font-['Poppins']">Terms & Conditions</DialogTitle>
             <DialogDescription className="text-white/70 font-['Poppins']">
-              Zenomi Health Platform – {isDoctor ? "Doctor" : "Patient"}
+              Zenomi Health Platform – {isDoctor ? "Clinician" : "Patient"}
             </DialogDescription>
           </DialogHeader>
         </div>

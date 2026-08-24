@@ -111,7 +111,7 @@ const Component = () => {
           </svg>
         </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-1 font-['Poppins']">Welcome back</h1>
-        <p className="text-sm text-gray-500 mb-1 font-['Poppins']">Sign in as <span className="text-[#704180] font-semibold">Doctor</span> to continue</p>
+        <p className="text-sm text-gray-500 mb-1 font-['Poppins']">Sign in as <span className="text-[#704180] font-semibold">Clinician</span> to continue</p>
         <p className="text-xs text-gray-400 mb-8 font-['Poppins']">Manage patients, referrals & appointments</p>
 
         {!termsAccepted ? (
@@ -179,7 +179,7 @@ const Component = () => {
         )}
 
         <button onClick={() => (window.location.href = "/chooserole")} className="text-xs text-[#704180] mt-6 font-medium font-['Poppins'] hover:underline">
-          ← Not a doctor? Choose a different role
+          ← Not a clinician? Choose a different role
         </button>
         <p className="text-xs text-gray-400 mt-4 text-center font-['Poppins']">
           By continuing, you agree to Zenomi's Terms of Service and Privacy Policy

@@ -159,7 +159,7 @@ export default function SetAvailabilityUser() {
   };
 
   // ── Loading ──
-  if (pageLoading) return <LottieLoader text="Loading doctor availability..." />;
+  if (pageLoading) return <LottieLoader text="Loading clinician availability..." />;
 
   // ── No availability ──
   const noSlots = availability.length === 0;
@@ -171,7 +171,7 @@ export default function SetAvailabilityUser() {
         <button onClick={() => navigate('/appointments')} className="p-1 hover:bg-gray-100 rounded-lg transition">
           <ChevronLeft className="w-5 h-5 text-[#8B2D6C]" />
         </button>
-        <h1 className="text-lg font-bold text-[#8B2D6C]">Doctor's Appointment</h1>
+        <h1 className="text-lg font-bold text-[#8B2D6C]">Clinician's Appointment</h1>
       </div>
 
       <div className="px-4 sm:px-6 py-4 flex-1 flex flex-col">
@@ -224,7 +224,7 @@ export default function SetAvailabilityUser() {
         {noSlots && (
           <div className="flex-1 flex flex-col items-center justify-center text-center px-10">
             <p className="text-xl font-bold text-[#8B2D6C] mb-3">No Open Appointments</p>
-            <p className="text-sm text-[#888]">The doctor currently has no available appointment slots</p>
+            <p className="text-sm text-[#888]">The clinician currently has no available appointment slots</p>
           </div>
         )}
 
