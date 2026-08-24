@@ -116,7 +116,7 @@ export default function Profile() {
 
         {/* View Courses */}
         {!isDoctor && allTestsDone && (
-          <a href="https://learn.zenomi.com" target="_blank" rel="noopener noreferrer"
+          <a href="https://zenomilearn.zenomihealth.com" target="_blank" rel="noopener noreferrer"
             className="w-full rounded-full py-4 flex items-center justify-center gap-2.5 text-white font-semibold mb-4"
             style={{ background: 'linear-gradient(90deg, #704180, #8B2D6C)' }}>
             <img src="/zenomiLogo.png" alt="Z" className="w-5 h-5 rounded" />
