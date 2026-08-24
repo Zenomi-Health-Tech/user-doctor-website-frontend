@@ -364,9 +364,6 @@ export default function Dashboard() {
     setPostTestLoading(true);
 
     // Poll until next test unlocks or max 15 seconds
-    const authCookie = Cookies.get("auth");
-    let token = "";
-    if (authCookie) { try { token = JSON.parse(authCookie).token; } catch { token = ""; } }
     const prevCompleted = tests.filter(t => t.testStatus === "COMPLETED").length;
     // If completing this test brings the count to all tests, the user is
     // waiting on their report being generated, not a "next test" - show
