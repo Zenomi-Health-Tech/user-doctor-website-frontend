@@ -1264,7 +1264,7 @@ export default function Dashboard() {
                         return (q.scaleOptions || []).map((option: string, i: number) => (
                           <button key={option} onClick={() => handleScrollableAnswer(globalIdx, option)} className={`py-3 rounded-xl text-center transition-all ${selected === option ? 'text-white' : 'text-gray-400 border border-white/10'}`} style={selected === option ? { background: 'linear-gradient(135deg, #7C5CFC, #6C8AFF)' } : { background: '#2D3048' }}>
                             <div className="text-lg">{sleepEmojis[i] || '❓'}</div>
-                            <div className="text-xs px-1 leading-tight mt-0.5">{option}</div>
+                            <div className="text-xs px-1 leading-tight mt-0.5">{option.replace(/-\d+$/, '')}</div>
                           </button>
                         ));
                       })()}
