@@ -244,7 +244,7 @@ const DoctorRegistrationForm = () => {
                             <ErrorMessage message={errors.gender?.message} />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Doctor Photo*</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Clinician Photo*</label>
                             <Controller control={control} name="doctorPhoto" render={({ field }) => (
                                 <input type="file" accept="image/*" onChange={e => field.onChange(e.target.files?.[0] || null)} className="w-full p-3.5 border-2 border-[#e5dff3] rounded-lg transition-all duration-200 cursor-pointer focus:outline-none focus:border-[#704180] focus:ring-1 focus:ring-[#704180]" style={{ backgroundColor: '#faf8fe' }} />
                             )} />

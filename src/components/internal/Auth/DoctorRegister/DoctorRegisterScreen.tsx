@@ -40,7 +40,7 @@ function RegisterComponent() {
                         <Card className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 lg:p-10 shadow-2xl h-full">
                             <div className="flex flex-col items-center h-full">
                                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                                    Register as <span style={{ color: '#704180' }}>Doctor</span>
+                                    Register as <span style={{ color: '#704180' }}>Clinician</span>
                                 </h2>
                                 <p className="text-sm text-gray-500 mb-6">Create your professional account</p>
                                 <div className="w-full flex-1 overflow-y-auto">

@@ -171,7 +171,7 @@ const UserRegistrationForm = () => {
 
                 {/* Doctor Referral Code */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">Doctor Referral Code*</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Clinician Referral Code*</label>
                     <div className="flex items-center">
                         <span className="px-4 py-3 rounded-l-full border-2 border-transparent text-[#704180] font-semibold select-none" style={{ backgroundColor: '#FCF8FA' }}>
                             ZENOMI-
@@ -182,7 +182,7 @@ const UserRegistrationForm = () => {
                             inputMode="numeric"
                             className="w-full p-3 rounded-r-full border-2 border-transparent focus:outline-none focus:border-[#704180] transition-colors"
                             style={{ backgroundColor: '#FCF8FA' }}
-                            placeholder="Enter doctor referral code"
+                            placeholder="Enter clinician referral code"
                             value={referralCodeDigits}
                             onChange={e => {
                                 const val = e.target.value.replace(/[^0-9]/g, "");

@@ -27,7 +27,7 @@ function PaymentScreen() {
               <span className="text-[#FFD966] shrink-0">
                 <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="4" /><path d="M9 12l2 2 4-4" /></svg>
               </span>
-              <span>Verified Doctor Profile</span>
+              <span>Verified Clinician Profile</span>
             </li>
             <li className="flex items-center gap-3">
               <span className="text-[#FFD966] shrink-0">

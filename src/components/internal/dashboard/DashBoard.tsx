@@ -656,7 +656,7 @@ export default function Dashboard() {
   const checklistItems = [
     { label: `Complete all ${tests.length || 5} assessments`, done: completedCount === tests.length && tests.length > 0, action: () => {} },
     { label: "Log your sleep in Sleep Tracker", done: hasSleepLog, action: () => navigate('/sleep-tracker') },
-    { label: "Book a doctor consultation", done: hasAppointment, action: () => navigate('/appointments') },
+    { label: "Book a clinician consultation", done: hasAppointment, action: () => navigate('/appointments') },
   ];
   const checklistDone = checklistItems.filter(c => c.done).length;
 
@@ -839,7 +839,7 @@ export default function Dashboard() {
                           {(nextAppt.doctorName || nextAppt.doctor_name || "Dr").split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm text-gray-900 truncate">{nextAppt.doctorName || nextAppt.doctor_name || "Doctor"}</p>
+                          <p className="font-semibold text-sm text-gray-900 truncate">{nextAppt.doctorName || nextAppt.doctor_name || "Clinician"}</p>
                           <p className="text-xs text-gray-500">{nextAppt.slotTime || nextAppt.time || ""} · {nextAppt.mode || nextAppt.consultationType || "Consultation"}</p>
                         </div>
                         <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
