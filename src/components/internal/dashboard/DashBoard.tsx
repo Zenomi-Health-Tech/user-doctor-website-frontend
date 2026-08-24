@@ -116,6 +116,7 @@ export default function Dashboard() {
   const [hasAppointment, setHasAppointment] = useState(false);
   const [nextAppt, setNextAppt] = useState<any>(null);
   const [postTestLoading, setPostTestLoading] = useState(false);
+  const [isFinalTestLoading, setIsFinalTestLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -367,6 +368,10 @@ export default function Dashboard() {
     let token = "";
     if (authCookie) { try { token = JSON.parse(authCookie).token; } catch { token = ""; } }
     const prevCompleted = tests.filter(t => t.testStatus === "COMPLETED").length;
+    // If completing this test brings the count to all tests, the user is
+    // waiting on their report being generated, not a "next test" - show
+    // the right message instead of implying another test is coming.
+    setIsFinalTestLoading(tests.length > 0 && prevCompleted + 1 >= tests.length);
 
     for (let i = 0; i < 10; i++) {
       await new Promise(r => setTimeout(r, 1500));
@@ -640,7 +645,7 @@ export default function Dashboard() {
   // }, []);
 
   if (loading) return <LottieLoader text="Loading your dashboard..." />;
-  if (postTestLoading) return <LottieLoader text="Preparing your next test..." />;
+  if (postTestLoading) return <LottieLoader text={isFinalTestLoading ? "Your report is being generated..." : "Preparing your next test..."} />;
 
   // Ensure tests is an array before proceeding
   if (!Array.isArray(tests) && !isDoctor) {
