@@ -160,12 +160,11 @@ export default function Dashboard() {
             }
           }
         } else {
-          const res = await axios.get(
-            "https://zenomiai.elitceler.com/api/testnames",
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
+          // Same host/DB as the write (update-test-score) - the scoring
+          // service's /testnames is a separate service and can lag behind
+          // a just-completed write, causing a just-finished test to look
+          // unlocked/incomplete and get retaken (duplicate submissions).
+          const res = await api.get("/users/test-status");
           console.log("API Response:", res.data);
 
           if (Array.isArray(res.data)) {
@@ -372,7 +371,7 @@ export default function Dashboard() {
     for (let i = 0; i < 10; i++) {
       await new Promise(r => setTimeout(r, 1500));
       try {
-        const res = await axios.get("https://zenomiai.elitceler.com/api/testnames", { headers: { Authorization: `Bearer ${token}` } });
+        const res = await api.get("/users/test-status");
         if (Array.isArray(res.data)) {
           const newCompleted = res.data.filter((t: any) => t.testStatus === "COMPLETED").length;
           if (newCompleted > prevCompleted || newCompleted === res.data.length) {
@@ -583,13 +582,10 @@ export default function Dashboard() {
       if (currentTestId !== SLEEP_TEST_ID && currentTestId !== GAD7_TEST_ID && currentTestId !== PHQ9_TEST_ID && !tests.find(t => t.id === currentTestId)?.name?.toUpperCase().includes('EMOTIONAL') && !isMindfulnessQuiz) {
         setShowCompletionDialog(true);
       }
-      // Re-fetch tests after submission to update completed count
-      const res = await axios.get(
-        "https://zenomiai.elitceler.com/api/testnames",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      // Re-fetch tests after submission to update completed count - same
+      // host/DB as the write above, not the scoring service (see note in
+      // fetchData's initial load for why).
+      const res = await api.get("/users/test-status");
       setTests(res.data);
       setCurrentTestId(null);
       setShowProcessing(false); // Hide processing card when API returns
@@ -1332,7 +1328,7 @@ export default function Dashboard() {
                 recommendations: parsedRecs.length > 0 ? parsedRecs : (d.recommendations ?? []),
                 assessment: d.assessment ?? d.sentiment ?? '',
               });
-              const res = await axios.get("https://zenomiai.elitceler.com/api/testnames", { headers: { Authorization: `Bearer ${token}` } });
+              const res = await api.get("/users/test-status");
               setTests(res.data);
             } catch {
               // Still show results even if API fails
