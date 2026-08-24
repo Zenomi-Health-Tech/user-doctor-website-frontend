@@ -56,6 +56,27 @@ export default function Results() {
 
   // ── Empty State ──
   if (analytics.length === 0) {
+    // All tests are done but no cycle came back — the report exists but is
+    // still awaiting clinician/admin release, not "nothing completed yet".
+    if (allTestsDone) {
+      return (
+        <div className="flex items-center justify-center min-h-[80vh] font-['Poppins']">
+          <div className="text-center px-8 max-w-sm">
+            <MeditationLottie />
+            <h2 className="text-[22px] font-bold text-black mb-3">Report Under Review</h2>
+            <p className="text-sm text-[#808080] leading-relaxed mb-6">
+              Your clinician is reviewing your results. Your report will appear here as soon as it&apos;s shared with you.
+            </p>
+            <div className="bg-[#8B2D6C]/10 rounded-2xl p-4 flex items-start gap-3 text-left">
+              <Lightbulb className="w-6 h-6 text-[#8B2D6C] flex-shrink-0 mt-0.5" />
+              <p className="text-[13px] text-[#8B2D6C] font-medium">
+                No action needed — check back soon or refresh this page.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="flex items-center justify-center min-h-[80vh] font-['Poppins']">
         <div className="text-center px-8 max-w-sm">
