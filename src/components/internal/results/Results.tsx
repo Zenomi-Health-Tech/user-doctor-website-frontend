@@ -9,6 +9,7 @@ import LottieLoader from '@/components/shared/LottieLoader';
 interface Analytics {
   id: string; cycle: string; updatedAt: string; testsCompleted: number;
   rawScores: Record<string, number>; normalizedScores: Record<string, number>;
+  bandLabels: Record<string, string>;
   reportView: string; reportDownload: string;
 }
 
@@ -52,6 +53,7 @@ export default function Results() {
 
   const selected = analytics[selectedIdx];
   const scores = selected?.normalizedScores || selected?.rawScores || {};
+  const bandLabels = selected?.bandLabels || {};
   const barData = Object.entries(scores).map(([key, value]) => ({ title: key, value: Number(value) || 0 }));
 
   // ── Empty State ──
@@ -184,7 +186,7 @@ export default function Results() {
         {/* Bar Chart */}
         <div className="mb-[30px]">
           {barData.length > 0 ? (
-            <AnimatedBarChart data={barData} animated={animated} />
+            <AnimatedBarChart data={barData} labels={bandLabels} animated={animated} />
           ) : (
             <div className="h-[220px] sm:h-[260px] flex items-center justify-center rounded-2xl bg-gray-50">
               <p className="text-sm text-gray-400">Complete tests to see your scores here</p>
@@ -298,9 +300,9 @@ function findKey(raw: string, keys: string[]) {
     || raw.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(raw.toLowerCase()));
 }
 
-function BarSection({ title, note, legend, entries, animated }:
+function BarSection({ title, note, legend, entries, labels, animated }:
   { title: string; note: string; legend: {label:string; color:string}[];
-    entries: {key:string; value:number}[]; animated: boolean }) {
+    entries: {key:string; value:number}[]; labels: Record<string, string>; animated: boolean }) {
   const BAR_H = 140;
   return (
     <div className="mb-5">
@@ -335,11 +337,11 @@ function BarSection({ title, note, legend, entries, animated }:
                 const v = Math.max(e.value, 0);
                 const inverted = SEVERITY_KEYS.includes(e.key);
                 const color = inverted ? severityColor(v) : wellnessColor(v);
-                const lbl   = inverted ? severityLabel(v)  : wellnessLabel(v);
+                const lbl   = labels[e.key] ?? (inverted ? severityLabel(v)  : wellnessLabel(v));
                 const barPx = Math.max((v / 100) * BAR_H, 4);
                 return (
                   <div key={e.key} className="flex flex-col items-center justify-end" style={{ width: 48 }}>
-                    <span className="text-[9px] font-bold mb-1 leading-none" style={{ color }}>{lbl}</span>
+                    <span className="text-[9px] font-bold mb-1 leading-tight text-center" style={{ color }}>{lbl}</span>
                     <div className="rounded-t-lg transition-all ease-out"
                       style={{
                         width: 36, height: animated ? barPx : 2,
@@ -366,7 +368,7 @@ function BarSection({ title, note, legend, entries, animated }:
   );
 }
 
-function AnimatedBarChart({ data, animated }: { data: { title: string; value: number }[]; animated: boolean }) {
+function AnimatedBarChart({ data, labels, animated }: { data: { title: string; value: number }[]; labels: Record<string, string>; animated: boolean }) {
   const wellnessEntries = WELLNESS_KEYS
     .map(k => { const d = data.find(x => findKey(x.title, [k])); return { key: k, value: d?.value ?? 0 }; })
     .filter(e => e.value > 0);
@@ -379,12 +381,12 @@ function AnimatedBarChart({ data, animated }: { data: { title: string; value: nu
       {wellnessEntries.length > 0 && (
         <BarSection title="Wellness Scores" note="Green = good, red = needs attention"
           legend={[{label:'Good',color:'#00C48C'},{label:'Fair',color:'#F5A623'},{label:'Needs attention',color:'#FF5C5C'}]}
-          entries={wellnessEntries} animated={animated} />
+          entries={wellnessEntries} labels={labels} animated={animated} />
       )}
       {anxietyEntries.length > 0 && (
         <BarSection title="Depression & Anxiety" note="Higher = more severe"
           legend={[{label:'Minimal',color:'#00C48C'},{label:'Mild',color:'#F5A623'},{label:'Moderate',color:'#FF8C00'},{label:'Severe',color:'#FF5C5C'}]}
-          entries={anxietyEntries} animated={animated} />
+          entries={anxietyEntries} labels={labels} animated={animated} />
       )}
     </div>
   );
