@@ -265,6 +265,10 @@ export default function Results() {
 // ── Wellness Bar Chart — matches app WellnessBarChart exactly ──
 const WELLNESS_KEYS = ['Sleep', 'Nutrition', 'Emotional'];
 const ANXIETY_KEYS  = ['GAD-7', 'PHQ-9'];
+// Sleep and Nutrition are stored as severity scores (higher = worse), same as
+// GAD-7/PHQ-9 — only Emotional is a true higher-is-better score. See
+// AI-Q-A-Report/app/services/test_config.py "higher_score_is_worse".
+const SEVERITY_KEYS = ['Sleep', 'Nutrition', 'GAD-7', 'PHQ-9'];
 
 function wellnessColor(v: number) {
   if (v >= 70) return '#00C48C';
@@ -294,9 +298,9 @@ function findKey(raw: string, keys: string[]) {
     || raw.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(raw.toLowerCase()));
 }
 
-function BarSection({ title, note, legend, entries, inverted, animated }:
+function BarSection({ title, note, legend, entries, animated }:
   { title: string; note: string; legend: {label:string; color:string}[];
-    entries: {key:string; value:number}[]; inverted: boolean; animated: boolean }) {
+    entries: {key:string; value:number}[]; animated: boolean }) {
   const BAR_H = 140;
   return (
     <div className="mb-5">
@@ -329,6 +333,7 @@ function BarSection({ title, note, legend, entries, inverted, animated }:
             <div className="absolute inset-0 flex items-end justify-around px-1">
               {entries.map((e, i) => {
                 const v = Math.max(e.value, 0);
+                const inverted = SEVERITY_KEYS.includes(e.key);
                 const color = inverted ? severityColor(v) : wellnessColor(v);
                 const lbl   = inverted ? severityLabel(v)  : wellnessLabel(v);
                 const barPx = Math.max((v / 100) * BAR_H, 4);
@@ -372,14 +377,14 @@ function AnimatedBarChart({ data, animated }: { data: { title: string; value: nu
   return (
     <div>
       {wellnessEntries.length > 0 && (
-        <BarSection title="Wellness Scores" note="Higher = healthier"
-          legend={[{label:'Thriving',color:'#00C48C'},{label:'Fair',color:'#F5A623'},{label:'Needs care',color:'#FF5C5C'}]}
-          entries={wellnessEntries} inverted={false} animated={animated} />
+        <BarSection title="Wellness Scores" note="Green = good, red = needs attention"
+          legend={[{label:'Good',color:'#00C48C'},{label:'Fair',color:'#F5A623'},{label:'Needs attention',color:'#FF5C5C'}]}
+          entries={wellnessEntries} animated={animated} />
       )}
       {anxietyEntries.length > 0 && (
         <BarSection title="Depression & Anxiety" note="Higher = more severe"
           legend={[{label:'Minimal',color:'#00C48C'},{label:'Mild',color:'#F5A623'},{label:'Moderate',color:'#FF8C00'},{label:'Severe',color:'#FF5C5C'}]}
-          entries={anxietyEntries} inverted={true} animated={animated} />
+          entries={anxietyEntries} animated={animated} />
       )}
     </div>
   );
