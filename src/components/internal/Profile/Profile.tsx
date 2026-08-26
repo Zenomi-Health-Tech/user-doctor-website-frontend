@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import api from "@/utils/api";
-import axios from "axios";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -36,13 +35,11 @@ export default function Profile() {
       setLoading(false);
     })();
     if (!isDoctor) {
-      const authCookie = Cookies.get("auth");
-      let token = "";
-      if (authCookie) { try { token = JSON.parse(authCookie).token; } catch { token = ""; } }
-      if (token) {
-        axios.get("https://zenomiai.elitceler.com/api/testnames", { headers: { Authorization: `Bearer ${token}` } })
-          .then(res => { if (Array.isArray(res.data) && res.data.length > 0 && res.data.every((t: any) => t.testStatus === "COMPLETED")) setAllTestsDone(true); }).catch(() => {});
-      }
+      // Same host/DB as the write (update-test-score) - the scoring
+      // service's /api/testnames is a separate service and can lag behind
+      // a just-completed write.
+      api.get("/users/test-status")
+        .then(res => { if (Array.isArray(res.data) && res.data.length > 0 && res.data.every((t: any) => t.testStatus === "COMPLETED")) setAllTestsDone(true); }).catch(() => {});
     }
   }, [isDoctor]);
 

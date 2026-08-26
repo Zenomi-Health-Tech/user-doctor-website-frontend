@@ -33,16 +33,12 @@ export default function Results() {
         const res = await api.get('/users/get-all-courses');
         if (res.data?.success) setCourses(res.data.data || []);
       } catch { }
-      // Check if all tests are completed
+      // Check if all tests are completed. Same host/DB as the write
+      // (update-test-score) - the scoring service's /api/testnames is a
+      // separate service and can lag behind a just-completed write.
       try {
-        const Cookies = (await import('js-cookie')).default;
-        const authCookie = Cookies.get('auth');
-        let token = ''; if (authCookie) { try { token = JSON.parse(authCookie).token; } catch { } }
-        if (token) {
-          const axios = (await import('axios')).default;
-          const r = await axios.get('https://zenomiai.elitceler.com/api/testnames', { headers: { Authorization: `Bearer ${token}` } });
-          if (Array.isArray(r.data) && r.data.length > 0 && r.data.every((t: any) => t.testStatus === 'COMPLETED')) setAllTestsDone(true);
-        }
+        const r = await api.get('/users/test-status');
+        if (Array.isArray(r.data) && r.data.length > 0 && r.data.every((t: any) => t.testStatus === 'COMPLETED')) setAllTestsDone(true);
       } catch { }
       setLoading(false);
       setTimeout(() => setAnimated(true), 100);
