@@ -69,6 +69,18 @@ interface Course {
   // add other fields if needed
 }
 
+// Sleep is a severity score (higher = worse), same convention as GAD-7/PHQ-9
+// (see AI-Q-A-Report/app/services/test_config.py "higher_score_is_worse").
+// Same green→yellow→orange→red thresholds used for the GAD-7/PHQ-9 severity
+// bars elsewhere, so a bad score doesn't render in a "good" color.
+function sleepRingColor(value: number, max: number): string {
+  const pct = max > 0 ? (value / max) * 100 : 0;
+  if (pct <= 20) return '#00D4AA';
+  if (pct <= 45) return '#F5A623';
+  if (pct <= 70) return '#FF8C00';
+  return '#FF5C5C';
+}
+
 export default function Dashboard() {
   const [tests, setTests] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1652,10 +1664,13 @@ export default function Dashboard() {
             <p className="text-sm text-gray-400 text-center mb-8">Here's what your answers tell us 🔍</p>
 
             {/* Global Score */}
+            {/* Sleep is a severity score (higher = worse), same as GAD-7/PHQ-9 —
+                ring color reflects that instead of a static "good" teal that
+                would otherwise fill up more for a worse score. */}
             <div className="rounded-2xl p-8 mb-4 flex flex-col items-center" style={{ background: '#252840' }}>
               <svg width="130" height="130" className="mb-3">
-                <circle cx="65" cy="65" r="55" stroke="#00D4AA22" strokeWidth="10" fill="none" />
-                <circle cx="65" cy="65" r="55" stroke="#00D4AA" strokeWidth="10" fill="none"
+                <circle cx="65" cy="65" r="55" stroke={`${sleepRingColor(sleepResults.score, sleepResults.max)}22`} strokeWidth="10" fill="none" />
+                <circle cx="65" cy="65" r="55" stroke={sleepRingColor(sleepResults.score, sleepResults.max)} strokeWidth="10" fill="none"
                   strokeDasharray={2 * Math.PI * 55}
                   strokeDashoffset={2 * Math.PI * 55 * (1 - (sleepResults.score / sleepResults.max))}
                   strokeLinecap="round" transform="rotate(-90 65 65)" />
@@ -1688,8 +1703,8 @@ export default function Dashboard() {
                   </div>
                   <div className="rounded-2xl p-5 flex flex-col items-center" style={{ background: '#252840' }}>
                     <svg width="80" height="80" className="mb-2">
-                      <circle cx="40" cy="40" r="32" stroke="#00D4AA22" strokeWidth="7" fill="none" />
-                      <circle cx="40" cy="40" r="32" stroke="#00D4AA" strokeWidth="7" fill="none"
+                      <circle cx="40" cy="40" r="32" stroke={`${sleepRingColor(lifImp, sleepResults.max - halfMax)}22`} strokeWidth="7" fill="none" />
+                      <circle cx="40" cy="40" r="32" stroke={sleepRingColor(lifImp, sleepResults.max - halfMax)} strokeWidth="7" fill="none"
                         strokeDasharray={2 * Math.PI * 32} strokeDashoffset={2 * Math.PI * 32 * (1 - lifImp / (sleepResults.max - halfMax))}
                         strokeLinecap="round" transform="rotate(-90 40 40)" />
                       <text x="50%" y="50%" textAnchor="middle" dy=".35em" fontSize="20" fill="white" fontWeight="bold">{lifImp}</text>
