@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-import Cookies from "js-cookie";
+import api from "@/utils/api";
 
 export interface Test {
   id: string;
@@ -18,22 +17,14 @@ export function useTests() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Same host/DB as the write (update-test-score) - the scoring
+    // service's /api/testnames is a separate service and can lag behind
+    // a just-completed write, causing a just-finished test to still show
+    // as incomplete until that service catches up.
     const fetchTests = async () => {
       setLoading(true);
       try {
-        const authCookie = Cookies.get("auth");
-        let token = "";
-        if (authCookie) {
-          try {
-            token = JSON.parse(authCookie).token;
-          } catch {
-            token = "";
-          }
-        }
-        const res = await axios.get(
-          "https://zenomiai.elitceler.com/api/testnames",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const res = await api.get("/users/test-status");
         setTests(Array.isArray(res.data) ? res.data : []);
       } catch {
         setTests([]);
