@@ -69,6 +69,34 @@ interface Course {
   // add other fields if needed
 }
 
+// Sleep/GAD-7/PHQ-9 show a locally-computed score immediately, then call the
+// scoring service in the background to persist the full Q&A + generate the
+// report's detailed insights. That background call used to fail silently on
+// a single attempt (network blip, cold start) — the local score would still
+// save, so the quiz looked "complete" while the detailed report quietly had
+// no data for that test, permanently (raw answers aren't stored anywhere
+// else to retry from later). Retry a few times, and only give up loudly.
+async function retryAxiosPost(url: string, body: unknown, config: Record<string, unknown>, attempts = 3) {
+  let lastError: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await axios.post(url, body, config);
+    } catch (e) {
+      lastError = e;
+      if (i < attempts - 1) await new Promise(r => setTimeout(r, 1500 * (i + 1)));
+    }
+  }
+  throw lastError;
+}
+
+async function postScoreWithRetry(testId: string, formattedAnswers: unknown, token: string): Promise<void> {
+  await retryAxiosPost(
+    `https://zenomiai.elitceler.com/api/score-test/${testId}`,
+    { answers: formattedAnswers },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+}
+
 export default function Dashboard() {
   const [tests, setTests] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
@@ -441,7 +469,12 @@ export default function Dashboard() {
         setGad7Results({ score: total, max, label, description });
         setShowQuiz(false);
         await api.put('/users/update-test-score', { testId: currentTestId, score: total }).catch((e) => console.error('Failed to update test score:', e));
-        try { await axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formattedAnswers }, { headers: { Authorization: `Bearer ${token}` } }); } catch (e) { console.error('GAD-7 scoring service failed:', e); }
+        try {
+          await postScoreWithRetry(currentTestId, formattedAnswers, token);
+        } catch (e) {
+          console.error('GAD-7 scoring service failed after retries:', e);
+          alert('Your GAD-7 score was saved, but we could not generate your detailed report. Please retake the GAD-7 assessment later to get the full report.');
+        }
       }
       // For PHQ-9 test, compute score locally and show results immediately
       else if (currentTestId === PHQ9_TEST_ID) {
@@ -457,7 +490,12 @@ export default function Dashboard() {
         setPhq9Results({ score: total, max, label, description });
         setShowQuiz(false);
         await api.put('/users/update-test-score', { testId: currentTestId, score: total }).catch((e) => console.error('Failed to update test score:', e));
-        try { await axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formattedAnswers }, { headers: { Authorization: `Bearer ${token}` } }); } catch (e) { console.error('PHQ-9 scoring service failed:', e); }
+        try {
+          await postScoreWithRetry(currentTestId, formattedAnswers, token);
+        } catch (e) {
+          console.error('PHQ-9 scoring service failed after retries:', e);
+          alert('Your PHQ-9 score was saved, but we could not generate your detailed report. Please retake the PHQ-9 assessment later to get the full report.');
+        }
       }
       // For Emotional Health test — use API response score, fallback to local calculation
       else if (tests.find(t => t.id === currentTestId)?.name?.toUpperCase().includes('EMOTIONAL')) {
@@ -553,9 +591,9 @@ export default function Dashboard() {
         setSleepResults({ score: total, max: questions.length * 4, assessment: '', sentiment: '' });
         setShowQuiz(false);
         await api.put('/users/update-test-score', { testId: currentTestId, score: total }).catch((e) => console.error('Failed to update test score:', e));
-        // Await API to ensure S3 JSON is saved for the report — update display score from API response
+        // Await API (with retries) to ensure S3 JSON is saved for the report — update display score from API response
         try {
-          const res = await axios.post(
+          const res = await retryAxiosPost(
             `https://zenomiai.elitceler.com/api/score-test/${currentTestId}`,
             { answers: formattedAnswers },
             { headers: { Authorization: `Bearer ${token}` } }
@@ -570,7 +608,10 @@ export default function Dashboard() {
             });
             await api.put('/users/update-test-score', { testId: currentTestId, score: apiScore }).catch((e) => console.error('Failed to update test score:', e));
           }
-        } catch (e) { console.error('Sleep scoring service failed:', e); }
+        } catch (e) {
+          console.error('Sleep scoring service failed after retries:', e);
+          alert('Your Sleep score was saved, but we could not generate your detailed report. Please retake the Sleep assessment later to get the full report.');
+        }
       } else {
         await axios.post(
           `https://zenomiai.elitceler.com/api/score-test/${currentTestId}`,
