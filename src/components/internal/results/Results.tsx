@@ -301,6 +301,10 @@ function BarSection({ title, note, legend, entries, labels, colors, animated }:
   { title: string; note: string; legend: {label:string; color:string}[];
     entries: {key:string; value:number}[]; labels: Record<string, string>; colors: Record<string, string>; animated: boolean }) {
   const BAR_H = 140;
+  // The label sits above the bar within this same fixed-height budget —
+  // reserve room for it so a near-100% bar doesn't visually overflow.
+  const LABEL_H = 20;
+  const MAX_BAR_H = BAR_H - LABEL_H;
   return (
     <div className="mb-5">
       {/* Header */}
@@ -339,7 +343,7 @@ function BarSection({ title, note, legend, entries, labels, colors, animated }:
                 // the first word conveys severity and matches the old short
                 // label vocabulary.
                 const lbl   = labels[e.key] ? labels[e.key].split(' ')[0] : (inverted ? severityLabel(v)  : wellnessLabel(v));
-                const barPx = Math.max((v / 100) * BAR_H, 4);
+                const barPx = Math.max((v / 100) * MAX_BAR_H, 4);
                 return (
                   <div key={e.key} className="flex flex-col items-center justify-end" style={{ width: 48 }}>
                     <span className="text-[9px] font-bold mb-1 leading-tight text-center" style={{ color }}>{lbl}</span>
@@ -381,7 +385,7 @@ function AnimatedBarChart({ data, labels, colors, animated }: { data: { title: s
     <div>
       {wellnessEntries.length > 0 && (
         <BarSection title="Wellness Scores" note="Green = good, red = needs attention"
-          legend={[{label:'Good',color:'#00C48C'},{label:'Fair',color:'#F5A623'},{label:'Needs attention',color:'#FF5C5C'}]}
+          legend={[{label:'Good',color:'#00C48C'},{label:'Fair',color:'#F5A623'},{label:'Moderate',color:'#FF8C00'},{label:'Needs attention',color:'#FF5C5C'}]}
           entries={wellnessEntries} labels={labels} colors={colors} animated={animated} />
       )}
       {anxietyEntries.length > 0 && (
