@@ -79,6 +79,8 @@ function sleepRingColor(value: number, max: number): string {
   if (pct <= 45) return '#F5A623';
   if (pct <= 70) return '#FF8C00';
   return '#FF5C5C';
+}
+
 // Sleep/GAD-7/PHQ-9 show a locally-computed score immediately, then call the
 // scoring service in the background to persist the full Q&A + generate the
 // report's detailed insights. That background call used to fail silently on
