@@ -338,7 +338,11 @@ function BarSection({ title, note, legend, entries, labels, colors, animated }:
                 const v = Math.max(e.value, 0);
                 const inverted = SEVERITY_KEYS.includes(e.key);
                 const color = colors[e.key] ?? (inverted ? severityColor(v) : wellnessColor(v));
-                const lbl   = labels[e.key] ?? (inverted ? severityLabel(v)  : wellnessLabel(v));
+                // Server labels are full clinical phrases ("Mild Emotional
+                // Dysregulation") — too long for this narrow column. Just
+                // the first word conveys severity and matches the old short
+                // label vocabulary.
+                const lbl   = labels[e.key] ? labels[e.key].split(' ')[0] : (inverted ? severityLabel(v)  : wellnessLabel(v));
                 const barPx = Math.max((v / 100) * BAR_H, 4);
                 return (
                   <div key={e.key} className="flex flex-col items-center justify-end" style={{ width: 48 }}>
