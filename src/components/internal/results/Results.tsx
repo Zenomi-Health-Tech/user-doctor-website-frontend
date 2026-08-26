@@ -297,9 +297,9 @@ function findKey(raw: string, keys: string[]) {
     || raw.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(raw.toLowerCase()));
 }
 
-function BarSection({ title, note, legend, entries, labels, colors, animated }:
+function BarSection({ title, note, legend, entries, labels, colors, animated, invertBarHeight }:
   { title: string; note: string; legend: {label:string; color:string}[];
-    entries: {key:string; value:number}[]; labels: Record<string, string>; colors: Record<string, string>; animated: boolean }) {
+    entries: {key:string; value:number}[]; labels: Record<string, string>; colors: Record<string, string>; animated: boolean; invertBarHeight: boolean }) {
   const BAR_H = 140;
   // The label sits above the bar within this same fixed-height budget —
   // reserve room for it so a near-100% bar doesn't visually overflow.
@@ -343,7 +343,12 @@ function BarSection({ title, note, legend, entries, labels, colors, animated }:
                 // the first word conveys severity and matches the old short
                 // label vocabulary.
                 const lbl   = labels[e.key] ? labels[e.key].split(' ')[0] : (inverted ? severityLabel(v)  : wellnessLabel(v));
-                const barPx = Math.max((v / 100) * MAX_BAR_H, 4);
+                // GAD-7/PHQ-9 bar height is inverted from the raw severity
+                // value: a bad (high) score renders a SHORT bar, not a tall
+                // one, so tall+green always reads as "healthier" there too.
+                // Sleep/Nutrition/Emotional keep height = raw value.
+                const barValue = invertBarHeight ? 100 - v : v;
+                const barPx = Math.max((barValue / 100) * MAX_BAR_H, 4);
                 return (
                   <div key={e.key} className="flex flex-col items-center justify-end" style={{ width: 48 }}>
                     <span className="text-[9px] font-bold mb-1 leading-tight text-center" style={{ color }}>{lbl}</span>
@@ -386,12 +391,12 @@ function AnimatedBarChart({ data, labels, colors, animated }: { data: { title: s
       {wellnessEntries.length > 0 && (
         <BarSection title="Wellness Scores" note="Green = good, red = needs attention"
           legend={[{label:'Good',color:'#00C48C'},{label:'Fair',color:'#F5A623'},{label:'Moderate',color:'#FF8C00'},{label:'Needs attention',color:'#FF5C5C'}]}
-          entries={wellnessEntries} labels={labels} colors={colors} animated={animated} />
+          entries={wellnessEntries} labels={labels} colors={colors} animated={animated} invertBarHeight={false} />
       )}
       {anxietyEntries.length > 0 && (
-        <BarSection title="Depression & Anxiety" note="Higher = more severe"
+        <BarSection title="Depression & Anxiety" note="Taller = healthier"
           legend={[{label:'Minimal',color:'#00C48C'},{label:'Mild',color:'#F5A623'},{label:'Moderate',color:'#FF8C00'},{label:'Severe',color:'#FF5C5C'}]}
-          entries={anxietyEntries} labels={labels} colors={colors} animated={animated} />
+          entries={anxietyEntries} labels={labels} colors={colors} animated={animated} invertBarHeight={true} />
       )}
     </div>
   );
