@@ -33,16 +33,12 @@ export default function Results() {
         const res = await api.get('/users/get-all-courses');
         if (res.data?.success) setCourses(res.data.data || []);
       } catch { }
-      // Check if all tests are completed
+      // Check if all tests are completed. Same host/DB as the write
+      // (update-test-score) - the scoring service's /api/testnames is a
+      // separate service and can lag behind a just-completed write.
       try {
-        const Cookies = (await import('js-cookie')).default;
-        const authCookie = Cookies.get('auth');
-        let token = ''; if (authCookie) { try { token = JSON.parse(authCookie).token; } catch { } }
-        if (token) {
-          const axios = (await import('axios')).default;
-          const r = await axios.get('https://zenomiai.elitceler.com/api/testnames', { headers: { Authorization: `Bearer ${token}` } });
-          if (Array.isArray(r.data) && r.data.length > 0 && r.data.every((t: any) => t.testStatus === 'COMPLETED')) setAllTestsDone(true);
-        }
+        const r = await api.get('/users/test-status');
+        if (Array.isArray(r.data) && r.data.length > 0 && r.data.every((t: any) => t.testStatus === 'COMPLETED')) setAllTestsDone(true);
       } catch { }
       setLoading(false);
       setTimeout(() => setAnimated(true), 100);
@@ -305,6 +301,10 @@ function BarSection({ title, note, legend, entries, labels, colors, animated }:
   { title: string; note: string; legend: {label:string; color:string}[];
     entries: {key:string; value:number}[]; labels: Record<string, string>; colors: Record<string, string>; animated: boolean }) {
   const BAR_H = 140;
+  // The label sits above the bar within this same fixed-height budget —
+  // reserve room for it so a near-100% bar doesn't visually overflow.
+  const LABEL_H = 20;
+  const MAX_BAR_H = BAR_H - LABEL_H;
   return (
     <div className="mb-5">
       {/* Header */}
@@ -338,8 +338,16 @@ function BarSection({ title, note, legend, entries, labels, colors, animated }:
                 const v = Math.max(e.value, 0);
                 const inverted = SEVERITY_KEYS.includes(e.key);
                 const color = colors[e.key] ?? (inverted ? severityColor(v) : wellnessColor(v));
-                const lbl   = labels[e.key] ?? (inverted ? severityLabel(v)  : wellnessLabel(v));
-                const barPx = Math.max((v / 100) * BAR_H, 4);
+                // Server labels are full clinical phrases ("Mild Emotional
+                // Dysregulation") — too long for this narrow column. Just
+                // the first word conveys severity and matches the old short
+                // label vocabulary.
+                const lbl   = labels[e.key] ? labels[e.key].split(' ')[0] : (inverted ? severityLabel(v)  : wellnessLabel(v));
+                // GAD-7/PHQ-9 bar height is inverted from the raw severity
+                // value: a bad (high) score renders a SHORT bar, not a tall
+                // one, so tall+green always reads as "healthier" there too.
+                // Sleep/Nutrition/Emotional keep height = raw value.
+                const barPx = Math.max((v / 100) * MAX_BAR_H, 4);
                 return (
                   <div key={e.key} className="flex flex-col items-center justify-end" style={{ width: 48 }}>
                     <span className="text-[9px] font-bold mb-1 leading-tight text-center" style={{ color }}>{lbl}</span>
@@ -381,7 +389,7 @@ function AnimatedBarChart({ data, labels, colors, animated }: { data: { title: s
     <div>
       {wellnessEntries.length > 0 && (
         <BarSection title="Wellness Scores" note="Green = good, red = needs attention"
-          legend={[{label:'Good',color:'#00C48C'},{label:'Fair',color:'#F5A623'},{label:'Needs attention',color:'#FF5C5C'}]}
+          legend={[{label:'Good',color:'#00C48C'},{label:'Fair',color:'#F5A623'},{label:'Moderate',color:'#FF8C00'},{label:'Needs attention',color:'#FF5C5C'}]}
           entries={wellnessEntries} labels={labels} colors={colors} animated={animated} />
       )}
       {anxietyEntries.length > 0 && (
