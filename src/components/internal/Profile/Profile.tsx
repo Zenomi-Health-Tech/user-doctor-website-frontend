@@ -4,13 +4,13 @@ import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { ChevronLeft, ChevronRight, User, Calendar, FileText, Info, Shield, AlertTriangle, LogOut } from "lucide-react";
+import { ChevronLeft, ChevronRight, User, Calendar, FileText, Info, Shield, AlertTriangle, LogOut, Copy } from "lucide-react";
 import LottieLoader from "@/components/shared/LottieLoader";
 
 const TERMS = `Zenomi Health - Terms and Conditions\n\nEffective Date: June 1st, 2025\n\nThese Terms govern your use of the Zenomi Health website and mobile application. By using the Service, you agree to these Terms.\n\n1. Use of Service — You must be at least 18 years old (India) or 13 years old (USA).\n2. Acceptable Use — Do not copy, modify, or reverse-engineer any part of the Service.\n3. Intellectual Property — All content is property of Zenomi Health.\n4. Data Handling — We do not sell or share your data with third parties.\n5. Termination — We may suspend your account if you violate these Terms.\n6. Disclaimer — The Service is provided "as is" without warranties.\n7. Contact — support@zenomihealth.com`;
 const PRIVACY = `Zenomi Health - Privacy Policy\n\nEffective Date: June 1st, 2025\n\n1. We collect Personal Information and Health/Wellness Information.\n2. We use your information to provide and personalize services.\n3. We employ industry-standard encryption.\n4. We do not share, sell, or rent your data.\n5. You may request access to, correction of, or deletion of your data.\n6. Contact: privacy@zenomihealth.com`;
 
-interface UserProfile { id: string; name: string; email: string; countryCode: string; phoneNumber: string; gender: string; profilePicture: string | null; }
+interface UserProfile { id: string; name: string; email: string; countryCode: string; phoneNumber: string; gender: string; profilePicture: string | null; referralCode?: string | null; }
 
 export default function Profile() {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -102,6 +102,28 @@ export default function Profile() {
             <p className="text-sm text-[#696969]">{user.countryCode}  {user.phoneNumber}</p>
           </div>
         </button>
+
+        {/* Referral code — teens share this with a parent to link reports in the Parent Portal */}
+        {!isDoctor && user.referralCode && (
+          <div className="w-full mb-4 px-4 py-3.5 rounded-[20px] flex items-center gap-3" style={{ background: 'rgba(139,45,108,0.08)', border: '1px solid rgba(139,45,108,0.2)' }}>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-[#696969]">Your Referral Code</p>
+              <p className="text-lg font-bold text-[#8B2D6C] mt-0.5">{user.referralCode}</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">Share this with your parent to link your reports in the Parent Portal</p>
+            </div>
+            <button
+              onClick={async () => {
+                await navigator.clipboard.writeText(user.referralCode!);
+                toast({ title: "Copied", description: "Referral code copied", className: "bg-green-500 text-white" });
+              }}
+              className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(139,45,108,0.12)' }}
+              aria-label="Copy referral code"
+            >
+              <Copy className="w-4 h-4 text-[#8B2D6C]" />
+            </button>
+          </div>
+        )}
 
         {/* Menu Group 1 */}
         <MenuCard items={menuGroup1} />
