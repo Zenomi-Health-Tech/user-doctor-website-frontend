@@ -291,15 +291,24 @@ function severityLabel(v: number) {
   if (v <= 70) return 'Moderate';
   return 'Severe';
 }
+// For the Wellness Scores section specifically — its own legend promises
+// Good/Fair/Moderate/Needs attention, not the clinical Minimal/Mild/Moderate/
+// Severe scale (that belongs to the Depression & Anxiety section below it).
+function wellnessSeverityLabel(v: number) {
+  if (v <= 20) return 'Good';
+  if (v <= 45) return 'Fair';
+  if (v <= 70) return 'Moderate';
+  return 'Needs attention';
+}
 function findKey(raw: string, keys: string[]) {
   const n = raw.toLowerCase().replace(/-/g,'').replace(/_/g,'');
   return keys.find(k => k.toLowerCase().replace(/-/g,'').replace(/_/g,'') === n
     || raw.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(raw.toLowerCase()));
 }
 
-function BarSection({ title, note, legend, entries, labels, colors, animated }:
+function BarSection({ title, note, legend, entries, labels, colors, animated, invertHeightForSeverity = false }:
   { title: string; note: string; legend: {label:string; color:string}[];
-    entries: {key:string; value:number}[]; labels: Record<string, string>; colors: Record<string, string>; animated: boolean }) {
+    entries: {key:string; value:number}[]; labels: Record<string, string>; colors: Record<string, string>; animated: boolean; invertHeightForSeverity?: boolean }) {
   const BAR_H = 140;
   // The label sits above the bar within this same fixed-height budget —
   // reserve room for it so a near-100% bar doesn't visually overflow.
@@ -323,31 +332,51 @@ function BarSection({ title, note, legend, entries, labels, colors, animated }:
       {/* Chart card — white with shadow like app */}
       <div className="rounded-2xl p-4" style={{ background: 'white', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
         <div className="flex" style={{ height: BAR_H + 24 }}>
-          {/* Y-axis */}
-          <div className="flex flex-col justify-between pr-2 text-[10px] text-gray-400 text-right" style={{ width: 36, height: BAR_H }}>
-            {['100%','75%','50%','25%','0%'].map(l => <span key={l}>{l}</span>)}
+          {/* Y-axis — confined to MAX_BAR_H (not the full BAR_H) and
+              bottom-anchored, so "100%" lines up with where a truly
+              full-height bar's top actually sits, not with the label row
+              reserved above the bars. Previously "100%" sat at the very top
+              of the box while even a perfect-score bar topped out LABEL_H
+              below that, so nothing could ever visually reach 100%. */}
+          <div className="flex flex-col justify-end pr-2" style={{ width: 36, height: BAR_H }}>
+            <div className="flex flex-col justify-between text-[10px] text-gray-400 text-right" style={{ height: MAX_BAR_H }}>
+              {['100%','75%','50%','25%','0%'].map(l => <span key={l}>{l}</span>)}
+            </div>
           </div>
           {/* Bars */}
           <div className="flex-1 relative" style={{ height: BAR_H }}>
-            {/* Grid lines */}
-            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+            {/* Grid lines — same MAX_BAR_H-tall, bottom-anchored area as the
+                Y-axis labels above, so they line up with the bars. */}
+            <div className="absolute left-0 right-0 bottom-0 flex flex-col justify-between pointer-events-none" style={{ height: MAX_BAR_H }}>
               {[0,1,2,3,4].map(i => <div key={i} className="border-b" style={{ borderColor:'rgba(0,0,0,0.07)' }} />)}
             </div>
             <div className="absolute inset-0 flex items-end justify-around px-1">
               {entries.map((e, i) => {
-                const v = Math.max(e.value, 0);
+                const v = Math.min(Math.max(e.value, 0), 100);
                 const inverted = SEVERITY_KEYS.includes(e.key);
                 const color = colors[e.key] ?? (inverted ? severityColor(v) : wellnessColor(v));
+                // In the Wellness Scores section, a severity metric's own
+                // Good/Fair/Moderate/Needs-attention wording is used instead
+                // of the server's raw clinical text (or GAD-7/PHQ-9's
+                // Minimal/Mild/Moderate/Severe) — that section's legend
+                // promises the former, not the latter.
+                const useLocalWellnessLabel = invertHeightForSeverity && inverted;
                 // Server labels are full clinical phrases ("Mild Emotional
                 // Dysregulation") — too long for this narrow column. Just
                 // the first word conveys severity and matches the old short
                 // label vocabulary.
-                const lbl   = labels[e.key] ? labels[e.key].split(' ')[0] : (inverted ? severityLabel(v)  : wellnessLabel(v));
-                // GAD-7/PHQ-9 bar height is inverted from the raw severity
-                // value: a bad (high) score renders a SHORT bar, not a tall
-                // one, so tall+green always reads as "healthier" there too.
-                // Sleep/Nutrition/Emotional keep height = raw value.
-                const barPx = Math.max((v / 100) * MAX_BAR_H, 4);
+                const lbl = useLocalWellnessLabel
+                  ? wellnessSeverityLabel(v)
+                  : labels[e.key] ? labels[e.key].split(' ')[0] : (inverted ? severityLabel(v) : wellnessLabel(v));
+                // Color always reflects the true severity direction (above) —
+                // but in the Wellness Scores section, bar HEIGHT should read
+                // "taller = better" consistently across every column, same as
+                // color already does, so a good severity result (e.g. Sleep
+                // "Minimal") doesn't look like a bad/empty bar next to a good
+                // Emotional result. Depression & Anxiety keeps raw severity
+                // height — it's explicitly labeled "Higher = more severe".
+                const heightValue = useLocalWellnessLabel ? 100 - v : v;
+                const barPx = Math.max((heightValue / 100) * MAX_BAR_H, 4);
                 return (
                   <div key={e.key} className="flex flex-col items-center justify-end" style={{ width: 48 }}>
                     <span className="text-[9px] font-bold mb-1 leading-tight text-center" style={{ color }}>{lbl}</span>
@@ -390,7 +419,7 @@ function AnimatedBarChart({ data, labels, colors, animated }: { data: { title: s
       {wellnessEntries.length > 0 && (
         <BarSection title="Wellness Scores" note="Green = good, red = needs attention"
           legend={[{label:'Good',color:'#00C48C'},{label:'Fair',color:'#F5A623'},{label:'Moderate',color:'#FF8C00'},{label:'Needs attention',color:'#FF5C5C'}]}
-          entries={wellnessEntries} labels={labels} colors={colors} animated={animated} />
+          entries={wellnessEntries} labels={labels} colors={colors} animated={animated} invertHeightForSeverity />
       )}
       {anxietyEntries.length > 0 && (
         <BarSection title="Depression & Anxiety" note="Higher = more severe"
