@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import LottieLoader from "@/components/shared/LottieLoader";
@@ -157,10 +157,21 @@ export default function Dashboard() {
   const [nextAppt, setNextAppt] = useState<any>(null);
   const [postTestLoading, setPostTestLoading] = useState(false);
   const [isFinalTestLoading, setIsFinalTestLoading] = useState(false);
+  // Bumped whenever the user opens a quiz or goes back to the dashboard. A
+  // submit that is still waiting on the scoring service checks it before
+  // touching the screen, so a slow reply for Sleep cannot reopen the Sleep
+  // results, or close the quiz, after the user has moved on to Nutrition.
+  const quizSessionRef = useRef(0);
+  // The test just submitted, so the post-test wait knows what to wait for.
+  const lastSubmittedTestIdRef = useRef<string | null>(null);
+  // Whether a quiz or result screen is open, read by the focus refetch.
+  const quizOpenRef = useRef(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
+    const fetchData = async (silent = false) => {
+      // The focus refetch is silent: putting the full-page loader up would
+      // unmount an open quiz and send it back to its first screen.
+      if (!silent) setLoading(true);
       try {
         const authCookie = Cookies.get("auth");
         let token = "";
@@ -217,15 +228,17 @@ export default function Dashboard() {
         }
       } catch (err) {
         console.error("Error in fetchData:", err);
-        setTests([]);
+        if (!silent) setTests([]);
       } finally {
-        setLoading(false);
+        if (!silent) setLoading(false);
       }
     };
     fetchData();
 
-    // Re-fetch tests when user returns to the tab (e.g., after retest assignment)
-    const onFocus = () => { if (!isDoctor) fetchData(); };
+    // Re-fetch tests when user returns to the tab (e.g., after retest
+    // assignment). Not while a quiz or result screen is open: that flow
+    // refreshes the list itself when it finishes.
+    const onFocus = () => { if (!isDoctor && !quizOpenRef.current) fetchData(true); };
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
   }, [isDoctor]);
@@ -287,6 +300,14 @@ export default function Dashboard() {
     }
   }, [isDoctor]);
 
+  useEffect(() => {
+    quizOpenRef.current = Boolean(
+      showQuiz || selectedTest || showCompletionDialog || postTestLoading ||
+      sleepResults || gad7Results || phq9Results || emotionalResults || mindfulnessResults
+    );
+  }, [showQuiz, selectedTest, showCompletionDialog, postTestLoading,
+      sleepResults, gad7Results, phq9Results, emotionalResults, mindfulnessResults]);
+
   const completedCount =
     tests?.filter((t) => t?.testStatus === "COMPLETED")?.length || 0;
   console.log(completedCount);
@@ -301,6 +322,7 @@ export default function Dashboard() {
 
       if (res.data && Array.isArray(res.data)) {
         setQuestions(res.data.filter((q: any) => q.questionStatus === 'ACTIVE'));
+        quizSessionRef.current += 1;
         setCurrentTestId(selectedTest.id);
         setShowQuiz(true);
         setSleepPart(0);
@@ -393,6 +415,7 @@ export default function Dashboard() {
   };
 
   const handleHomeScreen = async () => {
+    quizSessionRef.current += 1;
     setShowQuiz(false);
     setShowCompletionDialog(false);
     setSelectedTest(null);
@@ -410,13 +433,25 @@ export default function Dashboard() {
     // the right message instead of implying another test is coming.
     setIsFinalTestLoading(tests.length > 0 && prevCompleted + 1 >= tests.length);
 
+    // Wait for the test just submitted to show as COMPLETED, with the next one
+    // open (or everything done). Comparing completed counts alone fails when
+    // the list was already refreshed before Done was pressed, as Nutrition
+    // does: the count never rises again, so the user sat on this loader for
+    // the full 15 seconds and then the page reloaded.
+    const submittedId = lastSubmittedTestIdRef.current;
     for (let i = 0; i < 10; i++) {
-      await new Promise(r => setTimeout(r, 1500));
+      if (i > 0) await new Promise(r => setTimeout(r, 1500));
       try {
         const res = await api.get("/users/test-status");
         if (Array.isArray(res.data)) {
-          const newCompleted = res.data.filter((t: any) => t.testStatus === "COMPLETED").length;
-          if (newCompleted > prevCompleted || newCompleted === res.data.length) {
+          const list = res.data as Test[];
+          const newCompleted = list.filter(t => t.testStatus === "COMPLETED").length;
+          const allDone = newCompleted === list.length;
+          const ready = submittedId
+            ? list.some(t => t.id === submittedId && t.testStatus === "COMPLETED") &&
+              (allDone || list.some(t => t.testStatus === "UNLOCKED"))
+            : newCompleted > prevCompleted || allDone;
+          if (ready) {
             setTests(res.data);
             setPostTestLoading(false);
             setCurrentTestId(null);
@@ -431,6 +466,11 @@ export default function Dashboard() {
 
   const handleSubmitQuiz = async () => {
     if (!currentTestId) return;
+    lastSubmittedTestIdRef.current = currentTestId;
+    const session = quizSessionRef.current;
+    // False once the user has left this quiz's screens (Continue, Done, or
+    // opened another test). Saves still finish; only the screen is left alone.
+    const stillHere = () => quizSessionRef.current === session;
     const authCookie = Cookies.get("auth");
     let token = "";
     if (authCookie) {
@@ -527,6 +567,12 @@ export default function Dashboard() {
         };
         let totalScore: number;
         let maxScore: number;
+        // Emotional Fitness is the last test, so this call also builds the
+        // whole report and can take a minute or more. Without a screen the
+        // dashboard sat there still showing the test as open, and it looked
+        // as if it was asking for it again.
+        setIsFinalTestLoading(true);
+        setPostTestLoading(true);
         try {
           const res = await axios.post(`https://zenomiai.elitceler.com/api/score-test/${currentTestId}`, { answers: formattedAnswers }, { headers: { Authorization: `Bearer ${token}` } });
           const d = res.data?.data ?? res.data ?? {};
@@ -537,6 +583,8 @@ export default function Dashboard() {
           // Fallback: calculate locally
           totalScore = formattedAnswers.reduce((sum: number, a: any) => sum + scoreForAnswer(a.answer || ''), 0);
           maxScore = questions.length * 5;
+        } finally {
+          setPostTestLoading(false);
         }
         const catSize = 5;
         const cats = [
@@ -612,7 +660,7 @@ export default function Dashboard() {
           );
           if (res.data) {
             const apiScore = res.data.user_score ?? total;
-            setSleepResults({
+            if (stillHere()) setSleepResults({
               score: apiScore,
               max: res.data.max_score_for_test ?? questions.length * 4,
               assessment: res.data.assessment ?? '',
@@ -631,22 +679,26 @@ export default function Dashboard() {
           { headers: { Authorization: `Bearer ${token}` } }
         );
       }
+      // Re-fetch tests after submission to update completed count - same
+      // host/DB as the write above, not the scoring service (see note in
+      // fetchData's initial load for why).
+      const res = await api.get("/users/test-status");
+      // The user has already moved on (e.g. into the next test). Leave the
+      // screen alone: clearing currentTestId here is what threw an open
+      // Nutrition quiz back to its first screen.
+      if (!stillHere()) return;
       // Find the test name for the just-completed test
       const completedTest = tests.find(t => t.id === currentTestId);
       setLastCompletedTestName(completedTest?.name || null);
       if (currentTestId !== SLEEP_TEST_ID && currentTestId !== GAD7_TEST_ID && currentTestId !== PHQ9_TEST_ID && !tests.find(t => t.id === currentTestId)?.name?.toUpperCase().includes('EMOTIONAL') && !isMindfulnessQuiz) {
         setShowCompletionDialog(true);
       }
-      // Re-fetch tests after submission to update completed count - same
-      // host/DB as the write above, not the scoring service (see note in
-      // fetchData's initial load for why).
-      const res = await api.get("/users/test-status");
-      setTests(res.data);
+      if (Array.isArray(res.data)) setTests(res.data);
       setCurrentTestId(null);
       setShowProcessing(false); // Hide processing card when API returns
     } catch (error) {
       console.error("Failed to submit quiz:", error);
-      alert("Failed to submit quiz. Please try again.");
+      if (stillHere()) alert("Failed to submit quiz. Please try again.");
       setShowProcessing(false);
     } finally {
       setLoading(false);
@@ -1365,6 +1417,7 @@ export default function Dashboard() {
           questions={questions}
           onClose={() => handleHomeScreen()}
           onSubmit={async (formatted, onResult) => {
+            lastSubmittedTestIdRef.current = currentTestId;
             try {
               const authCookie = Cookies.get("auth");
               let token = "";
@@ -1520,7 +1573,10 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-      {showQuiz && !isSleepQuiz && !isNutritionQuiz && !isGad7Quiz && !isPhq9Quiz && !isEmotionalQuiz && (
+      {/* Generic quiz screen, for tests without their own design (Mindfulness).
+          Needs a test id: without one, every check above is false and this old
+          screen used to appear in place of whichever quiz was open. */}
+      {showQuiz && currentTestId && !isSleepQuiz && !isNutritionQuiz && !isGad7Quiz && !isPhq9Quiz && !isEmotionalQuiz && (
         <div className="w-full min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#fff7fa] to-[#f8f3fa] p-0 m-0 fixed top-0 left-0 z-50">
           <div
             className="w-full max-w-2xl mx-auto flex flex-col items-center justify-center min-h-screen"
