@@ -1,10 +1,20 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { trackPageView } from "@/utils/track";
 import { SidebarProvider } from "../ui/sidebar";
 import { AppSidebar } from "./sidebar";
 import Header from "./header";
 import MobileBottomNav from "./MobileBottomNav";
 
 export default function HomeLayout({ children }: { children: React.ReactNode }) {
+  const { pathname } = useLocation();
+  const { isDoctor, user } = useAuth();
+  // Teen section views for analytics; clinicians are not tracked here.
+  useEffect(() => {
+    if (user && !isDoctor) trackPageView(pathname);
+  }, [pathname, user, isDoctor]);
+
   return (
     <SidebarProvider>
       <main className="flex h-screen w-full">

@@ -1,3 +1,4 @@
+import { trackMindfulnessSession } from "@/utils/track";
 import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -165,6 +166,17 @@ function BreathingOrb({ phases, labels }: { phases: number[]; labels: string[] }
   );
 }
 
+// Category label for analytics, the same first word the app sends ("BREATHING · 4 MIN" -> BREATHING).
+function categoryFor(title: string): string {
+  const has = (list: { title: string }[]) => list.some((t) => t.title === title);
+  if (has(MICRO_SESSIONS)) return 'RESET';
+  if (has(BREATHING)) return 'BREATHING';
+  if (has(SLEEP_STORIES)) return 'SLEEP STORY';
+  if (has(SOUNDSCAPES)) return 'SOUNDSCAPE';
+  if (has(WIND_DOWN)) return 'MEDITATION';
+  return 'MINDFULNESS';
+}
+
 // ─── Player Bar (bottom-docked, mirrors app's AudioPlayerScreen) ──
 function PlayerBar({ playlist, index, onIndexChange, onClose }: {
   playlist: PlayableTrack[];
@@ -195,6 +207,8 @@ function PlayerBar({ playlist, index, onIndexChange, onClose }: {
     const onTime = () => setTime(a.currentTime);
     const onMeta = () => setDur(a.duration || 0);
     const onEnd = () => {
+      // Log a finished session, as the app does (looping soundscapes never "finish").
+      if (!track.isLooping) trackMindfulnessSession(categoryFor(track.title), track.title, a.duration);
       if (!track.isLooping && index < playlist.length - 1) onIndexChange(index + 1);
       else setPlaying(false);
     };
